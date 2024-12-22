@@ -1,8 +1,6 @@
-// app/api/stock/chart/route.ts
 import { NextResponse } from 'next/server';
 import yahooFinance from 'yahoo-finance2';
 
-// Error handling wrapper
 const withErrorHandling = async <T>(
   promise: Promise<T>,
   errorMessage: string
@@ -39,7 +37,9 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const symbol = searchParams.get('symbol');
-    const range = searchParams.get('range') || '1M';
+    const range = searchParams.get('range');
+    const startDate = searchParams.get('start');
+    const endDate = searchParams.get('end');
 
     if (!symbol) {
       return NextResponse.json(
@@ -48,10 +48,16 @@ export async function GET(request: Request) {
       );
     }
 
-    const queryOptions = {
-      period1: getStartDate(range),
-      interval: '1d'
+    const queryOptions: any = {
+      interval: '1d',
     };
+
+    if (startDate && endDate) {
+      queryOptions.period1 = new Date(startDate);
+      queryOptions.period2 = new Date(endDate);
+    } else if (range) {
+      queryOptions.period1 = getStartDate(range);
+    }
 
     const historicalData = await withErrorHandling(
       yahooFinance.historical(symbol, queryOptions),
@@ -71,9 +77,9 @@ export async function GET(request: Request) {
   } catch (error) {
     console.error('Chart API Error:', error);
     return NextResponse.json(
-      { 
-        error: 'Failed to fetch chart data', 
-        details: error.message 
+      {
+        error: 'Failed to fetch chart data',
+        details: error.message
       },
       { status: 500 }
     );

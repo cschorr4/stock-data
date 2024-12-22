@@ -1,0 +1,450 @@
+import React from 'react';
+import { format as dateFormat } from 'date-fns';
+import Papa from 'papaparse';
+import { Download, Upload, Plus, Pencil, Trash2, ArrowUpDown } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Badge } from '@/components/ui/badge';
+import { useToast } from '@/components/ui/use-toast';
+import { Transaction } from '@/lib/types';
+import TransactionForm from './TransactionForm';
+import { validateTransaction, exportToJSON, exportToCSV, downloadFile } from '@/lib/transactions';
+
+interface TransactionTableProps {
+  transactions: Transaction[];
+  onTransactionAdd: (transaction: Transaction) => void;
+  onTransactionEdit: (transaction: Transaction) => void;
+  onTransactionDelete: (id: number) => void;
+  onTransactionsDeleteAll: () => void;
+}
+
+export const TransactionTable: React.FC<TransactionTableProps> = ({
+  transactions,
+  onTransactionAdd,
+  onTransactionEdit,
+  onTransactionDelete,
+  onTransactionsDeleteAll,
+}) => {
+  const { toast } = useToast();
+  const [filter, setFilter] = React.useState('');
+  const [sortConfig, setSortConfig] = React.useState<{
+    key: keyof Transaction;
+    direction: 'asc' | 'desc';
+  }>({
+    key: 'date',
+    direction: 'desc'
+  });
+  const [isAddDialogOpen, setIsAddDialogOpen] = React.useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = React.useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
+  const [isDeleteAllDialogOpen, setIsDeleteAllDialogOpen] = React.useState(false);
+  const [selectedTransaction, setSelectedTransaction] = React.useState<Transaction | null>(null);
+
+  const getFilteredAndSortedTransactions = React.useMemo(() => {
+    return transactions
+      .filter(transaction => 
+        transaction.ticker.toLowerCase().includes(filter.toLowerCase())
+      )
+      .sort((a, b) => {
+        if (sortConfig.key === 'date') {
+          const dateA = new Date(a[sortConfig.key]).getTime();
+          const dateB = new Date(b[sortConfig.key]).getTime();
+          return sortConfig.direction === 'asc' ? dateA - dateB : dateB - dateA;
+        }
+        
+        const valueA = a[sortConfig.key];
+        const valueB = b[sortConfig.key];
+        
+        return sortConfig.direction === 'asc' 
+          ? valueA < valueB ? -1 : valueA > valueB ? 1 : 0
+          : valueA > valueB ? -1 : valueA < valueB ? 1 : 0;
+      });
+  }, [transactions, filter, sortConfig]);
+
+  const handleSort = (key: keyof Transaction) => {
+    setSortConfig(prev => ({
+      key,
+      direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc'
+    }));
+  };
+
+  const handleExport = (exportFormat: 'json' | 'csv') => {
+    const timestamp = dateFormat(new Date(), 'yyyy-MM-dd');
+    const filename = `stock_transactions_${timestamp}.${exportFormat}`;
+    
+    const blob = exportFormat === 'json' 
+      ? exportToJSON(transactions)
+      : exportToCSV(transactions);
+    
+    downloadFile(blob, filename);
+  };
+
+  const handleFileImport = async (file: File) => {
+    try {
+      let transactions: Transaction[];
+      
+      if (file.type === 'application/json') {
+        const text = await file.text();
+        const data = JSON.parse(text);
+        
+        if (!Array.isArray(data)) {
+          throw new Error('Invalid JSON format: Expected an array of transactions');
+        }
+
+        transactions = data.map(item => ({
+          id: item.id || Date.now() + Math.random(),
+          date: new Date(item.date).toISOString(),
+          ticker: item.ticker.toUpperCase(),
+          type: item.type.toLowerCase(),
+          price: Number(item.price),
+          shares: Number(item.shares)
+        }));
+      } else if (file.type === 'text/csv') {
+        transactions = await new Promise((resolve, reject) => {
+          Papa.parse(file, {
+            header: true,
+            dynamicTyping: true,
+            skipEmptyLines: true,
+            complete: (results) => {
+              try {
+                const parsed = results.data.map((row: any) => ({
+                  id: Date.now() + Math.random(),
+                  date: new Date(row.date).toISOString(),
+                  ticker: row.ticker.toUpperCase(),
+                  type: row.type.toLowerCase(),
+                  price: Number(row.price),
+                  shares: Number(row.shares)
+                }));
+                resolve(parsed);
+              } catch (error) {
+                reject(error);
+              }
+            },
+            error: (error) => reject(error)
+          });
+        });
+      } else {
+        throw new Error('Unsupported file format. Please use JSON or CSV.');
+      }
+
+      if (!transactions.every(validateTransaction)) {
+        throw new Error('Invalid transaction data in file');
+      }
+
+      transactions.forEach(onTransactionAdd);
+      toast({
+        title: "Success",
+        description: `Imported ${transactions.length} transactions successfully.`,
+      });
+    } catch (error) {
+      console.error('Error importing transactions:', error);
+      toast({
+        variant: "destructive",
+        title: "Import Error",
+        description: error.message || 'Error importing transactions. Please check the file format.',
+      });
+    }
+  };
+
+  const ImportButton = () => {
+    const inputRef = React.useRef<HTMLInputElement>(null);
+    
+    const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (!e.target.files?.length) return;
+      handleFileImport(e.target.files[0]);
+      if (inputRef.current) {
+        inputRef.current.value = '';
+      }
+    };
+
+    return (
+      <>
+        <input
+          type="file"
+          ref={inputRef}
+          onChange={handleImport}
+          accept=".json,.csv"
+          className="hidden"
+        />
+        <Button
+          variant="outline"
+          onClick={() => inputRef.current?.click()}
+        >
+          <Upload className="mr-2 h-4 w-4" />
+          Import
+        </Button>
+      </>
+    );
+  };
+
+  return (
+    <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
+      <div className="flex flex-col space-y-1.5 p-6">
+        <div className="flex justify-between items-center">
+          <div className="flex items-center space-x-4">
+            <h3 className="text-2xl font-semibold leading-none tracking-tight">Transaction Log</h3>
+            <Badge variant="secondary" className="ml-2">
+              {transactions.length} transactions
+            </Badge>
+          </div>
+          <div className="flex items-center space-x-2">
+            <div className="w-64">
+              <Input
+                placeholder="Filter by ticker..."
+                value={filter}
+                onChange={(e) => setFilter(e.target.value)}
+                className="w-full"
+              />
+            </div>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline">
+                        <Download className="mr-2 h-4 w-4" />
+                        Export
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                      <DropdownMenuItem onClick={() => handleExport('json')}>
+                        Export as JSON
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleExport('csv')}>
+                        Export as CSV
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </TooltipTrigger>
+                <TooltipContent>Export transactions</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <ImportButton />
+                </TooltipTrigger>
+                <TooltipContent>Import transactions from JSON or CSV</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Transaction
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Add New Transaction</DialogTitle>
+                </DialogHeader>
+                <TransactionForm 
+                  onSubmit={(transaction: Transaction) => {
+                    onTransactionAdd(transaction);
+                    setIsAddDialogOpen(false);
+                  }}
+                  onCancel={() => setIsAddDialogOpen(false)}
+                />
+              </DialogContent>
+            </Dialog>
+            {transactions.length > 0 && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      variant="destructive" 
+                      onClick={() => setIsDeleteAllDialogOpen(true)}
+                    >
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Remove All
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Delete all transactions</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="p-6 pt-0">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>
+                <Button 
+                  variant="ghost" 
+                  onClick={() => handleSort('date')}
+                  className="w-full text-left font-medium"
+                >
+                  Date
+                  <ArrowUpDown className="ml-2 h-4 w-4 inline-block" />
+                </Button>
+              </TableHead>
+              <TableHead>
+                <Button 
+                  variant="ghost" 
+                  onClick={() => handleSort('ticker')}
+                  className="w-full text-left font-medium"
+                >
+                  Ticker
+                  <ArrowUpDown className="ml-2 h-4 w-4 inline-block" />
+                </Button>
+              </TableHead>
+              <TableHead>Type</TableHead>
+              <TableHead>Price</TableHead>
+              <TableHead>Shares</TableHead>
+              <TableHead>Total</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {getFilteredAndSortedTransactions.map(transaction => (
+              <TableRow key={transaction.id}>
+                <TableCell>{dateFormat(new Date(transaction.date), "yyyy.MM.dd")}</TableCell>
+                <TableCell className="font-medium">{transaction.ticker}</TableCell>
+                <TableCell>
+                  <Badge variant={
+      transaction.type === 'buy' 
+        ? 'default'
+        : transaction.type === 'sell'
+        ? 'sand'
+        : 'blue'  // for dividend
+    }>
+                    {transaction.type.toUpperCase()}
+                  </Badge>
+                </TableCell>
+                <TableCell>${transaction.price.toFixed(2)}</TableCell>
+                <TableCell>{transaction.shares}</TableCell>
+                <TableCell>${(transaction.price * transaction.shares).toFixed(2)}</TableCell>
+                <TableCell className="text-right">
+                  <div className="flex justify-end gap-2">
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => {
+                              setSelectedTransaction(transaction);
+                              setIsEditDialogOpen(true);
+                            }}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Edit transaction</TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="destructive"
+                            size="icon"
+                            onClick={() => {
+                              setSelectedTransaction(transaction);
+                              setIsDeleteDialogOpen(true);
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Delete transaction</TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+
+      {/* Edit Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Transaction</DialogTitle>
+          </DialogHeader>
+          {selectedTransaction && (
+            <TransactionForm
+              initialData={selectedTransaction}
+              onSubmit={(transaction) => {
+                onTransactionEdit(transaction);
+                setIsEditDialogOpen(false);
+              }}
+              onCancel={() => setIsEditDialogOpen(false)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Single Transaction Dialog */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Transaction</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this transaction? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => {
+                if (selectedTransaction) {
+                  onTransactionDelete(selectedTransaction.id);
+                }
+                setIsDeleteDialogOpen(false);
+              }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete All Transactions Dialog */}
+      <AlertDialog open={isDeleteAllDialogOpen} onOpenChange={setIsDeleteAllDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete All Transactions</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete all transactions? This action cannot be undone and will remove all {transactions.length} transactions from your history.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => {
+                onTransactionsDeleteAll();
+                setIsDeleteAllDialogOpen(false);
+                toast({
+                  title: "Success",
+                  description: "All transactions have been deleted.",
+                });
+              }}
+            >
+              Delete All
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+};
+
+export default TransactionTable;

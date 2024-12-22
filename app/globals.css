@@ -14,9 +14,9 @@ body {
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
+    --background: 220 25% 97%;  /* Slightly blue-tinted white */
     --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
+    --card: 0 0% 100%;  /* Pure white cards for contrast */
     --card-foreground: 222.2 84% 4.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
@@ -41,9 +41,9 @@ body {
     --radius: 0.5rem;
   }
   .dark {
-    --background: 222.2 84% 4.9%;
+    --background: 224 71% 4%;  /* Deep blue-grey */
     --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
+    --card: 220 17% 25%;  /* Keep your chosen card color */
     --card-foreground: 210 40% 98%;
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
