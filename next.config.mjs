@@ -1,9 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  typescript: {
-    ignoreBuildErrors: false
-  },
-  output: 'standalone'
+  experimental: {
+    esmExternals: "loose"  // Add this line
+  }
 }
 
-export default nextConfig
+export default nextConfig;
