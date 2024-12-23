@@ -142,7 +142,7 @@ const PortfolioSummary = ({
     return `${value.toFixed(decimals)}%`;
   };
 
-  const safeNumber = (value) => value ?? 0;
+  const safeNumber = (value: number | null | undefined): number => value ?? 0;
 
   return (
     <div className="w-full max-w-6xl mx-auto">
