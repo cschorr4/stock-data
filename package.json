@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "yahoo-finance2": "^2.9.1",
     "@hookform/resolvers": "^3.9.1",
     "@radix-ui/react-alert-dialog": "^1.1.2",
     "@radix-ui/react-dialog": "^1.1.2",
