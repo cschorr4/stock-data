@@ -92,7 +92,7 @@ const PortfolioSummary = ({
     }
   }, []);
 
-  const calculateHoldingPeriod = (position) => {
+  const calculateHoldingPeriod = (position: Position | { buyDate: string }) => {
     const buyDate = new Date(position.buyDate);
     const today = new Date();
     return Math.floor((today.getTime() - buyDate.getTime()) / (1000 * 60 * 60 * 24));
