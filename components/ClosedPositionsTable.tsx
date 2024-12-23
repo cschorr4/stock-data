@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import {
   Table,
@@ -35,9 +35,9 @@ const ClosedPositionsTable = ({
       : `${Math.floor(holdingPeriod / 30)}m ${holdingPeriod % 30}d`;
   };
 
-  const [isMobileView, setIsMobileView] = React.useState(false);
+  const [isMobileView, setIsMobileView] = useState(false);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const checkMobileView = () => {
       setIsMobileView(window.innerWidth < 768);
     };
