@@ -44,7 +44,7 @@ export interface Position {
   peRatio?: number;
   forwardPE?: number;
   industryPE?: number;
-  spyReturn: number;
+  spyReturn?: number;
 }
 
 export interface ClosedPosition {

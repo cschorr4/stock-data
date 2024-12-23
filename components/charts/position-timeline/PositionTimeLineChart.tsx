@@ -212,7 +212,6 @@ const PositionTimelineChart: React.FC<PositionTimelineChartProps> = ({
     return colors[ticker] || '#16a34a';
   };
 
-  // Rest of the component remains the same...
   if (isLoading) {
     return (
       <Card>
