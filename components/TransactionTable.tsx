@@ -215,7 +215,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
           className="hidden"
         />
         <Button
-          variant="outline"
+          variant="outline" className="w-full sm:w-auto" size="sm"
           onClick={() => inputRef.current?.click()}
         >
           <Upload className="mr-2 h-4 w-4" />
