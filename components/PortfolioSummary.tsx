@@ -7,12 +7,47 @@ import 'swiper/css';
 import 'swiper/css/pagination';
 import 'swiper/css/navigation';
 
+interface Props {
+  metrics: {
+    totalValue: number;
+    totalCost: number;
+    winRate: number;
+    avgWinPercent: number;
+    avgLossPercent: number;
+    bestPerformer: any | null;
+    worstPerformer: any | null;
+    avgHoldingPeriodWinners: number;
+  };
+  totals: {
+    realizedProfits: number;
+    unrealizedProfits: number;
+    totalInvestment: number;
+    currentValue: number;
+    totalReturn: number;
+  };
+  openPositions: Array<{
+    ticker: string;
+    currentValue: number;
+    dayChange: number;
+    dayChangePercent: number;
+    buyDate: string;
+  }>;
+  closedPositions: Array<{
+    ticker: string;
+    buyDate: string;
+    sellDate: string;
+    profit: number;
+    percentChange: number;
+    holdingPeriod: number;
+  }>;
+}
+
 const PortfolioSummary = ({
   metrics,
   totals,
   openPositions,
   closedPositions
-}) => {
+}: Props) => {
   const swiperRef = useRef(null);
   
   useEffect(() => {
