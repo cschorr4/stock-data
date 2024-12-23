@@ -67,24 +67,29 @@ const PortfolioSummary = ({
   
   useEffect(() => {
     register();
-    const swiperEl = swiperRef.current;
-    const params = {
-      slidesPerView: 2.5,
-      spaceBetween: 16,
-      loop: true,
-      autoplay: {
-        delay: 2000,
-        disableOnInteraction: false,
-      },
-      pagination: {
-        clickable: true,
-      },
-      speed: 1000,
-      effect: 'slide',
-      grabCursor: true,
-    };
-    Object.assign(swiperEl, params);
-    swiperEl.initialize();
+    const swiperEl = swiperRef.current as HTMLElement & { 
+      initialize: () => void;
+    } | null;
+    
+    if (swiperEl) {
+      const params = {
+        slidesPerView: 2.5,
+        spaceBetween: 16,
+        loop: true,
+        autoplay: {
+          delay: 2000,
+          disableOnInteraction: false,
+        },
+        pagination: {
+          clickable: true,
+        },
+        speed: 1000,
+        effect: 'slide',
+        grabCursor: true,
+      };
+      Object.assign(swiperEl, params);
+      swiperEl.initialize();
+    }
   }, []);
 
   const calculateHoldingPeriod = (position) => {
