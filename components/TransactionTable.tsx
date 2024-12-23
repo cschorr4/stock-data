@@ -323,11 +323,12 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
             <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <DropdownMenu>
+                  <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="outline" className="w-full sm:w-auto" size="sm">
                           <Download className="sm:mr-2 h-4 w-4" />
                           <span className="hidden sm:inline">Export</span>
+                          <span className="sm:hidden">Export</span>
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent>
