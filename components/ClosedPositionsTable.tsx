@@ -1,23 +1,29 @@
-// components/ClosedPositionsTable.tsx
 import React from 'react';
 import { format } from 'date-fns';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
 } from '@/components/ui/table';
 import { ClosedPositionsTableProps } from '@/lib/types';
 
-const ClosedPositionsTable: React.FC<ClosedPositionsTableProps> = ({ 
+const ClosedPositionsTable: React.FC<ClosedPositionsTableProps> = ({
   positions
 }) => {
+  const getColorClass = (value: number | undefined | null) => {
+    if (value === undefined || value === null) return '';
+    return value >= 0 ? 'text-green-600' : 'text-red-600';
+  };
+
   return (
     <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
       <div className="flex flex-col space-y-1.5 p-6">
-        <h3 className="text-2xl font-semibold leading-none tracking-tight">Closed Positions</h3>
+        <h3 className="text-2xl font-semibold leading-none tracking-tight">
+          Closed Positions
+        </h3>
       </div>
       <div className="p-6 pt-0">
         <Table>
@@ -33,6 +39,7 @@ const ClosedPositionsTable: React.FC<ClosedPositionsTableProps> = ({
               <TableHead>P/L</TableHead>
               <TableHead>% Change</TableHead>
               <TableHead>vs SPY</TableHead>
+              <TableHead>Alpha</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -40,10 +47,18 @@ const ClosedPositionsTable: React.FC<ClosedPositionsTableProps> = ({
               // Calculate holding period
               const buyDate = new Date(position.buyDate);
               const sellDate = new Date(position.sellDate);
-              const holdingPeriod = Math.round((sellDate.getTime() - buyDate.getTime()) / (1000 * 60 * 60 * 24));
-              const holdingPeriodText = holdingPeriod >= 365 
+              const holdingPeriod = Math.round(
+                (sellDate.getTime() - buyDate.getTime()) / (1000 * 60 * 60 * 24)
+              );
+              
+              const holdingPeriodText = holdingPeriod >= 365
                 ? `${Math.floor(holdingPeriod / 365)}y ${Math.floor((holdingPeriod % 365) / 30)}m`
                 : `${Math.floor(holdingPeriod / 30)}m ${holdingPeriod % 30}d`;
+
+              // Calculate alpha (outperformance vs SPY)
+              const alpha = position.spyReturn !== undefined 
+                ? position.percentChange - position.spyReturn 
+                : null;
 
               return (
                 <TableRow key={`${position.ticker}-${index}`}>
@@ -54,20 +69,18 @@ const ClosedPositionsTable: React.FC<ClosedPositionsTableProps> = ({
                   <TableCell>{position.shares.toFixed(2)}</TableCell>
                   <TableCell>${position.buyPrice.toFixed(2)}</TableCell>
                   <TableCell>${position.sellPrice.toFixed(2)}</TableCell>
-                  <TableCell className={position.profit >= 0 ? 'text-green-600' : 'text-red-600'}>
+                  <TableCell className={getColorClass(position.profit)}>
                     ${position.profit.toFixed(2)}
                   </TableCell>
-                  <TableCell className={position.percentChange >= 0 ? 'text-green-600' : 'text-red-600'}>
+                  <TableCell className={getColorClass(position.percentChange)}>
                     {position.percentChange.toFixed(2)}%
                   </TableCell>
-                  <TableCell className={position.spyReturn > 0 ? 'text-green-600' : 'text-red-600'}>
-                                      {position.spyReturn?.toFixed(2)}%
-                                    </TableCell>
-                                    <TableCell className={
-                                      ((position.percentChange - (position.spyReturn || 0)) > 0) ? 'text-green-600' : 'text-red-600'
-                                    }>
-                                      {((position.percentChange - (position.spyReturn || 0))).toFixed(2)}%
-                                    </TableCell>
+                  <TableCell className={getColorClass(position.spyReturn)}>
+                    {position.spyReturn?.toFixed(2) ?? 'N/A'}%
+                  </TableCell>
+                  <TableCell className={getColorClass(alpha)}>
+                    {alpha?.toFixed(2) ?? 'N/A'}%
+                  </TableCell>
                 </TableRow>
               );
             })}

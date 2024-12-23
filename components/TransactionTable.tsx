@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import { format as dateFormat } from 'date-fns';
 import Papa from 'papaparse';
@@ -20,6 +22,27 @@ import { Transaction } from '@/lib/types';
 import TransactionForm from './TransactionForm';
 import { validateTransaction, exportToJSON, exportToCSV, downloadFile } from '@/lib/transactions';
 
+interface CSVRow {
+  date: string;
+  ticker: string;
+  type: string;
+  price: number;
+  shares: number;
+}
+
+interface ImportedTransaction {
+  id?: number;
+  date: string;
+  ticker: string;
+  type: string;
+  price: number;
+  shares: number;
+}
+function isValidTransactionType(type: string): type is Transaction['type'] {
+  return ['buy', 'sell', 'dividend'].includes(type.toLowerCase());
+}
+
+
 interface TransactionTableProps {
   transactions: Transaction[];
   onTransactionAdd: (transaction: Transaction) => void;
@@ -27,7 +50,6 @@ interface TransactionTableProps {
   onTransactionDelete: (id: number) => void;
   onTransactionsDeleteAll: () => void;
 }
-
 export const TransactionTable: React.FC<TransactionTableProps> = ({
   transactions,
   onTransactionAdd,
@@ -95,52 +117,66 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
       
       if (file.type === 'application/json') {
         const text = await file.text();
-        const data = JSON.parse(text);
+        const data = JSON.parse(text) as ImportedTransaction[];
         
         if (!Array.isArray(data)) {
           throw new Error('Invalid JSON format: Expected an array of transactions');
         }
-
-        transactions = data.map(item => ({
-          id: item.id || Date.now() + Math.random(),
-          date: new Date(item.date).toISOString(),
-          ticker: item.ticker.toUpperCase(),
-          type: item.type.toLowerCase(),
-          price: Number(item.price),
-          shares: Number(item.shares)
-        }));
+  
+        transactions = data.map(item => {
+          const normalizedType = item.type.toLowerCase();
+          if (!isValidTransactionType(normalizedType)) {
+            throw new Error(`Invalid transaction type: ${item.type}. Must be "buy", "sell", or "dividend"`);
+          }
+  
+          return {
+            id: item.id || Date.now() + Math.random(),
+            date: new Date(item.date).toISOString(),
+            ticker: item.ticker.toUpperCase(),
+            type: normalizedType,
+            price: Number(item.price),
+            shares: Number(item.shares)
+          } as Transaction;
+        });
       } else if (file.type === 'text/csv') {
-        transactions = await new Promise((resolve, reject) => {
-          Papa.parse(file, {
+        transactions = await new Promise<Transaction[]>((resolve, reject) => {
+          Papa.parse<CSVRow>(file, {
             header: true,
             dynamicTyping: true,
             skipEmptyLines: true,
             complete: (results) => {
               try {
-                const parsed = results.data.map((row: any) => ({
-                  id: Date.now() + Math.random(),
-                  date: new Date(row.date).toISOString(),
-                  ticker: row.ticker.toUpperCase(),
-                  type: row.type.toLowerCase(),
-                  price: Number(row.price),
-                  shares: Number(row.shares)
-                }));
+                const parsed = results.data.map((row): Transaction => {
+                  const normalizedType = row.type.toLowerCase();
+                  if (!isValidTransactionType(normalizedType)) {
+                    throw new Error(`Invalid transaction type: ${row.type}. Must be "buy", "sell", or "dividend"`);
+                  }
+  
+                  return {
+                    id: Date.now() + Math.random(),
+                    date: new Date(row.date).toISOString(),
+                    ticker: row.ticker.toUpperCase(),
+                    type: normalizedType,
+                    price: Number(row.price),
+                    shares: Number(row.shares)
+                  };
+                });
                 resolve(parsed);
               } catch (error) {
-                reject(error);
+                reject(new Error('Error parsing CSV row: ' + (error as Error).message));
               }
             },
-            error: (error) => reject(error)
+            error: (error) => reject(new Error('CSV parsing error: ' + error.message))
           });
         });
       } else {
         throw new Error('Unsupported file format. Please use JSON or CSV.');
       }
-
+  
       if (!transactions.every(validateTransaction)) {
         throw new Error('Invalid transaction data in file');
       }
-
+  
       transactions.forEach(onTransactionAdd);
       toast({
         title: "Success",
@@ -151,7 +187,7 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
       toast({
         variant: "destructive",
         title: "Import Error",
-        description: error.message || 'Error importing transactions. Please check the file format.',
+        description: (error as Error).message || 'Error importing transactions. Please check the file format.',
       });
     }
   };

@@ -1,5 +1,3 @@
-// lib/types.ts
-
 // Existing interfaces
 export interface Transaction {
   id: number;
@@ -8,6 +6,24 @@ export interface Transaction {
   type: 'buy' | 'sell' | 'dividend';
   price: number;
   shares: number;
+}
+
+export interface StockQuote {
+  symbol: string;
+  currentPrice: number;
+  change: number;
+  changePercent: number;
+  volume: number;
+  dayHigh: number;
+  dayLow: number;
+  peRatio?: number;
+  forwardPE?: number;
+  industryPE?: number;
+  spyReturn?: number;
+}
+
+export interface ApiResponse {
+  quotes: StockQuote[];
 }
 
 export interface Position {
@@ -41,6 +57,7 @@ export interface ClosedPosition {
   profit: number;
   percentChange: number;
   spyReturn?: number;
+  holdingPeriod: number;
 }
 
 export interface TransactionFormState {
@@ -59,6 +76,7 @@ export interface PortfolioMetrics {
   avgLossPercent: number;
   bestPerformer: Position | null;
   worstPerformer: Position | null;
+  avgHoldingPeriodWinners: number;
 }
 
 export interface PortfolioTotals {
@@ -133,7 +151,7 @@ export interface PortfolioSummaryProps {
   closedPositions: ClosedPosition[];
 }
 
-// New Chart-related interfaces
+// Chart-related interfaces
 export interface ChartDataPoint {
   date: string;
   [key: string]: number | string | null;
@@ -167,14 +185,33 @@ export interface ChartControlsProps {
   onTimeRangeChange: (value: string) => void;
 }
 
+// Tooltip-related interfaces
+interface TooltipPayloadItem {
+  value: number;
+  name: string;
+  dataKey: string;
+  color?: string;
+  fill?: string;
+  payload?: {
+    date: string;
+    [key: string]: number | string | null;
+  };
+}
+
+interface PositionDataValue {
+  shares: number;
+  price?: number;
+  value?: number;
+  percentChange?: number;
+  ticker?: string;
+  type?: string;
+}
+
 export interface CustomTooltipProps {
   active?: boolean;
-  payload?: any[];
+  payload?: TooltipPayloadItem[];
   label?: string;
-  positionData: Record<string, {
-    shares: number;
-    [key: string]: any;
-  }>;
+  positionData: Record<string, PositionDataValue>;
   showPercentage: boolean;
   getTickerColor: (ticker: string) => string;
 }

@@ -2,7 +2,27 @@ import { format } from 'date-fns';
 import Papa from 'papaparse';
 import { Transaction } from '@/lib/types';
 
-export const validateTransaction = (transaction: any): transaction is Transaction => {
+// Define a type for unvalidated transaction data
+type UnvalidatedTransaction = {
+  id?: number;
+  date: unknown;
+  ticker: unknown;
+  type: unknown;
+  price: unknown;
+  shares: unknown;
+};
+
+// Define a type for CSV row data
+type CSVRowData = {
+  date: string;
+  ticker: string;
+  type: string;
+  price: number;
+  shares: number;
+  [key: string]: unknown; // Allow for additional fields in CSV
+};
+
+export const validateTransaction = (transaction: UnvalidatedTransaction): transaction is Transaction => {
   return (
     typeof transaction.date === 'string' &&
     typeof transaction.ticker === 'string' &&
@@ -55,7 +75,7 @@ export const parseJSONFile = async (file: File): Promise<Transaction[]> => {
   if (!Array.isArray(data)) {
     throw new Error('Invalid JSON format: Expected an array of transactions');
   }
-
+  
   const transactions = data.map(item => ({
     id: item.id || Date.now() + Math.random(),
     date: new Date(item.date).toISOString(),
@@ -80,7 +100,7 @@ export const parseCSVFile = async (file: File): Promise<Transaction[]> => {
       skipEmptyLines: true,
       complete: (results) => {
         try {
-          const transactions = results.data.map((row: any) => ({
+          const transactions = (results.data as CSVRowData[]).map((row) => ({
             id: Date.now() + Math.random(),
             date: new Date(row.date).toISOString(),
             ticker: row.ticker.toUpperCase(),

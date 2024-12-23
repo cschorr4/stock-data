@@ -1,15 +1,30 @@
 import { NextResponse } from 'next/server';
 import yahooFinance from 'yahoo-finance2';
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
+interface FormattedQuote {
+  symbol: string;
+  currentPrice: number | null;
+  change: number | null;
+  changePercent: number | null;
+  volume: number | null;
+  dayHigh: number | null;
+  dayLow: number | null;
+  peRatio?: number | null;
+  forwardPE?: number | null;
+  spyReturn: number | null;
+}
 
 interface QuoteCache {
-  data: any;
+  data: FormattedQuote;
   timestamp: number;
 }
 
 const quoteCache: Record<string, QuoteCache> = {};
-const CACHE_DURATION = 60 * 60 * 1000;
+const CACHE_DURATION = 60 * 60 * 1000; // 1 hour in milliseconds
 
-async function getHistoricalSPYReturn(buyDate: string) {
+async function getHistoricalSPYReturn(buyDate: string): Promise<number | null> {
   try {
     const historicalData = await yahooFinance.historical('SPY', {
       period1: new Date(buyDate),
@@ -28,7 +43,7 @@ async function getHistoricalSPYReturn(buyDate: string) {
   }
 }
 
-async function getQuoteWithCache(symbol: string, buyDate: string) {
+async function getQuoteWithCache(symbol: string, buyDate: string): Promise<FormattedQuote | null> {
   const now = Date.now();
   const cachedData = quoteCache[symbol];
 
@@ -50,23 +65,18 @@ async function getQuoteWithCache(symbol: string, buyDate: string) {
     // Get SPY comparison data
     const spyReturn = await getHistoricalSPYReturn(buyDate);
 
-    // Extract PE ratios from both potential locations
-    const trailingPE = quoteSummary.summaryDetail?.trailingPE || 
-                      quoteSummary.defaultKeyStatistics?.trailingPE ||
-                      quote.trailingPE;
-                      
-    const forwardPE = quoteSummary.summaryDetail?.forwardPE || 
-                     quoteSummary.defaultKeyStatistics?.forwardPE ||
-                     quote.forwardPE;
+    // Extract PE ratios correctly from summaryDetail
+    const trailingPE = quoteSummary.summaryDetail?.trailingPE ?? null;
+    const forwardPE = quoteSummary.summaryDetail?.forwardPE ?? null;
 
-    const formattedQuote = {
+    const formattedQuote: FormattedQuote = {
       symbol,
-      currentPrice: quote.regularMarketPrice,
-      change: quote.regularMarketChange,
-      changePercent: quote.regularMarketChangePercent,
-      volume: quote.regularMarketVolume,
-      dayHigh: quote.regularMarketDayHigh,
-      dayLow: quote.regularMarketDayLow,
+      currentPrice: quote.regularMarketPrice ?? null,
+      change: quote.regularMarketChange ?? null,
+      changePercent: quote.regularMarketChangePercent ?? null,
+      volume: quote.regularMarketVolume ?? null,
+      dayHigh: quote.regularMarketDayHigh ?? null,
+      dayLow: quote.regularMarketDayLow ?? null,
       peRatio: trailingPE,
       forwardPE: forwardPE,
       spyReturn
@@ -86,6 +96,12 @@ async function getQuoteWithCache(symbol: string, buyDate: string) {
   }
 }
 
+interface QuoteResponse {
+  quotes: FormattedQuote[];
+  cached: boolean;
+  lastUpdated: string;
+}
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -100,18 +116,20 @@ export async function GET(request: Request) {
     }
 
     const quotes = await Promise.all(
-      symbols.map((symbol, index) => 
+      symbols.map((symbol, index) =>
         getQuoteWithCache(symbol, buyDates?.[index] || new Date().toISOString())
       )
     );
 
-    const validQuotes = quotes.filter(quote => quote !== null);
+    const validQuotes = quotes.filter((quote): quote is FormattedQuote => quote !== null);
 
-    return NextResponse.json({
+    const response: QuoteResponse = {
       quotes: validQuotes,
       cached: true,
       lastUpdated: new Date().toISOString()
-    });
+    };
+
+    return NextResponse.json(response);
   } catch (error) {
     console.error('Error fetching quotes:', error);
     return NextResponse.json(

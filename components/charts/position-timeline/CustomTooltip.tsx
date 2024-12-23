@@ -1,16 +1,34 @@
-// components/charts/position-timeline/CustomTooltip.tsx
+import React from 'react';
 import { format } from 'date-fns';
 
-interface TooltipData {
-  active: boolean;
-  payload: any[];
-  label: string;
-  positionData: Record<string, any>;
+interface PositionEntry {
+  shares: number;
+  value: number;
+}
+
+interface TooltipPayloadEntry {
+  dataKey: string;
+  value: number;
+  color?: string;
+  name?: string;
+}
+
+interface PositionDataMap {
+  [date: string]: {
+    [ticker: string]: PositionEntry;
+  };
+}
+
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: TooltipPayloadEntry[];
+  label?: string;
+  positionData: PositionDataMap;
   showPercentage: boolean;
   getTickerColor: (ticker: string) => string;
 }
 
-export const CustomTooltip: React.FC<TooltipData> = ({
+export const CustomTooltip: React.FC<CustomTooltipProps> = ({
   active,
   payload,
   label,
@@ -18,7 +36,7 @@ export const CustomTooltip: React.FC<TooltipData> = ({
   showPercentage,
   getTickerColor
 }) => {
-  if (!active || !payload || !payload.length) return null;
+  if (!active || !payload || !payload.length || !label) return null;
 
   return (
     <div className="bg-white p-4 border rounded shadow">
@@ -47,3 +65,5 @@ export const CustomTooltip: React.FC<TooltipData> = ({
     </div>
   );
 };
+
+export default CustomTooltip;

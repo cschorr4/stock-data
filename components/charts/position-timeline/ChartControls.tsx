@@ -1,6 +1,5 @@
-// components/charts/position-timeline/ChartControls.tsx
 import React from 'react';
-import { subDays, subMonths, subYears, format } from 'date-fns';
+import { subYears, format } from 'date-fns';
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { DollarSign, PercentIcon } from 'lucide-react';
@@ -141,3 +140,5 @@ export const ChartControls: React.FC<ChartControlsProps> = ({
     </div>
   );
 };
+
+export default ChartControls;

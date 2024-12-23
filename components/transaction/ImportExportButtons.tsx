@@ -10,13 +10,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useToast } from '@/components/ui/use-toast';
 import { Transaction } from '@/lib/types';
-import { 
-  exportToJSON, 
-  exportToCSV, 
-  downloadFile, 
-  parseJSONFile, 
-  parseCSVFile 
-} from '@/utils/transactions';
+import {
+  exportToJSON,
+  exportToCSV,
+  downloadFile,
+  parseJSONFile,
+  parseCSVFile
+} from '@/lib/transactions';
 
 interface ImportButtonProps {
   onImport: (transactions: Transaction[]) => void;
@@ -25,11 +25,11 @@ interface ImportButtonProps {
 export const ImportButton: React.FC<ImportButtonProps> = ({ onImport }) => {
   const { toast } = useToast();
   const inputRef = React.useRef<HTMLInputElement>(null);
-  
+
   const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files?.length) return;
-    
     const file = e.target.files[0];
+    
     try {
       let transactions: Transaction[];
       
@@ -40,13 +40,14 @@ export const ImportButton: React.FC<ImportButtonProps> = ({ onImport }) => {
       } else {
         throw new Error('Unsupported file format. Please use JSON or CSV.');
       }
-
+      
       onImport(transactions);
       toast({
         title: "Success",
         description: `Imported ${transactions.length} transactions successfully.`,
       });
-    } catch (error) {
+    } catch (err) {
+      const error = err as Error;
       console.error('Error importing transactions:', error);
       toast({
         variant: "destructive",
@@ -54,7 +55,7 @@ export const ImportButton: React.FC<ImportButtonProps> = ({ onImport }) => {
         description: error.message || 'Error importing transactions. Please check the file format.',
       });
     }
-    
+
     if (inputRef.current) {
       inputRef.current.value = '';
     }
@@ -85,14 +86,14 @@ interface ExportButtonProps {
 }
 
 export const ExportButton: React.FC<ExportButtonProps> = ({ transactions }) => {
-  const handleExport = (format: 'json' | 'csv') => {
-    const timestamp = format(new Date(), 'yyyy-MM-dd');
-    const filename = `stock_transactions_${timestamp}.${format}`;
-    
-    const blob = format === 'json' 
+  const formatDate = (date: Date): string => format(date, 'yyyy-MM-dd');
+
+  const handleExport = (exportFormat: 'json' | 'csv') => {
+    const timestamp = formatDate(new Date());
+    const filename = `stock_transactions_${timestamp}.${exportFormat}`;
+    const blob = exportFormat === 'json'
       ? exportToJSON(transactions)
       : exportToCSV(transactions);
-    
     downloadFile(blob, filename);
   };
 

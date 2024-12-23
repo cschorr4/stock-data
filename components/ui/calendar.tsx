@@ -5,23 +5,21 @@ import { ChevronLeft, ChevronRight } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 
-export interface CalendarProps extends React.HTMLAttributes<HTMLDivElement> {
-  mode?: "single"
+interface CalendarBaseProps {
   selected?: Date
   onSelect?: (date: Date | undefined) => void
-  initialFocus?: boolean
   disabled?: boolean
   fromDate?: Date
   toDate?: Date
   showOutsideDays?: boolean
 }
 
+export type CalendarProps = CalendarBaseProps & Omit<React.HTMLAttributes<HTMLDivElement>, keyof CalendarBaseProps>
+
 function Calendar({
   className,
-  mode = "single",
   selected,
   onSelect,
-  initialFocus,
   disabled,
   fromDate,
   toDate,

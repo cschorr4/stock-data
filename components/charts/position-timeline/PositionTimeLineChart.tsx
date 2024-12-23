@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { format, differenceInDays } from 'date-fns';
+import { format } from 'date-fns';
 import {
   LineChart,
   Line,
@@ -12,24 +12,53 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ChartControls } from './ChartControls';
+import { Transaction } from '@/lib/types'
 
-const PositionTimelineChart = ({
-  transactions,
+interface Position {
+  ticker: string;
+  buyDate: string;
+  sellDate?: string;
+}
+
+interface StockDataPoint {
+  date: string;
+  close?: number;
+  price?: number;
+}
+
+interface ChartDataPoint {
+  date: string;
+  [key: string]: number | string | undefined;
+}
+
+interface ProcessedDataPoint extends ChartDataPoint {
+  SPY?: number;
+}
+
+interface TickerData {
+  ticker: string;
+  data: StockDataPoint[];
+}
+interface PositionTimelineChartProps {
+  transactions: Transaction[];
+  openPositions: Position[];
+  closedPositions: Position[];
+}
+
+const PositionTimelineChart: React.FC<PositionTimelineChartProps> = ({
   openPositions,
   closedPositions
 }) => {
   const [timeRange, setTimeRange] = useState('6M');
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
   const [showPercentage, setShowPercentage] = useState(false);
-  const [selectedTickers, setSelectedTickers] = useState(['SPY']);
-  const [allTickers, setAllTickers] = useState(['SPY']);
-  const [chartData, setChartData] = useState([]);
-  const [baselineValues, setBaselineValues] = useState({});
+  const [selectedTickers, setSelectedTickers] = useState<string[]>(['SPY']);
+  const [allTickers, setAllTickers] = useState<string[]>(['SPY']);
+  const [chartData, setChartData] = useState<ProcessedDataPoint[]>([]);
 
-  // Get reference prices for percentage calculations
-  const getBaselineValues = (data, tickers) => {
-    const baselines = {};
+  const getBaselineValues = (data: ProcessedDataPoint[], tickers: string[]): Record<string, number> => {
+    const baselines: Record<string, number> = {};
     tickers.forEach(ticker => {
       const firstPoint = data.find(point => 
         point[`${ticker}_base`] !== undefined || 
@@ -38,25 +67,28 @@ const PositionTimelineChart = ({
         point[ticker] !== undefined
       );
       if (firstPoint) {
-        baselines[ticker] = firstPoint[`${ticker}_base`] || 
-                           firstPoint[`${ticker}_closed`] || 
-                           firstPoint[`${ticker}_open`] || 
-                           firstPoint[ticker] || 0;
+        const value = firstPoint[`${ticker}_base`] || 
+                     firstPoint[`${ticker}_closed`] || 
+                     firstPoint[`${ticker}_open`] || 
+                     firstPoint[ticker];
+        if (typeof value === 'number') {
+          baselines[ticker] = value;
+        }
       }
     });
     return baselines;
   };
 
   useEffect(() => {
-    const uniqueTickers = [...new Set([
+    const uniqueTickers = Array.from(new Set([
       ...openPositions.map(p => p.ticker),
       ...closedPositions.map(p => p.ticker),
       'SPY'
-    ])];
+    ]));
     setAllTickers(uniqueTickers);
   }, [openPositions, closedPositions]);
 
-  const handleTickerSelect = (ticker) => {
+  const handleTickerSelect = (ticker: string) => {
     if (ticker === 'SPY') return;
     setSelectedTickers(current =>
       current.includes(ticker)
@@ -86,29 +118,30 @@ const PositionTimelineChart = ({
             const response = await fetch(`/api/stock/chart?symbol=${ticker}&range=${timeRange}`);
             if (!response.ok) throw new Error(`Failed to fetch data for ${ticker}`);
             const data = await response.json();
-            return { ticker, data: data.error ? [] : data };
+            return { ticker, data: data.error ? [] : data } as TickerData;
           } catch (err) {
             console.error(`Error fetching ${ticker}:`, err);
-            return { ticker, data: [] };
+            return { ticker, data: [] } as TickerData;
           }
         });
 
         const results = await Promise.all(tickerDataPromises);
         
-        const allDates = new Set();
+        const allDates = new Set<string>();
         results.forEach(({ data }) => {
-          data.forEach(point => allDates.add(point.date));
+          data.forEach((point: StockDataPoint) => allDates.add(point.date));
         });
 
-        let initialProcessedData = Array.from(allDates).sort().map(date => {
-          const point = { date };
+        const initialProcessedData = Array.from(allDates).sort().map(date => {
+          const point: ChartDataPoint = { date };
           const dateObj = new Date(date);
 
           results.forEach(({ ticker, data }) => {
-            const dataPoint = data.find(p => p.date === date);
+            const dataPoint = data.find((p: StockDataPoint) => p.date === date);
             if (!dataPoint) return;
 
-            const value = dataPoint.close || dataPoint.price;
+            const value = dataPoint.close ?? dataPoint.price;
+            if (value === undefined) return;
 
             if (ticker === 'SPY') {
               point[ticker] = value;
@@ -118,7 +151,7 @@ const PositionTimelineChart = ({
               const isInClosedPeriod = closedPositions.some(position => {
                 if (position.ticker !== ticker) return false;
                 const buyDate = new Date(position.buyDate);
-                const sellDate = new Date(position.sellDate);
+                const sellDate = position.sellDate ? new Date(position.sellDate) : new Date();
                 return dateObj >= buyDate && dateObj <= sellDate;
               });
 
@@ -140,21 +173,19 @@ const PositionTimelineChart = ({
           return point;
         });
 
-        // Get baseline values for percentage calculations
         const baselines = getBaselineValues(initialProcessedData, tickers);
-        setBaselineValues(baselines);
-
-        // Convert to percentages if needed
         const processedData = initialProcessedData.map(point => {
-          const newPoint = { date: point.date };
+          const newPoint: ChartDataPoint = { date: point.date };
           Object.entries(point).forEach(([key, value]) => {
             if (key === 'date') return;
             
-            const ticker = key.split('_')[0];
-            if (showPercentage && baselines[ticker]) {
-              newPoint[key] = ((value - baselines[ticker]) / baselines[ticker]) * 100;
-            } else {
-              newPoint[key] = value;
+            if (typeof value === 'number') {
+              const ticker = key.split('_')[0];
+              if (showPercentage && baselines[ticker]) {
+                newPoint[key] = ((value - baselines[ticker]) / baselines[ticker]) * 100;
+              } else {
+                newPoint[key] = value;
+              }
             }
           });
           return newPoint;
@@ -172,8 +203,8 @@ const PositionTimelineChart = ({
     fetchStockData();
   }, [timeRange, selectedTickers, showPercentage, openPositions, closedPositions]);
 
-  const getTickerColor = (ticker) => {
-    const colors = {
+  const getTickerColor = (ticker: string): string => {
+    const colors: Record<string, string> = {
       SPY: '#888888',
       AAPL: '#2563eb',
       LLY: '#dc2626'
@@ -181,6 +212,7 @@ const PositionTimelineChart = ({
     return colors[ticker] || '#16a34a';
   };
 
+  // Rest of the component remains the same...
   if (isLoading) {
     return (
       <Card>
@@ -264,20 +296,20 @@ const PositionTimelineChart = ({
                 />
                 <Tooltip
                   labelFormatter={(label) => format(new Date(label), 'PPP')}
-                  formatter={(value, name) => {
-                    const displayName = name.replace(/_closed|_open|_base/, '');
-                    const type = name.includes('_open') ? ' (Open)' : 
-                               name.includes('_closed') ? ' (Closed)' : '';
+                  formatter={(value, name: string | number) => {
+                    const nameStr = String(name);
+                    const displayName = nameStr.replace(/_closed|_open|_base/, '');
+                    const type = nameStr.includes('_open') ? ' (Open)' : 
+                               nameStr.includes('_closed') ? ' (Closed)' : '';
                     return [
                       showPercentage 
                         ? `${Number(value).toFixed(1)}%` 
-                        : `$${Number(value).toFixed(2)}`,
+                        : `${Number(value).toFixed(2)}`,
                       displayName + type
                     ];
                   }}
                 />
                 
-                {/* SPY reference line */}
                 <Line
                   type="monotone"
                   dataKey="SPY"
@@ -287,10 +319,8 @@ const PositionTimelineChart = ({
                   connectNulls={true}
                 />
                 
-                {/* Lines for selected tickers */}
                 {selectedTickers.filter(ticker => ticker !== 'SPY').map((ticker) => (
                   <React.Fragment key={ticker}>
-                    {/* Dotted line showing price between positions */}
                     <Line
                       type="monotone"
                       dataKey={`${ticker}_base`}
@@ -300,7 +330,6 @@ const PositionTimelineChart = ({
                       dot={false}
                       connectNulls={true}
                     />
-                    {/* Closed position line */}
                     <Line
                       type="monotone"
                       dataKey={`${ticker}_closed`}
@@ -309,7 +338,6 @@ const PositionTimelineChart = ({
                       dot={false}
                       connectNulls={false}
                     />
-                    {/* Open position line */}
                     <Line
                       type="monotone"
                       dataKey={`${ticker}_open`}

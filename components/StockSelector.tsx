@@ -11,7 +11,13 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 
-const StockSelector = ({ tickers, selectedTickers, onSelectTicker }) => {
+interface StockSelectorProps {
+  tickers: string[];
+  selectedTickers: string[];
+  onSelectTicker: (ticker: string) => void;
+}
+
+const StockSelector: React.FC<StockSelectorProps> = ({ tickers, selectedTickers, onSelectTicker }) => {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
 
@@ -19,13 +25,13 @@ const StockSelector = ({ tickers, selectedTickers, onSelectTicker }) => {
     ticker.toLowerCase().includes(search.toLowerCase())
   );
 
-  const toggleTicker = (ticker) => {
+  const toggleTicker = (ticker: string) => {
     onSelectTicker(ticker);
   };
 
   const clearAll = () => {
     selectedTickers.forEach(ticker => {
-      if (ticker !== 'SPY') { // Don't remove SPY when clearing
+      if (ticker !== 'SPY') {
         onSelectTicker(ticker);
       }
     });
@@ -48,7 +54,7 @@ const StockSelector = ({ tickers, selectedTickers, onSelectTicker }) => {
               key={ticker}
               variant="secondary"
               className="cursor-pointer"
-              onClick={() => ticker !== 'SPY' && toggleTicker(ticker)} // Prevent removing SPY
+              onClick={() => ticker !== 'SPY' && toggleTicker(ticker)}
             >
               {ticker}
               {ticker !== 'SPY' && <X className="ml-1 h-3 w-3" />}

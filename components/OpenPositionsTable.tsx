@@ -15,14 +15,21 @@ import {
   HoverCardTrigger 
 } from '@/components/ui/hover-card';
 import { cn } from '@/lib/utils';
-import { OpenPositionsTableProps } from '@/lib/types';
+import { OpenPositionsTableProps, Position } from '@/lib/types';
 
 type SortField = 'ticker' | 'buyDate' | 'shares' | 'avgCost' | 'currentValue' | 'peRatio' | 'dollarChange' | 'percentChange' | 'spyReturn';
 type SortDirection = 'asc' | 'desc';
+type SortValue = string | number | Date | undefined;
 
 const OpenPositionsTable: React.FC<OpenPositionsTableProps> = ({ positions }) => {
   const [sortField, setSortField] = useState<SortField>('ticker');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+
+  const getValueColor = (value: number | undefined, neutral = false) => {
+    if (value === undefined) return '';
+    if (neutral && value === 0) return 'text-yellow-600';
+    return value > 0 ? 'text-green-600' : 'text-red-600';
+  };
 
   const getPeRatioColor = (peRatio: number | undefined, industryPE: number | undefined) => {
     if (!peRatio || !industryPE) return '';
@@ -43,16 +50,29 @@ const OpenPositionsTable: React.FC<OpenPositionsTableProps> = ({ positions }) =>
     }
   };
 
+  const getSortValue = (position: Position, field: SortField): SortValue => {
+    switch (field) {
+      case 'buyDate':
+        return new Date(position.buyDate).getTime();
+      case 'ticker':
+      case 'shares':
+      case 'avgCost':
+      case 'currentValue':
+      case 'peRatio':
+      case 'dollarChange':
+      case 'percentChange':
+      case 'spyReturn':
+        return position[field];
+      default:
+        return undefined;
+    }
+  };
+
   const getSortedPositions = () => {
     return [...positions].sort((a, b) => {
-      let aValue: any = a[sortField];
-      let bValue: any = b[sortField];
+      const aValue = getSortValue(a, sortField);
+      const bValue = getSortValue(b, sortField);
       
-      if (sortField === 'buyDate') {
-        aValue = new Date(a.buyDate).getTime();
-        bValue = new Date(b.buyDate).getTime();
-      }
-
       if (aValue === undefined || aValue === null) return 1;
       if (bValue === undefined || bValue === null) return -1;
 
@@ -100,6 +120,9 @@ const OpenPositionsTable: React.FC<OpenPositionsTableProps> = ({ positions }) =>
           <TableBody>
             {getSortedPositions().map(position => {
               const isLongTerm = new Date().getTime() - new Date(position.buyDate).getTime() > 365 * 24 * 60 * 60 * 1000;
+              const alpha = position.spyReturn !== undefined 
+                ? position.percentChange - position.spyReturn 
+                : undefined;
               
               return (
                 <TableRow key={position.ticker}>
@@ -110,9 +133,7 @@ const OpenPositionsTable: React.FC<OpenPositionsTableProps> = ({ positions }) =>
                           {position.ticker}
                           <span className={cn(
                             "ml-2 text-xs",
-                            position.dayChangePercent > 0 ? 'text-green-600' : 
-                            position.dayChangePercent < 0 ? 'text-red-600' : 
-                            'text-yellow-600'
+                            getValueColor(position.dayChangePercent, true)
                           )}>
                             {position.dayChangePercent > 0 ? '+' : ''}{position.dayChangePercent?.toFixed(2)}%
                           </span>
@@ -139,29 +160,19 @@ const OpenPositionsTable: React.FC<OpenPositionsTableProps> = ({ positions }) =>
                   <TableCell>${position.avgCost.toFixed(2)}</TableCell>
                   <TableCell>${position.currentValue.toFixed(2)}</TableCell>
                   <TableCell className={getPeRatioColor(position.peRatio, position.industryPE)}>
-                    {position.peRatio?.toFixed(2) || 'N/A'}
+                    {position.peRatio?.toFixed(2) ?? 'N/A'}
                   </TableCell>
-                  <TableCell className={cn(
-                    position.dollarChange > 0 ? 'text-green-600' : 
-                    position.dollarChange < 0 ? 'text-red-600' : 
-                    'text-yellow-600'
-                  )}>
+                  <TableCell className={getValueColor(position.dollarChange, true)}>
                     ${position.dollarChange.toFixed(2)}
                   </TableCell>
-                  <TableCell className={cn(
-                    position.percentChange > 0 ? 'text-green-600' : 
-                    position.percentChange < 0 ? 'text-red-600' : 
-                    'text-yellow-600'
-                  )}>
+                  <TableCell className={getValueColor(position.percentChange, true)}>
                     {position.percentChange > 0 ? '+' : ''}{position.percentChange.toFixed(2)}%
                   </TableCell>
-                  <TableCell className={position.spyReturn > 0 ? 'text-green-600' : 'text-red-600'}>
-                    {position.spyReturn?.toFixed(2)}%
+                  <TableCell className={getValueColor(position.spyReturn)}>
+                    {position.spyReturn?.toFixed(2) ?? 'N/A'}%
                   </TableCell>
-                  <TableCell className={
-                    ((position.percentChange - (position.spyReturn || 0)) > 0) ? 'text-green-600' : 'text-red-600'
-                  }>
-                    {((position.percentChange - (position.spyReturn || 0))).toFixed(2)}%
+                  <TableCell className={getValueColor(alpha)}>
+                    {alpha?.toFixed(2) ?? 'N/A'}%
                   </TableCell>
                 </TableRow>
               );

@@ -1,6 +1,6 @@
 import React from 'react';
-import { cn } from "@/lib/utils"; // Utility for class name merging
-import { AlertCircle, Info, CheckCircle, XCircle } from 'lucide-react';
+import { cn } from "@/lib/utils";
+import { AlertCircle, Info, CheckCircle } from 'lucide-react'; // Removed XCircle
 
 export interface AlertProps extends React.HTMLAttributes<HTMLDivElement> {
   variant?: "default" | "destructive" | "success" | "info";
@@ -14,9 +14,9 @@ export const Alert = React.forwardRef<HTMLDivElement, AlertProps>(
       success: CheckCircle,
       info: Info,
     };
-
+    
     const Icon = iconMap[variant] || Info;
-
+    
     return (
       <div
         ref={ref}
@@ -35,9 +35,11 @@ export const Alert = React.forwardRef<HTMLDivElement, AlertProps>(
     );
   }
 );
+
 Alert.displayName = "Alert";
 
-export interface AlertDescriptionProps extends React.HTMLAttributes<HTMLParagraphElement> {}
+// Instead of an empty interface, we'll use a type alias that extends the HTML paragraph element props
+export type AlertDescriptionProps = React.HTMLAttributes<HTMLParagraphElement>;
 
 export const AlertDescription = React.forwardRef<HTMLParagraphElement, AlertDescriptionProps>(
   ({ className, children, ...props }, ref) => (
@@ -50,9 +52,9 @@ export const AlertDescription = React.forwardRef<HTMLParagraphElement, AlertDesc
     </p>
   )
 );
+
 AlertDescription.displayName = "AlertDescription";
 
-// Styles for different alert variants
 const variantStyles = {
   default: "bg-background border-border text-foreground",
   destructive: "bg-red-100 border-red-300 text-red-800",

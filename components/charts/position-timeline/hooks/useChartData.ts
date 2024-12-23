@@ -1,4 +1,3 @@
-// components/charts/position-timeline/hooks/useChartData.ts
 import { useState, useEffect } from 'react';
 import { ChartDataPoint, Transaction, TickerData } from '@/lib/types';
 import { processChartData, processDataForDisplay } from '../utils/dataProcessing';
@@ -28,7 +27,7 @@ export const useChartData = (
 
     const processData = async () => {
       try {
-        const { timelineData, sharesData, rawData: newRawData } = 
+        const { sharesData, rawData: newRawData } = 
           await processChartData(tickerData, tickers, transactions);
         
         setRawData(newRawData);

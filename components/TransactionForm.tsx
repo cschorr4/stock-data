@@ -1,4 +1,3 @@
-// components/TransactionForm.tsx
 import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { Calendar as CalendarIcon } from 'lucide-react';
@@ -81,10 +80,8 @@ const TransactionForm = ({ initialData, onSubmit, onCancel }: TransactionFormPro
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0">
             <Calendar
-              mode="single"
               selected={selectedDate}
-              onSelect={(date) => setSelectedDate(date || new Date())}
-              initialFocus
+              onSelect={(date) => date && setSelectedDate(date)}
             />
           </PopoverContent>
         </Popover>
@@ -105,7 +102,8 @@ const TransactionForm = ({ initialData, onSubmit, onCancel }: TransactionFormPro
       <div className="space-y-2">
         <Label>Type</Label>
         <Select 
-          onValueChange={(value) => setFormState(prev => ({ ...prev, type: value }))} 
+          onValueChange={(value: 'buy' | 'sell' | 'dividend') => 
+            setFormState(prev => ({ ...prev, type: value }))} 
           value={formState.type}
         >
           <SelectTrigger>

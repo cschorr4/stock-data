@@ -2,7 +2,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 import { cn } from '@/lib/utils';
-import { PortfolioSummaryProps } from '@/lib/types';
+import { PortfolioSummaryProps, Position } from '@/lib/types';
 import { TrendingUp, PieChart, Clock, Activity, BarChart3, Shield } from 'lucide-react';
 
 const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
@@ -11,6 +11,12 @@ const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
   openPositions,
   closedPositions
 }) => {
+  const calculateHoldingPeriod = (position: Position): number => {
+    const buyDate = new Date(position.buyDate);
+    const today = new Date();
+    return Math.floor((today.getTime() - buyDate.getTime()) / (1000 * 60 * 60 * 24));
+  };
+
   const calculateDiversification = () => {
     const totalValue = openPositions.reduce((sum, pos) => sum + (pos.currentValue || 0), 0);
     return openPositions
@@ -18,14 +24,14 @@ const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
         ticker: pos.ticker,
         percentage: totalValue > 0 ? ((pos.currentValue || 0) / totalValue) * 100 : 0,
         value: pos.currentValue || 0,
-        holdingPeriod: pos.holdingPeriod || 0
+        holdingPeriod: calculateHoldingPeriod(pos)
       }))
       .sort((a, b) => b.percentage - a.percentage);
   };
 
   const diversification = calculateDiversification();
   const avgHoldingPeriod = Math.floor(
-    openPositions.reduce((sum, pos) => sum + (pos.holdingPeriod || 0), 0) / 
+    openPositions.reduce((sum, pos) => sum + calculateHoldingPeriod(pos), 0) / 
     (openPositions.length || 1)
   );
 
@@ -59,6 +65,14 @@ const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
     return ((closedPositions?.length || 0) / 
            ((openPositions?.length || 0) + (closedPositions?.length || 0))) * 100;
   };
+
+  // Position classification helpers
+  const isLongTerm = (position: Position) => calculateHoldingPeriod(position) >= 365;
+  const isMidTerm = (position: Position) => {
+    const period = calculateHoldingPeriod(position);
+    return period >= 180 && period < 365;
+  };
+  const isShortTerm = (position: Position) => calculateHoldingPeriod(position) < 180;
 
   return (
     <Card className="bg-white dark:bg-gray-800">
@@ -192,17 +206,15 @@ const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
                 {[
                   { 
                     label: "Long-term Positions",
-                    value: openPositions?.filter(p => (p.holdingPeriod || 0) >= 365).length || 0
+                    value: openPositions.filter(isLongTerm).length
                   },
                   {
                     label: "Mid-term Positions",
-                    value: openPositions?.filter(p => 
-                      (p.holdingPeriod || 0) >= 180 && (p.holdingPeriod || 0) < 365
-                    ).length || 0
+                    value: openPositions.filter(isMidTerm).length
                   },
                   {
                     label: "Recent Positions",
-                    value: openPositions?.filter(p => (p.holdingPeriod || 0) < 180).length || 0
+                    value: openPositions.filter(isShortTerm).length
                   }
                 ].map((item, index) => (
                   <div key={index} className="flex justify-between items-center">
@@ -238,8 +250,9 @@ const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
                     isPositive: safeNumber(totals?.unrealizedProfits) >= 0
                   },
                   {
-                    label: "Avg Hold Winners",
-                    value: `${safeNumber(metrics?.avgHoldingPeriodWinners)} days`
+                    label: "Total Value",
+                    value: formatCurrency(safeNumber(metrics?.totalValue)),
+                    isPositive: true
                   }
                 ].map((item, index) => (
                   <div key={index} className="flex justify-between items-center">
@@ -284,11 +297,8 @@ const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
                     )
                   },
                   {
-                    label: "Cash Position",
-                    value: formatPercentage(
-                      (safeNumber(metrics?.cashBalance) / 
-                       safeNumber(metrics?.totalValue)) * 100
-                    )
+                    label: "Total Positions",
+                    value: `${openPositions.length}`
                   }
                 ].map((item, index) => (
                   <div key={index} className="flex justify-between items-center">

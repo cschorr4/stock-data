@@ -1,5 +1,13 @@
 import { NextResponse } from 'next/server';
 import yahooFinance from 'yahoo-finance2';
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
+interface QueryOptions {
+  interval: '1d' | '1wk' | '1mo';
+  period1: Date;  // Made required
+  period2?: Date | string | number;
+}
 
 const withErrorHandling = async <T>(
   promise: Promise<T>,
@@ -9,7 +17,7 @@ const withErrorHandling = async <T>(
     return await promise;
   } catch (error) {
     console.error(`${errorMessage}:`, error);
-    throw new Error(`${errorMessage}: ${error.message}`);
+    throw new Error(`${errorMessage}: ${(error as Error).message}`);
   }
 };
 
@@ -48,8 +56,12 @@ export async function GET(request: Request) {
       );
     }
 
-    const queryOptions: any = {
-      interval: '1d',
+    // Always set a default period1 to ensure it's not undefined
+    const defaultStartDate = getStartDate('1M');
+    
+    const queryOptions: QueryOptions = {
+      interval: '1d' as const,
+      period1: defaultStartDate
     };
 
     if (startDate && endDate) {
@@ -79,7 +91,7 @@ export async function GET(request: Request) {
     return NextResponse.json(
       {
         error: 'Failed to fetch chart data',
-        details: error.message
+        details: (error as Error).message
       },
       { status: 500 }
     );
