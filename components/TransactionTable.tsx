@@ -344,7 +344,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                 </Tooltip>
               </TooltipProvider>
 
-              
+              <ImportButton />
 
               <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
                 <DialogTrigger asChild>
