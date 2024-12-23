@@ -17,9 +17,7 @@ const PortfolioSummary = ({
   
   useEffect(() => {
     register();
-    
     const swiperEl = swiperRef.current;
-    
     const params = {
       slidesPerView: 2.5,
       spaceBetween: 16,
@@ -35,7 +33,6 @@ const PortfolioSummary = ({
       effect: 'slide',
       grabCursor: true,
     };
-
     Object.assign(swiperEl, params);
     swiperEl.initialize();
   }, []);
@@ -91,13 +88,14 @@ const PortfolioSummary = ({
   };
 
   const safeNumber = (value) => value ?? 0;
+
   return (
     <div className="w-full max-w-6xl mx-auto px-2 py-2">
       <swiper-container ref={swiperRef} init="false" class="pb-0">
         {/* Portfolio Value Card */}
         <swiper-slide>
-          <Card className="h-48 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-900 shadow-lg">
-            <CardHeader className="space-y-1">
+          <Card className="h-40 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-900">
+            <CardHeader className="space-y-0.5 pb-2">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-xl font-bold">Portfolio Value</CardTitle>
                 <DollarSign className="w-5 h-5 text-blue-600 dark:text-blue-400" />
@@ -106,7 +104,7 @@ const PortfolioSummary = ({
                 {formatCurrency(safeNumber(metrics?.totalValue))}
               </p>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pt-0">
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600 dark:text-gray-400">Daily Change</span>
@@ -130,8 +128,8 @@ const PortfolioSummary = ({
 
         {/* Active Positions Card */}
         <swiper-slide>
-          <Card className="h-48 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-gray-800 dark:to-gray-900 shadow-lg">
-            <CardHeader className="space-y-1">
+          <Card className="h-40 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-gray-800 dark:to-gray-900">
+            <CardHeader className="space-y-0.5 pb-2">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-xl font-bold">Active Positions</CardTitle>
                 <Activity className="w-5 h-5 text-green-600 dark:text-green-400" />
@@ -140,7 +138,7 @@ const PortfolioSummary = ({
                 {openPositions.length}
               </p>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pt-0">
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600 dark:text-gray-400">Gainers</span>
@@ -155,59 +153,82 @@ const PortfolioSummary = ({
           </Card>
         </swiper-slide>
 
-        {/* Top Holdings Card */}
+        {/* Average Hold Time Card */}
         <swiper-slide>
-          <Card className="h-48 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-gray-800 dark:to-gray-900 shadow-lg">
-            <CardHeader className="space-y-1">
+          <Card className="h-40 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-gray-800 dark:to-gray-900">
+            <CardHeader className="space-y-0.5 pb-2">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-xl font-bold">Top Holdings</CardTitle>
-                <PieChart className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                <CardTitle className="text-xl font-bold">Hold Time</CardTitle>
+                <Clock className="w-5 h-5 text-purple-600 dark:text-purple-400" />
               </div>
+              <p className="text-3xl font-bold text-purple-600 dark:text-purple-400">
+                {avgHoldingPeriod} days
+              </p>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pt-0">
               <div className="space-y-2">
-                {diversification.slice(0, 3).map((holding) => (
-                  <div key={holding.ticker} className="flex justify-between items-center text-sm">
-                    <span className="font-medium">{holding.ticker}</span>
-                    <span className="text-purple-600 dark:text-purple-400">
-                      {formatPercentage(holding.percentage)}
-                    </span>
-                  </div>
-                ))}
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600 dark:text-gray-400">Total Closed</span>
+                  <span className="font-medium text-purple-600">{closedPositions.length}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600 dark:text-gray-400">Win Rate</span>
+                  <span className="font-medium text-purple-600">
+                    {formatPercentage(metrics?.winRate || 0)}
+                  </span>
+                </div>
               </div>
             </CardContent>
           </Card>
         </swiper-slide>
 
-        {/* Performance Card */}
+        {/* Portfolio Analytics Card */}
         <swiper-slide>
-          <Card className="h-48 bg-gradient-to-br from-orange-50 to-amber-50 dark:from-gray-800 dark:to-gray-900 shadow-lg">
-            <CardHeader className="space-y-1">
+          <Card className="h-40 bg-gradient-to-br from-orange-50 to-amber-50 dark:from-gray-800 dark:to-gray-900">
+            <CardHeader className="space-y-0.5 pb-2">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-xl font-bold">Performance</CardTitle>
-                <TrendingUp className="w-5 h-5 text-orange-600 dark:text-orange-400" />
+                <CardTitle className="text-xl font-bold">Analytics</CardTitle>
+                <BarChart3 className="w-5 h-5 text-orange-600 dark:text-orange-400" />
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pt-0">
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600 dark:text-gray-400">Realized Gains</span>
-                  <span className={cn(
-                    "font-medium",
-                    safeNumber(totals?.realizedProfits) >= 0 ? 'text-green-600' : 'text-red-600'
-                  )}>
-                    {formatCurrency(safeNumber(totals?.realizedProfits))}
+                  <span className="text-gray-600 dark:text-gray-400">Best Return</span>
+                  <span className={cn("font-medium text-green-600")}>
+                    {formatPercentage(metrics?.avgWinPercent || 0)}
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600 dark:text-gray-400">Unrealized Gains</span>
-                  <span className={cn(
-                    "font-medium",
-                    safeNumber(totals?.unrealizedProfits) >= 0 ? 'text-green-600' : 'text-red-600'
-                  )}>
-                    {formatCurrency(safeNumber(totals?.unrealizedProfits))}
+                  <span className="text-gray-600 dark:text-gray-400">Worst Return</span>
+                  <span className={cn("font-medium text-red-600")}>
+                    {formatPercentage(metrics?.avgLossPercent || 0)}
                   </span>
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+        </swiper-slide>
+
+        {/* Risk Management Card */}
+        <swiper-slide>
+          <Card className="h-40 bg-gradient-to-br from-cyan-50 to-teal-50 dark:from-gray-800 dark:to-gray-900">
+            <CardHeader className="space-y-0.5 pb-2">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-xl font-bold">Risk Management</CardTitle>
+                <Shield className="w-5 h-5 text-teal-600 dark:text-teal-400" />
+              </div>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="space-y-2">
+                {diversification.slice(0, 2).map((holding) => (
+                  <div key={holding.ticker} className="flex justify-between text-sm">
+                    <span className="text-gray-600 dark:text-gray-400">{holding.ticker} Exposure</span>
+                    <span className="font-medium text-teal-600">
+                      {formatPercentage(holding.percentage)}
+                    </span>
+                  </div>
+                ))}
               </div>
             </CardContent>
           </Card>
