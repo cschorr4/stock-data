@@ -19,6 +19,35 @@ import { useToast } from '@/components/ui/use-toast';
 import { Transaction } from '@/lib/types';
 import TransactionForm from './TransactionForm';
 
+interface CSVRow {
+  date: string;
+  ticker: string;
+  type: string;
+  price: number;
+  shares: number;
+}
+
+interface ImportedTransaction {
+  id?: number;
+  date: string;
+  ticker: string;
+  type: string;
+  price: number;
+  shares: number;
+}
+
+interface TransactionTableProps {
+  transactions: Transaction[];
+  onTransactionAdd: (transaction: Transaction) => void;
+  onTransactionEdit: (transaction: Transaction) => void;
+  onTransactionDelete: (id: number) => void;
+  onTransactionsDeleteAll: () => void;
+}
+
+function isValidTransactionType(type: string): type is Transaction['type'] {
+  return ['buy', 'sell', 'dividend'].includes(type.toLowerCase());
+}
+
 const TransactionTable: React.FC<TransactionTableProps> = ({
   transactions,
   onTransactionAdd,
