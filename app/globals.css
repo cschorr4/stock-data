@@ -76,3 +76,48 @@ body {
     @apply bg-background text-foreground;
   }
 }
+swiper-container {
+  width: 100%;
+  padding: 50px 0;
+}
+
+swiper-slide {
+  background-position: center;
+  background-size: cover;
+  width: 300px;
+  height: 400px;
+}
+
+.swiper-button-next,
+.swiper-button-prev {
+  color: hsl(var(--primary));
+  background: hsl(var(--background));
+  width: 50px !important;
+  height: 50px !important;
+  border-radius: 50%;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  transition: all 0.3s ease;
+}
+
+.swiper-button-next:hover,
+.swiper-button-prev:hover {
+  background: hsl(var(--primary));
+  color: hsl(var(--background));
+}
+
+.swiper-button-next::after,
+.swiper-button-prev::after {
+  font-size: 1.5rem !important;
+}
+
+.swiper-pagination-bullet {
+  width: 12px;
+  height: 12px;
+  background: hsl(var(--primary));
+  opacity: 0.5;
+}
+
+.swiper-pagination-bullet-active {
+  opacity: 1;
+  background: hsl(var(--primary));
+}

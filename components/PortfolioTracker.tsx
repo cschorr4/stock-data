@@ -299,35 +299,32 @@ const PortfolioTracker = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-1">
+      <h1 className="text-xl font-bold px-2 py-0.5">Portfolio Tracker</h1>
       <PortfolioSummary
         metrics={metrics}
         totals={totals}
         openPositions={openPositions}
         closedPositions={closedPositions}
       />
-      
-      <PositionTimelineChart 
-        transactions={transactions}
-        openPositions={openPositions}
-        closedPositions={closedPositions}
-      />
-
-      <OpenPositionsTable
-        positions={openPositions}
-      />
-
-      <ClosedPositionsTable
-        positions={closedPositions}
-      />
-
-      <TransactionTable
-        transactions={transactions}
-        onTransactionAdd={handleTransactionAdd}
-        onTransactionEdit={handleTransactionEdit}
-        onTransactionDelete={handleTransactionDelete}
-        onTransactionsDeleteAll={handleTransactionsDeleteAll}
-      />
+      <div className="mt-1">
+        <PositionTimelineChart 
+          transactions={transactions}
+          openPositions={openPositions}
+          closedPositions={closedPositions}
+        />
+      </div>
+      <div className="space-y-1">
+        <OpenPositionsTable positions={openPositions} />
+        <ClosedPositionsTable positions={closedPositions} />
+        <TransactionTable
+          transactions={transactions}
+          onTransactionAdd={handleTransactionAdd}
+          onTransactionEdit={handleTransactionEdit}
+          onTransactionDelete={handleTransactionDelete}
+          onTransactionsDeleteAll={handleTransactionsDeleteAll}
+        />
+      </div>
     </div>
   );
 };

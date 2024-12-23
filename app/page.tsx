@@ -5,12 +5,12 @@ import PortfolioTracker from '@/components/PortfolioTracker';
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-background p-4">
+    <main className="min-h-screen bg-background p-2">
       <Card className="max-w-7xl mx-auto">
-        <CardHeader>
+        <CardHeader className="pb-2">
           <CardTitle className="text-xl text-center">Portfolio Tracker</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-2">
           <PortfolioTracker />
         </CardContent>
       </Card>
