@@ -9,14 +9,21 @@ import {
   TableRow
 } from '@/components/ui/table';
 import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { ClosedPositionsTableProps } from '@/lib/types';
 
-const ClosedPositionsTable: React.FC<ClosedPositionsTableProps> = ({
+const ClosedPositionsTable = ({
   positions
-}) => {
+}: ClosedPositionsTableProps) => {
   const getColorClass = (value: number | undefined | null) => {
     if (value === undefined || value === null) return '';
-    return value >= 0 ? 'text-green-600' : 'text-red-600';
+    return value >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400';
+  };
+
+  const getBadgeVariant = (value: number | undefined | null) => {
+    if (value === undefined || value === null) return 'secondary';
+    return value >= 0 ? 'success' : 'destructive';
   };
 
   const calculateHoldingPeriod = (buyDate: Date, sellDate: Date) => {
@@ -46,63 +53,67 @@ const ClosedPositionsTable: React.FC<ClosedPositionsTableProps> = ({
           Closed Positions
         </h3>
         
-        <div className="space-y-4">
-          {positions.map((position, index) => {
-            const buyDate = new Date(position.buyDate);
-            const sellDate = new Date(position.sellDate);
-            const holdingPeriodText = calculateHoldingPeriod(buyDate, sellDate);
+        <ScrollArea className="h-[calc(100vh-12rem)]">
+          <div className="space-y-4">
+            {positions.map((position, index) => {
+              const buyDate = new Date(position.buyDate);
+              const sellDate = new Date(position.sellDate);
+              const holdingPeriodText = calculateHoldingPeriod(buyDate, sellDate);
+              const alpha = position.spyReturn !== undefined
+                ? position.percentChange - position.spyReturn
+                : null;
 
-            return (
-              <Card key={`${position.ticker}-${index}-mobile`} className="p-4">
-                <div className="flex justify-between items-center mb-4">
-                  <h4 className="text-lg font-bold">{position.ticker}</h4>
-                  <span className={`font-semibold ${getColorClass(position.profit)}`}>
-                    ${position.profit.toFixed(2)}
-                  </span>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-3 text-sm">
-                  <div>
-                    <p className="text-muted-foreground">Buy Date</p>
-                    <p className="font-medium">{format(buyDate, "PP")}</p>
+              return (
+                <Card key={`${position.ticker}-${index}-mobile`} className="p-4">
+                  <div className="flex justify-between items-center mb-4">
+                    <div className="space-y-1">
+                      <h4 className="text-lg font-bold">{position.ticker}</h4>
+                      <Badge variant={getBadgeVariant(position.profit)}>
+                        ${position.profit.toFixed(2)} ({position.percentChange.toFixed(2)}%)
+                      </Badge>
+                    </div>
+                    <Badge variant={getBadgeVariant(alpha)}>
+                      α: {alpha?.toFixed(2) ?? 'N/A'}%
+                    </Badge>
                   </div>
-                  <div>
-                    <p className="text-muted-foreground">Sell Date</p>
-                    <p className="font-medium">{format(sellDate, "PP")}</p>
+                  
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <p className="text-muted-foreground">Buy Date</p>
+                      <p className="font-medium">{format(buyDate, "PP")}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Sell Date</p>
+                      <p className="font-medium">{format(sellDate, "PP")}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Period</p>
+                      <p className="font-medium">{holdingPeriodText}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Shares</p>
+                      <p className="font-medium">{position.shares.toFixed(2)}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Entry</p>
+                      <p className="font-medium">${position.buyPrice.toFixed(2)}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Exit</p>
+                      <p className="font-medium">${position.sellPrice.toFixed(2)}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">vs SPY</p>
+                      <p className={`font-medium ${getColorClass(position.spyReturn)}`}>
+                        {position.spyReturn?.toFixed(2) ?? 'N/A'}%
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-muted-foreground">Period</p>
-                    <p className="font-medium">{holdingPeriodText}</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Shares</p>
-                    <p className="font-medium">{position.shares.toFixed(2)}</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Buy Price</p>
-                    <p className="font-medium">${position.buyPrice.toFixed(2)}</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Sell Price</p>
-                    <p className="font-medium">${position.sellPrice.toFixed(2)}</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">% Change</p>
-                    <p className={`font-medium ${getColorClass(position.percentChange)}`}>
-                      {position.percentChange.toFixed(2)}%
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">vs SPY</p>
-                    <p className={`font-medium ${getColorClass(position.spyReturn)}`}>
-                      {position.spyReturn?.toFixed(2) ?? 'N/A'}%
-                    </p>
-                  </div>
-                </div>
-              </Card>
-            );
-          })}
-        </div>
+                </Card>
+              );
+            })}
+          </div>
+        </ScrollArea>
       </div>
     );
   }
