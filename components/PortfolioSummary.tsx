@@ -7,6 +7,27 @@ import 'swiper/css';
 import 'swiper/css/pagination';
 import 'swiper/css/navigation';
 
+interface Position {
+  ticker: string;
+  shares: number;
+  avgCost: number;
+  currentPrice: number;
+  currentValue: number;
+  dollarChange: number;
+  percentChange: number;
+  dayChange: number;
+  dayChangePercent: number;
+  volume?: number;
+  dayHigh?: number;
+  dayLow?: number;
+  peRatio?: number;
+  forwardPE?: number;
+  industryPE?: number;
+  spyReturn: number;
+  buyDate: string;
+  lastUpdated: string;
+}
+
 interface Props {
   metrics: {
     totalValue: number;
@@ -14,8 +35,8 @@ interface Props {
     winRate: number;
     avgWinPercent: number;
     avgLossPercent: number;
-    bestPerformer: any | null;
-    worstPerformer: any | null;
+    bestPerformer: Position | null;
+    worstPerformer: Position | null;
     avgHoldingPeriodWinners: number;
   };
   totals: {
@@ -25,13 +46,7 @@ interface Props {
     currentValue: number;
     totalReturn: number;
   };
-  openPositions: Array<{
-    ticker: string;
-    currentValue: number;
-    dayChange: number;
-    dayChangePercent: number;
-    buyDate: string;
-  }>;
+  openPositions: Array<Position>;
   closedPositions: Array<{
     ticker: string;
     buyDate: string;
