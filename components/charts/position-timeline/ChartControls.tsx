@@ -1,4 +1,5 @@
-import { useState } from 'react';
+// components/charts/position-timeline/ChartControls.tsx
+import React from 'react';
 import { subYears, format } from 'date-fns';
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -27,7 +28,7 @@ const presetRanges = [
   { label: '5Y', days: 1825, icon: '📋' },
 ];
 
-export const ChartControls = ({ 
+export const ChartControls: React.FC<ChartControlsProps> = ({
   allTickers,
   selectedTickers,
   showPercentage,
@@ -35,10 +36,10 @@ export const ChartControls = ({
   onTickerSelect,
   onShowPercentageChange,
   onTimeRangeChange,
-}: ChartControlsProps) => {
+}) => {
   const today = new Date();
-  const [startDate, setStartDate] = useState(format(subYears(today, 1), 'yyyy-MM-dd'));
-const [endDate, setEndDate] = useState(format(today, 'yyyy-MM-dd'));
+  const [startDate, setStartDate] = React.useState(format(subYears(today, 1), 'yyyy-MM-dd'));
+  const [endDate, setEndDate] = React.useState(format(today, 'yyyy-MM-dd'));
 
   const handlePresetClick = (days: number, label: string) => {
     onTimeRangeChange(label);
@@ -140,5 +141,3 @@ const [endDate, setEndDate] = useState(format(today, 'yyyy-MM-dd'));
     </div>
   );
 };
-
-export default ChartControls;

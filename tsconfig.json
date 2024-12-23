@@ -20,10 +20,14 @@
     ],
     "paths": {
       "@/*": ["./*"]
-    },
-    "typeRoots": ["./node_modules/@types", "./"],
-    "noImplicitAny": false
+    }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "types/**/*.d.ts"],
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    "types/swiper.d.ts"  // Add this line
+  ],
   "exclude": ["node_modules"]
 }
