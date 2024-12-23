@@ -26,7 +26,171 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
   onTransactionDelete,
   onTransactionsDeleteAll,
 }) => {
-  // ... keep existing state and handlers ...
+  const { toast } = useToast();
+  const [filter, setFilter] = React.useState('');
+  const [sortConfig, setSortConfig] = React.useState<{
+    key: keyof Transaction;
+    direction: 'asc' | 'desc';
+  }>({
+    key: 'date',
+    direction: 'desc'
+  });
+  const [isAddDialogOpen, setIsAddDialogOpen] = React.useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = React.useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
+  const [isDeleteAllDialogOpen, setIsDeleteAllDialogOpen] = React.useState(false);
+  const [selectedTransaction, setSelectedTransaction] = React.useState<Transaction | null>(null);
+
+  const getFilteredAndSortedTransactions = React.useMemo(() => {
+    return transactions
+      .filter(transaction => 
+        transaction.ticker.toLowerCase().includes(filter.toLowerCase())
+      )
+      .sort((a, b) => {
+        if (sortConfig.key === 'date') {
+          const dateA = new Date(a[sortConfig.key]).getTime();
+          const dateB = new Date(b[sortConfig.key]).getTime();
+          return sortConfig.direction === 'asc' ? dateA - dateB : dateB - dateA;
+        }
+        
+        const valueA = a[sortConfig.key];
+        const valueB = b[sortConfig.key];
+        
+        return sortConfig.direction === 'asc' 
+          ? valueA < valueB ? -1 : valueA > valueB ? 1 : 0
+          : valueA > valueB ? -1 : valueA < valueB ? 1 : 0;
+      });
+  }, [transactions, filter, sortConfig]);
+
+  const handleSort = (key: keyof Transaction) => {
+    setSortConfig(prev => ({
+      key,
+      direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc'
+    }));
+  };
+
+  const handleExport = (exportFormat: 'json' | 'csv') => {
+    const timestamp = dateFormat(new Date(), 'yyyy-MM-dd');
+    const filename = `stock_transactions_${timestamp}.${exportFormat}`;
+    
+    const blob = exportFormat === 'json' 
+      ? exportToJSON(transactions)
+      : exportToCSV(transactions);
+    
+    downloadFile(blob, filename);
+  };
+
+  const handleFileImport = async (file: File) => {
+    try {
+      let transactions: Transaction[];
+      
+      if (file.type === 'application/json') {
+        const text = await file.text();
+        const data = JSON.parse(text) as ImportedTransaction[];
+        
+        if (!Array.isArray(data)) {
+          throw new Error('Invalid JSON format: Expected an array of transactions');
+        }
+  
+        transactions = data.map(item => {
+          const normalizedType = item.type.toLowerCase();
+          if (!isValidTransactionType(normalizedType)) {
+            throw new Error(`Invalid transaction type: ${item.type}. Must be "buy", "sell", or "dividend"`);
+          }
+  
+          return {
+            id: item.id || Date.now() + Math.random(),
+            date: new Date(item.date).toISOString(),
+            ticker: item.ticker.toUpperCase(),
+            type: normalizedType,
+            price: Number(item.price),
+            shares: Number(item.shares)
+          } as Transaction;
+        });
+      } else if (file.type === 'text/csv') {
+        transactions = await new Promise<Transaction[]>((resolve, reject) => {
+          Papa.parse<CSVRow>(file, {
+            header: true,
+            dynamicTyping: true,
+            skipEmptyLines: true,
+            complete: (results) => {
+              try {
+                const parsed = results.data.map((row): Transaction => {
+                  const normalizedType = row.type.toLowerCase();
+                  if (!isValidTransactionType(normalizedType)) {
+                    throw new Error(`Invalid transaction type: ${row.type}. Must be "buy", "sell", or "dividend"`);
+                  }
+  
+                  return {
+                    id: Date.now() + Math.random(),
+                    date: new Date(row.date).toISOString(),
+                    ticker: row.ticker.toUpperCase(),
+                    type: normalizedType,
+                    price: Number(row.price),
+                    shares: Number(row.shares)
+                  };
+                });
+                resolve(parsed);
+              } catch (error) {
+                reject(new Error('Error parsing CSV row: ' + (error as Error).message));
+              }
+            },
+            error: (error) => reject(new Error('CSV parsing error: ' + error.message))
+          });
+        });
+      } else {
+        throw new Error('Unsupported file format. Please use JSON or CSV.');
+      }
+  
+      if (!transactions.every(validateTransaction)) {
+        throw new Error('Invalid transaction data in file');
+      }
+  
+      transactions.forEach(onTransactionAdd);
+      toast({
+        title: "Success",
+        description: `Imported ${transactions.length} transactions successfully.`,
+      });
+    } catch (error) {
+      console.error('Error importing transactions:', error);
+      toast({
+        variant: "destructive",
+        title: "Import Error",
+        description: (error as Error).message || 'Error importing transactions. Please check the file format.',
+      });
+    }
+  };
+
+  const ImportButton = () => {
+    const inputRef = React.useRef<HTMLInputElement>(null);
+    
+    const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (!e.target.files?.length) return;
+      handleFileImport(e.target.files[0]);
+      if (inputRef.current) {
+        inputRef.current.value = '';
+      }
+    };
+
+    return (
+      <>
+        <input
+          type="file"
+          ref={inputRef}
+          onChange={handleImport}
+          accept=".json,.csv"
+          className="hidden"
+        />
+        <Button
+          variant="outline"
+          onClick={() => inputRef.current?.click()}
+        >
+          <Upload className="mr-2 h-4 w-4" />
+          Import
+        </Button>
+      </>
+    );
+  };
 
   const MobileTransaction = ({ transaction }: { transaction: Transaction }) => (
     <Card className="mb-4 p-4">
