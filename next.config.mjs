@@ -6,7 +6,7 @@ const nextConfig = {
   experimental: {
     serverComponentsExternalPackages: ['yfinance']
   },
-  output: 'standalone',  // Add this
+  output: 'standalone'
 }
 
 export default nextConfig
