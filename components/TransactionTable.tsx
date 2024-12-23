@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { format as dateFormat } from 'date-fns';
+import Papa from 'papaparse';
 import { Download, Upload, Plus, Pencil, Trash2, ArrowUpDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
