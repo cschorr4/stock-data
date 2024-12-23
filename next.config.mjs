@@ -6,10 +6,7 @@ const nextConfig = {
   experimental: {
     serverComponentsExternalPackages: ['yfinance']
   },
-  // Add these configurations
-  distDir: '.next',
-  poweredByHeader: false,
-  reactStrictMode: true,
+  output: 'standalone',  // Add this
 }
 
 export default nextConfig
