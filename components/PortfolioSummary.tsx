@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef } from 'react';
 import { register } from 'swiper/element/bundle';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
-import { TrendingUp, PieChart, Clock, Activity, BarChart3, Shield, DollarSign } from 'lucide-react';
+import { TrendingUp, PieChart, Clock, Activity, DollarSign } from 'lucide-react';
 import 'swiper/css';
 import 'swiper/css/pagination';
 import 'swiper/css/navigation';
@@ -125,7 +125,7 @@ const PortfolioSummary = ({
             </CardContent>
           </Card>
         </swiper-slide>
-
+        
         {/* Active Positions Card */}
         <swiper-slide>
           <Card className="h-40 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-gray-800 dark:to-gray-900">
@@ -152,8 +152,36 @@ const PortfolioSummary = ({
             </CardContent>
           </Card>
         </swiper-slide>
-
-        {/* Average Hold Time Card */}
+        
+        {/* Performance Card */}
+        <swiper-slide>
+          <Card className="h-40 bg-gradient-to-br from-orange-50 to-amber-50 dark:from-gray-800 dark:to-gray-900">
+            <CardHeader className="space-y-0.5 pb-2">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-xl font-bold">Performance</CardTitle>
+                <TrendingUp className="w-5 h-5 text-orange-600 dark:text-orange-400" />
+              </div>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600 dark:text-gray-400">Best Return</span>
+                  <span className={cn("font-medium text-green-600")}>
+                    {formatPercentage(metrics?.avgWinPercent || 0)}
+                  </span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600 dark:text-gray-400">Worst Return</span>
+                  <span className={cn("font-medium text-red-600")}>
+                    {formatPercentage(metrics?.avgLossPercent || 0)}
+                  </span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </swiper-slide>
+        
+        {/* Hold Time Card */}
         <swiper-slide>
           <Card className="h-40 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-gray-800 dark:to-gray-900">
             <CardHeader className="space-y-0.5 pb-2">
@@ -181,36 +209,8 @@ const PortfolioSummary = ({
             </CardContent>
           </Card>
         </swiper-slide>
-
-        {/* Portfolio Analytics Card */}
-        <swiper-slide>
-          <Card className="h-40 bg-gradient-to-br from-orange-50 to-amber-50 dark:from-gray-800 dark:to-gray-900">
-            <CardHeader className="space-y-0.5 pb-2">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-xl font-bold">Performance</CardTitle>
-                <TrendingUp className="w-5 h-5 text-orange-600 dark:text-orange-400" />
-              </div>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600 dark:text-gray-400">Best Return</span>
-                  <span className={cn("font-medium text-green-600")}>
-                    {formatPercentage(metrics?.avgWinPercent || 0)}
-                  </span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600 dark:text-gray-400">Worst Return</span>
-                  <span className={cn("font-medium text-red-600")}>
-                    {formatPercentage(metrics?.avgLossPercent || 0)}
-                  </span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </swiper-slide>
-
-        {/* Risk Management Card */}
+        
+        {/* Diversification Card */}
         <swiper-slide>
           <Card className="h-40 bg-gradient-to-br from-cyan-50 to-teal-50 dark:from-gray-800 dark:to-gray-900">
             <CardHeader className="space-y-0.5 pb-2">
@@ -233,7 +233,6 @@ const PortfolioSummary = ({
             </CardContent>
           </Card>
         </swiper-slide>
-
       </swiper-container>
     </div>
   );
