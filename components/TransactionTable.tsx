@@ -320,14 +320,14 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
             />
             
             <div className="flex items-center gap-2">
-              <TooltipProvider>
+            <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="outline" className="w-full sm:w-auto">
-                          <Download className="mr-2 h-4 w-4" />
-                          Export
+                        <Button variant="outline" className="w-full sm:w-auto" size="sm">
+                          <Download className="sm:mr-2 h-4 w-4" />
+                          <span className="hidden sm:inline">Export</span>
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent>
