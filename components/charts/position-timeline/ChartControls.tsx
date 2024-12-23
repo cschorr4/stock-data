@@ -27,7 +27,7 @@ const presetRanges = [
   { label: '5Y', days: 1825, icon: '📋' },
 ];
 
-export const ChartControls: React.FC<ChartControlsProps> = ({
+export const ChartControls = ({ 
   allTickers,
   selectedTickers,
   showPercentage,
@@ -35,7 +35,7 @@ export const ChartControls: React.FC<ChartControlsProps> = ({
   onTickerSelect,
   onShowPercentageChange,
   onTimeRangeChange,
-}) => {
+}: ChartControlsProps) => {
   const today = new Date();
   const [startDate, setStartDate] = React.useState(format(subYears(today, 1), 'yyyy-MM-dd'));
   const [endDate, setEndDate] = React.useState(format(today, 'yyyy-MM-dd'));
