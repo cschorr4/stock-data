@@ -1,4 +1,4 @@
-import React from 'react';
+import { useState } from 'react';
 import { subYears, format } from 'date-fns';
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -37,8 +37,8 @@ export const ChartControls = ({
   onTimeRangeChange,
 }: ChartControlsProps) => {
   const today = new Date();
-  const [startDate, setStartDate] = React.useState(format(subYears(today, 1), 'yyyy-MM-dd'));
-  const [endDate, setEndDate] = React.useState(format(today, 'yyyy-MM-dd'));
+  const [startDate, setStartDate] = useState(format(subYears(today, 1), 'yyyy-MM-dd'));
+const [endDate, setEndDate] = useState(format(today, 'yyyy-MM-dd'));
 
   const handlePresetClick = (days: number, label: string) => {
     onTimeRangeChange(label);
