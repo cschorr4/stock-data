@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import { format as dateFormat } from 'date-fns';
 import { Download, Upload, Plus, Pencil, Trash2, ArrowUpDown } from 'lucide-react';
@@ -18,6 +20,7 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/components/ui/use-toast';
 import { Transaction } from '@/lib/types';
 import TransactionForm from './TransactionForm';
+import { validateTransaction, exportToJSON, exportToCSV, downloadFile } from '@/lib/transactions';
 
 interface CSVRow {
   date: string;
