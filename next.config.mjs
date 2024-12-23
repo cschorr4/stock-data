@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: 'standalone',  // Add this line
   typescript: {
     ignoreBuildErrors: false
   },
@@ -8,4 +9,4 @@ const nextConfig = {
   }
 }
 
-export default nextConfig;
+export default nextConfig
