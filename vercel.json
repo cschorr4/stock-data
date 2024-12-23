@@ -1,22 +1,9 @@
 {
     "version": 2,
-    "buildCommand": "next build",
     "framework": "nextjs",
+    "buildCommand": "next build",
     "installCommand": "npm install",
     "builds": [
-      {
-        "src": "package.json",
-        "use": "@vercel/node"
-      },
-      {
-        "src": "requirements.txt",
-        "use": "@vercel/python"
-      }
-    ],
-    "routes": [
-      {
-        "src": "/(.*)",
-        "dest": "/"
-      }
+      { "src": "next.config.mjs", "use": "@vercel/next" }
     ]
   }
