@@ -219,7 +219,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
           onClick={() => inputRef.current?.click()}
         >
           <Upload className="mr-2 h-4 w-4" />
-          Import
+          <span className="hidden sm:inline">Import</span>
         </Button>
       </>
     );
