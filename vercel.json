@@ -1,19 +1,5 @@
 {
     "version": 2,
     "framework": "nextjs",
-    "buildCommand": "next build",
-    "functions": {
-      "api/**/*.py": {
-        "runtime": "python3.9"
-      }
-    },
-    "builds": [
-      {
-        "src": "next.config.mjs",
-        "use": "@vercel/next"
-      }
-    ],
-    "env": {
-      "PYTHONPATH": "."
-    }
+    "buildCommand": "next build"
   }

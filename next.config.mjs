@@ -3,10 +3,7 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: false
   },
-  experimental: {
-    serverComponentsExternalPackages: ['yfinance']
-  },
   output: 'standalone'
 }
 
-export default nextConfig /
+export default nextConfig
