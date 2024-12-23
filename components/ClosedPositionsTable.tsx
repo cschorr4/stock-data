@@ -34,14 +34,8 @@ const ClosedPositionsTable: React.FC<ClosedPositionsTableProps> = ({
     const checkMobileView = () => {
       setIsMobileView(window.innerWidth < 768);
     };
-    
-    // Initial check
     checkMobileView();
-    
-    // Add event listener
     window.addEventListener('resize', checkMobileView);
-    
-    // Cleanup
     return () => window.removeEventListener('resize', checkMobileView);
   }, []);
 
@@ -57,9 +51,6 @@ const ClosedPositionsTable: React.FC<ClosedPositionsTableProps> = ({
             const buyDate = new Date(position.buyDate);
             const sellDate = new Date(position.sellDate);
             const holdingPeriodText = calculateHoldingPeriod(buyDate, sellDate);
-            const alpha = position.spyReturn !== undefined
-              ? position.percentChange - position.spyReturn
-              : null;
 
             return (
               <Card key={`${position.ticker}-${index}-mobile`} className="p-4">
