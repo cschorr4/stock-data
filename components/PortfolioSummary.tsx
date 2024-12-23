@@ -7,6 +7,13 @@ import 'swiper/css';
 import 'swiper/css/pagination';
 import 'swiper/css/navigation';
 
+declare namespace JSX {
+  interface IntrinsicElements {
+    'swiper-container': any;
+    'swiper-slide': any;
+  }
+}
+
 interface Position {
   ticker: string;
   shares: number;
