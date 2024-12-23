@@ -1,6 +1,5 @@
-import React, { useRef, useState, TouchEvent } from 'react';
+import React, { useRef, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { cn } from '@/lib/utils';
 import { 
   DollarSign, Activity, TrendingUp, Clock, 
   PieChart, Target, Waypoints, BarChart3 
@@ -115,12 +114,10 @@ const SwipeableContainer: React.FC<{children: React.ReactNode}> = ({ children })
   const innerRef = useRef<HTMLDivElement>(null);
   const [startX, setStartX] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
-  const [currentX, setCurrentX] = useState(0);
 
   const handleStart = (clientX: number) => {
     setIsDragging(true);
     setStartX(clientX);
-    setCurrentX(0);
     if (innerRef.current) {
       innerRef.current.style.transform = 'none';
       innerRef.current.style.transition = 'none';
@@ -130,7 +127,6 @@ const SwipeableContainer: React.FC<{children: React.ReactNode}> = ({ children })
   const handleMove = (clientX: number) => {
     if (!isDragging) return;
     const diff = (clientX - startX) * 1.5;
-    setCurrentX(diff);
     if (innerRef.current) {
       innerRef.current.style.transform = `translateX(${diff}px)`;
     }
