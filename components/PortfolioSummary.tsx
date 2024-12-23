@@ -126,7 +126,7 @@ const PortfolioSummary = ({
     return { diversification, avgHoldingPeriod, portfolioStats };
   }, [openPositions]);
 
-  const formatCurrency = (value) => {
+  const formatCurrency = (value: number | null) => {
     if (value == null) return '$0';
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
