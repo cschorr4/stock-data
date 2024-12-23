@@ -1,26 +1,11 @@
-import React from 'react';
-
-interface SwiperParams {
-  init: string;
-  class: string;
-  slidesPerView?: number;
-  spaceBetween?: number;
-  loop?: boolean;
-  autoplay?: {
-    delay: number;
-    disableOnInteraction: boolean;
-  };
-  pagination?: {
-    clickable: boolean;
-  };
-  speed?: number;
-  effect?: string;
-  grabCursor?: boolean;
-}
-
-declare global {
-  interface HTMLElementTagNameMap {
-    'swiper-container': HTMLElement & SwiperParams & { initialize: () => void };
-    'swiper-slide': HTMLElement;
+declare module 'react' {
+    namespace JSX {
+      interface IntrinsicElements {
+        'swiper-container': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement> & {
+          init: string;
+          ref: React.RefObject<HTMLElement>;
+        }, HTMLElement>;
+        'swiper-slide': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement>;
+      }
+    }
   }
-}
