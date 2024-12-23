@@ -137,7 +137,7 @@ const PortfolioSummary = ({
     }).format(value);
   };
 
-  const formatPercentage = (value, decimals = 1) => {
+  const formatPercentage = (value: number | null, decimals = 1): string => {
     if (value == null) return '0.0%';
     return `${value.toFixed(decimals)}%`;
   };
