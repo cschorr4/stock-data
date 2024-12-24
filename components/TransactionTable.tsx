@@ -319,13 +319,13 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
               className="w-full sm:w-64"
             />
             
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex items-center space-x-2">
   <TooltipProvider>
     <Tooltip>
       <TooltipTrigger asChild>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm" className="flex-shrink-0">
+            <Button variant="outline" size="sm">
               <Download className="sm:mr-2 h-4 w-4" />
               <span className="hidden sm:inline">Export</span>
             </Button>
@@ -346,7 +346,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
   <ImportButton />
   <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
     <DialogTrigger asChild>
-      <Button className="flex-shrink-0">
+      <Button size="sm">
         <Plus className="mr-2 h-4 w-4" />
         <span className="sm:hidden">Add</span>
         <span className="hidden sm:inline">Add Transaction</span>
@@ -369,11 +369,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
-          <Button
-            variant="destructive"
-            onClick={() => setIsDeleteAllDialogOpen(true)}
-            className="flex-shrink-0"
-          >
+          <Button variant="destructive" size="sm">
             <Trash2 className="mr-2 h-4 w-4" />
             <span className="hidden sm:inline">Remove All</span>
           </Button>
