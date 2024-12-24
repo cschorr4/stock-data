@@ -101,6 +101,61 @@ const OpenPositionsTable: React.FC<OpenPositionsTableProps> = ({ positions }) =>
         <h3 className="text-2xl font-semibold leading-none tracking-tight">Open Positions</h3>
       </div>
       <div className="p-6 pt-0">
+
+        {/* Mobile View */}
+<div className="md:hidden px-4 pb-4">
+  {getSortedPositions().map(position => {
+    const isLongTerm = new Date().getTime() - new Date(position.buyDate).getTime() > 365 * 24 * 60 * 60 * 1000;
+    const alpha = position.spyReturn !== undefined 
+      ? position.percentChange - position.spyReturn 
+      : undefined;
+
+    return (
+      <div key={`${position.ticker}-mobile`} className="mb-4 rounded-lg border bg-card p-4">
+        <div className="flex justify-between items-center mb-2">
+          <span className="font-semibold">{position.ticker}</span>
+          <span className={cn(
+            "text-sm",
+            getValueColor(position.dayChangePercent, true)
+          )}>
+            {position.dayChangePercent > 0 ? '+' : ''}{position.dayChangePercent?.toFixed(2)}%
+          </span>
+        </div>
+        <div className="grid grid-cols-2 gap-2 text-sm">
+          <div>Date Opened:</div>
+          <div>{format(new Date(position.buyDate), "PPP")}</div>
+          <div>Term:</div>
+          <div>{isLongTerm ? 'Long Term' : 'Short Term'}</div>
+          <div>Shares:</div>
+          <div>{position.shares.toFixed(2)}</div>
+          <div>Avg. Cost:</div>
+          <div>${position.avgCost.toFixed(2)}</div>
+          <div>Current Value:</div>
+          <div>${position.currentValue.toFixed(2)}</div>
+          <div>P/E Ratio:</div>
+          <div className={getPeRatioColor(position.peRatio, position.industryPE)}>
+            {position.peRatio?.toFixed(2) ?? 'N/A'}
+          </div>
+          <div>$ Change:</div>
+          <div className={getValueColor(position.dollarChange, true)}>
+            ${position.dollarChange.toFixed(2)}
+          </div>
+          <div>% Change:</div>
+          <div className={getValueColor(position.percentChange, true)}>
+            {position.percentChange > 0 ? '+' : ''}{position.percentChange.toFixed(2)}%
+          </div>
+          <div>vs SPY:</div>
+          <div className={getValueColor(alpha)}>
+            {alpha?.toFixed(2) ?? 'N/A'}%
+          </div>
+        </div>
+      </div>
+    );
+  })}
+</div>
+
+{/* Desktop View */}
+<div className="hidden md:block">
         <Table>
           <TableHeader>
             <TableRow>
@@ -180,6 +235,8 @@ const OpenPositionsTable: React.FC<OpenPositionsTableProps> = ({ positions }) =>
           </TableBody>
         </Table>
       </div>
+    </div>
+
     </div>
   );
 };

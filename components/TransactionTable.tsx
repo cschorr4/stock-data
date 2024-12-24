@@ -325,9 +325,9 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
       <TooltipTrigger asChild>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm">
-              <Download className="sm:mr-2 h-4 w-4" />
-              <span className="hidden sm:inline">Export</span>
+            <Button variant="outline" size="sm" className="min-w-10">
+              <Download className="h-4 w-4" />
+              <span className="hidden sm:ml-2 sm:inline">Export</span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
@@ -343,7 +343,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
       <TooltipContent>Export transactions</TooltipContent>
     </Tooltip>
   </TooltipProvider>
-  <ImportButton />
+  <ImportButton className="min-w-10" />
   <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
     <DialogTrigger asChild>
       <Button size="sm">
