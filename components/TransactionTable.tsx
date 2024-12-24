@@ -356,7 +356,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
     <DialogTrigger asChild>
       <Button size="sm">
         <Plus className="mr-2 h-4 w-4" />
-       {/* <span className="sm:hidden">Add</span>  */}
+       <span className="sm:hidden">Add Transaction</span> 
         <span className="hidden sm:inline">Add Transaction</span>
       </Button>
     </DialogTrigger>
