@@ -345,22 +345,23 @@ const SwipeableContainer: React.FC<{children: React.ReactNode}> = ({ children })
           WebkitOverflowScrolling: 'touch'
         }}
       >
-        <div 
+        <div
   ref={innerRef}
   className={`flex gap-4 pb-4 ${
     isValidElement(React.Children.toArray(children)[0]) &&
-    (React.Children.toArray(children)[0] as React.ReactElement)?.type?.name === 'StockTicker'
+    typeof React.Children.toArray(children)[0]?.type === 'object' &&
+    (React.Children.toArray(children)[0]?.type as JSXElementConstructor<any>)?.name === 'StockTicker'
       ? 'scroll-stocks'
       : 'scroll-metrics'
   } ${isDragging ? 'animation-play-state: paused' : ''}`}
-  style={{ 
+  style={{
     width: 'fit-content',
     transform: 'translateX(0)',
-    '--num-items': React.Children.count(children) * 2
+    '--num-items': React.Children.count(children) * 2,
   } as React.CSSProperties}
 >
-  {React.Children.map(children, child => child)}
-  {React.Children.map(children, child => child)}
+  {React.Children.map(children, (child) => child)}
+  {React.Children.map(children, (child) => child)}
 </div>
       </div>
     </div>
