@@ -1,4 +1,4 @@
-import React, { useRef, useState, isValidElement} from 'react';
+import React, { useRef, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
   DollarSign, 
@@ -58,23 +58,6 @@ export interface IndustryMetric {
   sector: string;
 }
 
-interface PortfolioMetrics {
-  totalValue: number;
-  totalCost: number;
-  winRate: number;
-  avgWinPercent: number;
-  avgLossPercent: number;
-  bestPerformer: Position | null;
-  worstPerformer: Position | null;
-  avgHoldingPeriodWinners: number;
-  portfolioBeta: number;
-  maxDrawdown: number;
-  sharpeRatio: number;
-  cashBalance: number;
-  buyingPower: number;
-  sectorMetrics: SectorMetric[];
-  industryMetrics: IndustryMetric[];
-}
 
 interface PortfolioTotals {
   realizedProfits: number;
@@ -97,7 +80,23 @@ interface MetricCardProps {
   metric2Color: string;
   gradient: string;
 }
-
+interface PortfolioMetrics {
+  totalValue: number;
+  totalCost: number;
+  winRate: number;
+  avgWinPercent: number;
+  avgLossPercent: number;
+  bestPerformer: Position | null;
+  worstPerformer: Position | null;
+  avgHoldingPeriodWinners: number;
+  portfolioBeta: number;
+  maxDrawdown: number;
+  sharpeRatio: number;
+  cashBalance: number;
+  buyingPower: number;
+  sectorMetrics: SectorMetric[];
+  industryMetrics: IndustryMetric[];
+}
 
 
 const MetricCards: React.FC<{
@@ -345,24 +344,22 @@ const SwipeableContainer: React.FC<{children: React.ReactNode}> = ({ children })
           WebkitOverflowScrolling: 'touch'
         }}
       >
-        <div
-  ref={innerRef}
-  className={`flex gap-4 pb-4 ${
-    isValidElement(React.Children.toArray(children)[0]) &&
-    typeof React.Children.toArray(children)[0]?.type === 'object' &&
-    (React.Children.toArray(children)[0]?.type as JSXElementConstructor<any>)?.name === 'StockTicker'
-      ? 'scroll-stocks'
-      : 'scroll-metrics'
-  } ${isDragging ? 'animation-play-state: paused' : ''}`}
-  style={{
-    width: 'fit-content',
-    transform: 'translateX(0)',
-    '--num-items': React.Children.count(children) * 2,
-  } as React.CSSProperties}
->
-  {React.Children.map(children, (child) => child)}
-  {React.Children.map(children, (child) => child)}
-</div>
+        <div 
+          ref={innerRef}
+          className={`flex gap-4 pb-4 ${
+            Array.isArray(children) && children.length > 0 && children[0]?.type?.name === 'StockTicker'
+              ? 'scroll-stocks'
+              : 'scroll-metrics'
+          } ${isDragging ? 'animation-play-state: paused' : ''}`}          
+          style={{ 
+            width: 'fit-content',
+            transform: 'translateX(0)',
+            '--num-items': React.Children.count(children) * 2
+          } as React.CSSProperties}
+        >
+          {React.Children.map(children, child => child)}
+          {React.Children.map(children, child => child)}
+        </div>
       </div>
     </div>
   );

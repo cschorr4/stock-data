@@ -144,53 +144,114 @@ const PortfolioTracker = () => {
     }, [transactions, realtimePrices, spyData]);
 
     // Wrap calculateMetrics in useCallback
-  const calculateMetrics = useCallback(() => {
-    const { openPositions, closedPositions } = calculatePositions();
+    const calculateSectorMetrics = (positions: Position[]): SectorMetric[] => {
+      const totalValue = positions.reduce((sum, pos) => sum + pos.currentValue, 0);
+      
+      const sectorMap = positions.reduce((map, pos) => {
+        const existing = map.get(pos.sector) || { value: 0, return: 0, count: 0 };
+        map.set(pos.sector, {
+          value: existing.value + pos.currentValue,
+          return: existing.return + pos.percentChange,
+          count: existing.count + 1
+        });
+        return map;
+      }, new Map<string, { value: number; return: number; count: number }>());
     
-    const realizedProfits = closedPositions.reduce((sum, pos) => sum + pos.profit, 0);
-    const unrealizedProfits = openPositions.reduce((sum, pos) => sum + pos.dollarChange, 0);
-    const totalInvestment = openPositions.reduce((sum, pos) => sum + (pos.avgCost * pos.shares), 0);
-    const currentValue = openPositions.reduce((sum, pos) => sum + pos.currentValue, 0);
-    
-    const totals: PortfolioTotals = {
-      realizedProfits,
-      unrealizedProfits,
-      totalInvestment,
-      currentValue,
-      totalReturn: totalInvestment > 0 ? ((currentValue + realizedProfits) / totalInvestment - 1) * 100 : 0
+      return Array.from(sectorMap.entries()).map(([name, data]) => ({
+        name,
+        allocation: (data.value / totalValue) * 100,
+        return: data.return / data.count,
+        positions: data.count
+      }));
     };
-
-    const winningPositions = closedPositions.filter(pos => pos.profit > 0);
-    const losingPositions = closedPositions.filter(pos => pos.profit < 0);
     
-    const metrics: PortfolioMetrics = {
-      totalValue: currentValue,
-      totalCost: totalInvestment,
-      winRate: (winningPositions.length / (winningPositions.length + losingPositions.length)) * 100 || 0,
-      avgWinPercent: winningPositions.length > 0 
-        ? winningPositions.reduce((sum, pos) => sum + pos.percentChange, 0) / winningPositions.length 
-        : 0,
-      avgLossPercent: losingPositions.length > 0
-        ? losingPositions.reduce((sum, pos) => sum + pos.percentChange, 0) / losingPositions.length
-        : 0,
+    const calculateIndustryMetrics = (positions: Position[]): IndustryMetric[] => {
+      const totalValue = positions.reduce((sum, pos) => sum + pos.currentValue, 0);
+      
+      const industryMap = positions.reduce((map, pos) => {
+        const existing = map.get(pos.industry) || { value: 0, return: 0, count: 0, sector: pos.sector };
+        map.set(pos.industry, {
+          value: existing.value + pos.currentValue,
+          return: existing.return + pos.percentChange,
+          count: existing.count + 1,
+          sector: pos.sector
+        });
+        return map;
+      }, new Map<string, { value: number; return: number; count: number; sector: string }>());
+    
+      return Array.from(industryMap.entries()).map(([name, data]) => ({
+        name,
+        allocation: (data.value / totalValue) * 100,
+        return: data.return / data.count,
+        positions: data.count,
+        sector: data.sector
+      }));
+    };
+    
+    const calculateMetrics = useCallback(() => {
+      const { openPositions, closedPositions } = calculatePositions();
+      
+      const realizedProfits = closedPositions.reduce((sum, pos) => sum + pos.profit, 0);
+      const unrealizedProfits = openPositions.reduce((sum, pos) => sum + pos.dollarChange, 0);
+      const totalInvestment = openPositions.reduce((sum, pos) => sum + (pos.avgCost * pos.shares), 0);
+      const currentValue = openPositions.reduce((sum, pos) => sum + pos.currentValue, 0);
+      
+      const totals: PortfolioTotals = {
+        realizedProfits,
+        unrealizedProfits,
+        totalInvestment,
+        currentValue,
+        totalReturn: totalInvestment > 0 ? ((currentValue + realizedProfits) / totalInvestment - 1) * 100 : 0
+      };
+    
+      const winningPositions = closedPositions.filter(pos => pos.profit > 0);
+      const losingPositions = closedPositions.filter(pos => pos.profit < 0);
+      
+      // Calculate max drawdown using peak to trough
+      const values = openPositions.map(pos => pos.currentValue / (pos.avgCost * pos.shares));
+      let maxDrawdown = 0;
+      let peak = values[0] || 1;
+      
+      values.forEach(value => {
+        if (value > peak) peak = value;
+        const drawdown = (peak - value) / peak * 100;
+        if (drawdown > maxDrawdown) maxDrawdown = drawdown;
+      });
+    
+      const metrics: PortfolioMetrics = {
+        totalValue: currentValue,
+        totalCost: totalInvestment,
+        winRate: (winningPositions.length / (winningPositions.length + losingPositions.length)) * 100 || 0,
+        avgWinPercent: winningPositions.length > 0 
+          ? winningPositions.reduce((sum, pos) => sum + pos.percentChange, 0) / winningPositions.length 
+          : 0,
+        avgLossPercent: losingPositions.length > 0
+          ? losingPositions.reduce((sum, pos) => sum + pos.percentChange, 0) / losingPositions.length
+          : 0,
         bestPerformer: openPositions.length > 0 
-        ? openPositions.reduce<Position>((best, pos) => 
-            pos.percentChange > best.percentChange ? pos : best
-          , openPositions[0])
-        : null,
-      worstPerformer: openPositions.length > 0
-        ? openPositions.reduce<Position>((worst, pos) => 
-            pos.percentChange < worst.percentChange ? pos : worst
-          , openPositions[0])
-        : null,
-      avgHoldingPeriodWinners: winningPositions.length > 0
-        ? Math.floor(winningPositions.reduce((sum, pos) => sum + pos.holdingPeriod, 0) / winningPositions.length)
-        : 0
-    };
-
-    return { metrics, totals, openPositions, closedPositions };
-  }, [calculatePositions]);
-
+          ? openPositions.reduce((best, pos) => 
+              pos.percentChange > best.percentChange ? pos : best
+            , openPositions[0])
+          : null,
+        worstPerformer: openPositions.length > 0
+          ? openPositions.reduce((worst, pos) => 
+              pos.percentChange < worst.percentChange ? pos : worst
+            , openPositions[0])
+          : null,
+        avgHoldingPeriodWinners: winningPositions.length > 0
+          ? Math.floor(winningPositions.reduce((sum, pos) => sum + pos.holdingPeriod, 0) / winningPositions.length)
+          : 0,
+        maxDrawdown,
+        portfolioBeta: 1,
+        sharpeRatio: 0,
+        cashBalance: 0,
+        buyingPower: 0,
+        sectorMetrics: [],
+        industryMetrics: []
+      };
+    
+      return { metrics, totals, openPositions, closedPositions };
+    }, [calculatePositions]);
   // Fetch realtime prices with calculatePositions in dependencies
   useEffect(() => {
     const fetchPrices = async () => {
