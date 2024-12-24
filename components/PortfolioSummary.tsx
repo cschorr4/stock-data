@@ -5,6 +5,7 @@ import {
   PieChart, Target,
   ArrowUpRight, ArrowDownRight, Network, AlertTriangle
 } from 'lucide-react';
+import React, { isValidElement } from 'react';
 
 interface Position {
   ticker: string;
@@ -348,7 +349,10 @@ const SwipeableContainer: React.FC<{children: React.ReactNode}> = ({ children })
         <div 
   ref={innerRef}
   className={`flex gap-4 pb-4 ${
-    React.Children.toArray(children)[0]?.type?.name === 'StockTicker' ? 'scroll-stocks' : 'scroll-metrics'
+    isValidElement(React.Children.toArray(children)[0]) &&
+    (React.Children.toArray(children)[0] as React.ReactElement)?.type?.name === 'StockTicker'
+      ? 'scroll-stocks'
+      : 'scroll-metrics'
   } ${isDragging ? 'animation-play-state: paused' : ''}`}
   style={{ 
     width: 'fit-content',
