@@ -1,9 +1,9 @@
 import React, { useRef, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
-  DollarSign, Activity, TrendingUp, Clock, 
-  PieChart, Target, Waypoints, BarChart3,
-  ArrowUpRight, ArrowDownRight, TrendingDown, Network, AlertTriangle
+  DollarSign, 
+  PieChart, Target,
+  ArrowUpRight, ArrowDownRight, Network, AlertTriangle
 } from 'lucide-react';
 
 interface Position {
