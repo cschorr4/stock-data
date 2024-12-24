@@ -56,6 +56,7 @@ const PositionTimelineChart: React.FC<PositionTimelineChartProps> = ({
   const [selectedTickers, setSelectedTickers] = useState<string[]>(['SPY']);
   const [allTickers, setAllTickers] = useState<string[]>(['SPY']);
   const [chartData, setChartData] = useState<ProcessedDataPoint[]>([]);
+  const [currentDateRange, setCurrentDateRange] = useState<{ start: string; end: string } | undefined>(undefined);
 
   const getBaselineValues = (data: ProcessedDataPoint[], tickers: string[]): Record<string, number> => {
     const baselines: Record<string, number> = {};
@@ -97,6 +98,11 @@ const PositionTimelineChart: React.FC<PositionTimelineChartProps> = ({
     );
   };
 
+  const handleTimeRangeChange = (value: string, dateRange?: { start: string; end: string }) => {
+    setTimeRange(value);
+    setCurrentDateRange(dateRange);
+  };
+
   useEffect(() => {
     const fetchStockData = async () => {
       setIsLoading(true);
@@ -115,7 +121,12 @@ const PositionTimelineChart: React.FC<PositionTimelineChartProps> = ({
 
         const tickerDataPromises = tickers.map(async ticker => {
           try {
-            const response = await fetch(`/api/stock/chart?symbol=${ticker}&range=${timeRange}`);
+            const baseUrl = `/api/stock/chart?symbol=${ticker}`;
+            const url = timeRange === 'custom' && currentDateRange
+              ? `${baseUrl}&start=${currentDateRange.start}&end=${currentDateRange.end}`
+              : `${baseUrl}&range=${timeRange}`;
+              
+            const response = await fetch(url);
             if (!response.ok) throw new Error(`Failed to fetch data for ${ticker}`);
             const data = await response.json();
             return { ticker, data: data.error ? [] : data } as TickerData;
@@ -124,7 +135,7 @@ const PositionTimelineChart: React.FC<PositionTimelineChartProps> = ({
             return { ticker, data: [] } as TickerData;
           }
         });
-
+        
         const results = await Promise.all(tickerDataPromises);
         
         const allDates = new Set<string>();
@@ -201,7 +212,7 @@ const PositionTimelineChart: React.FC<PositionTimelineChartProps> = ({
     };
 
     fetchStockData();
-  }, [timeRange, selectedTickers, showPercentage, openPositions, closedPositions]);
+  }, [timeRange, selectedTickers, showPercentage, openPositions, closedPositions, currentDateRange]);
 
   const getTickerColor = (ticker: string): string => {
     const colors: Record<string, string> = {
@@ -232,14 +243,15 @@ const PositionTimelineChart: React.FC<PositionTimelineChartProps> = ({
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Position Timeline</CardTitle>
         <ChartControls
-          allTickers={allTickers}
-          selectedTickers={selectedTickers}
-          showPercentage={showPercentage}
-          timeRange={timeRange}
-          onTickerSelect={handleTickerSelect}
-          onShowPercentageChange={setShowPercentage}
-          onTimeRangeChange={setTimeRange}
-        />
+  allTickers={allTickers}
+  selectedTickers={selectedTickers}
+  showPercentage={showPercentage}
+  timeRange={timeRange}
+  dateRange={currentDateRange}  // Add this line
+  onTickerSelect={handleTickerSelect}
+  onShowPercentageChange={setShowPercentage}
+  onTimeRangeChange={handleTimeRangeChange}
+/>
       </CardHeader>
       <CardContent>
         {error ? (
