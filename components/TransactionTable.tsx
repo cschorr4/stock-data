@@ -377,7 +377,11 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
-          <Button variant="destructive" size="sm">
+        <Button 
+            variant="destructive" 
+            size="sm"
+            onClick={() => setIsDeleteAllDialogOpen(true)}
+          >
             <Trash2 className="mr-2 h-4 w-4"/>
             <span>Remove All</span>
           </Button>
