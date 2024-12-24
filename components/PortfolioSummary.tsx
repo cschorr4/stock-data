@@ -346,19 +346,19 @@ const SwipeableContainer: React.FC<{children: React.ReactNode}> = ({ children })
         }}
       >
         <div 
-          ref={innerRef}
-          className={`flex gap-4 pb-4 ${
-            children[0]?.type?.name === 'StockTicker' ? 'scroll-stocks' : 'scroll-metrics'
-          } ${isDragging ? 'animation-play-state: paused' : ''}`}
-          style={{ 
-            width: 'fit-content',
-            transform: 'translateX(0)',
-            '--num-items': React.Children.count(children) * 2
-          } as React.CSSProperties}
-        >
-          {React.Children.map(children, child => child)}
-          {React.Children.map(children, child => child)}
-        </div>
+  ref={innerRef}
+  className={`flex gap-4 pb-4 ${
+    React.Children.toArray(children)[0]?.type?.name === 'StockTicker' ? 'scroll-stocks' : 'scroll-metrics'
+  } ${isDragging ? 'animation-play-state: paused' : ''}`}
+  style={{ 
+    width: 'fit-content',
+    transform: 'translateX(0)',
+    '--num-items': React.Children.count(children) * 2
+  } as React.CSSProperties}
+>
+  {React.Children.map(children, child => child)}
+  {React.Children.map(children, child => child)}
+</div>
       </div>
     </div>
   );
