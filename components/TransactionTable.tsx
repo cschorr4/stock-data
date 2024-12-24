@@ -369,20 +369,20 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
 
               {transactions.length > 0 && (
                 <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button 
-                        variant="destructive" 
-                        onClick={() => setIsDeleteAllDialogOpen(true)}
-                        className="w-full sm:w-auto"
-                      >
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        <span className="hidden sm:inline">Remove All</span>
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Delete all transactions</TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="destructive"
+                      onClick={() => setIsDeleteAllDialogOpen(true)}
+                      className="w-full sm:w-auto flex items-center justify-center"
+                    >
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      <span className="hidden sm:inline">Remove All</span>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Delete all transactions</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
               )}
             </div>
           </div>
