@@ -377,7 +377,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                         className="w-full sm:w-auto"
                       >
                         <Trash2 className="mr-2 h-4 w-4" />
-                        Remove All
+                        <span className="hidden sm:inline">Remove All</span>
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent>Delete all transactions</TooltipContent>
