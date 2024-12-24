@@ -194,9 +194,13 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
     }
   };
 
-  const ImportButton = () => {
+  interface ImportButtonProps {
+    className?: string;
+  }
+  
+  const ImportButton = ({ className }: ImportButtonProps) => {
     const inputRef = React.useRef<HTMLInputElement>(null);
-    
+  
     const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
       if (!e.target.files?.length) return;
       handleFileImport(e.target.files[0]);
@@ -204,7 +208,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
         inputRef.current.value = '';
       }
     };
-
+  
     return (
       <>
         <input
@@ -215,11 +219,13 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
           className="hidden"
         />
         <Button
-          variant="outline" className="w-full sm:w-auto" size="sm"
+          variant="outline"
+          size="sm"
+          className={className}
           onClick={() => inputRef.current?.click()}
         >
-          <Upload className="mr-2 h-4 w-4" />
-          <span className="hidden sm:inline">Import</span>
+          <Upload className="h-4 w-4" />
+          <span className="hidden sm:ml-2 sm:inline">Import</span>
         </Button>
       </>
     );
@@ -320,7 +326,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
             />
             
             <div className="flex items-center space-x-2">
-  <TooltipProvider>
+            <TooltipProvider>
     <Tooltip>
       <TooltipTrigger asChild>
         <DropdownMenu>
@@ -344,6 +350,8 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
     </Tooltip>
   </TooltipProvider>
   <ImportButton className="min-w-10" />
+  
+  
   <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
     <DialogTrigger asChild>
       <Button size="sm">
