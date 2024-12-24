@@ -93,7 +93,7 @@ export const ChartControls: React.FC<ChartControlsProps> = ({
     if (isCustom) {
       try {
         return `${format(new Date(dateRange.start), 'MMM d, yyyy')} - ${format(new Date(dateRange.end), 'MMM d, yyyy')}`;
-      } catch (e) {
+      } catch {
         return 'Custom Range';
       }
     }
