@@ -56,6 +56,17 @@ const PositionTimelineChart: React.FC<PositionTimelineChartProps> = ({
   const [selectedTickers, setSelectedTickers] = useState<string[]>(['SPY']);
   const [allTickers, setAllTickers] = useState<string[]>(['SPY']);
   const [chartData, setChartData] = useState<ProcessedDataPoint[]>([]);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.matchMedia('(max-width: 768px)').matches);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const getBaselineValues = (data: ProcessedDataPoint[], tickers: string[]): Record<string, number> => {
     const baselines: Record<string, number> = {};
@@ -228,8 +239,8 @@ const PositionTimelineChart: React.FC<PositionTimelineChartProps> = ({
   }
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
+    <Card className="w-full">
+      <CardHeader className={`flex ${isMobile ? 'flex-col' : 'flex-row'} items-center justify-between space-y-4`}>
         <CardTitle>Position Timeline</CardTitle>
         <ChartControls
           allTickers={allTickers}
@@ -251,11 +262,14 @@ const PositionTimelineChart: React.FC<PositionTimelineChartProps> = ({
             No position data to display
           </div>
         ) : (
-          <div className="h-96">
+          <div className={`${isMobile ? 'h-72' : 'h-96'}`}>
             <ResponsiveContainer width="100%" height="100%">
               <LineChart 
                 data={chartData}
-                margin={{ top: 5, right: 30, left: 20, bottom: 20 }}
+                margin={isMobile ? 
+                  { top: 5, right: 10, left: 0, bottom: 40 } : 
+                  { top: 5, right: 30, left: 20, bottom: 20 }
+                }
               >
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis 
@@ -264,33 +278,42 @@ const PositionTimelineChart: React.FC<PositionTimelineChartProps> = ({
                   angle={-45}
                   textAnchor="end"
                   height={50}
-                  interval="preserveStartEnd"
+                  interval={isMobile ? 'preserveStartEnd' : 'preserveStartEnd'}
                   stroke="#000000"
-                  strokeWidth={2}
-                  tick={{ fontSize: 12, fontWeight: 500 }}
+                  strokeWidth={1}
+                  tick={{ fontSize: isMobile ? 10 : 12, fontWeight: 500 }}
                   label={{ 
                     value: 'Date',
                     position: 'bottom',
                     offset: 0,
-                    style: { textAnchor: 'middle', fontWeight: 600 }
+                    style: { 
+                      textAnchor: 'middle', 
+                      fontWeight: 600,
+                      fontSize: isMobile ? 12 : 14 
+                    }
                   }}
                 />
                 <YAxis 
                   tickFormatter={(value) => 
                     showPercentage 
                       ? `${value.toFixed(1)}%` 
-                      : `$${value.toFixed(2)}`
+                      : `$${value.toFixed(0)}`
                   }
+                  width={isMobile ? 45 : 60}
                   domain={['auto', 'auto']}
                   stroke="#000000"
-                  strokeWidth={2}
-                  tick={{ fontSize: 12, fontWeight: 500 }}
+                  strokeWidth={1}
+                  tick={{ fontSize: isMobile ? 10 : 12, fontWeight: 500 }}
                   label={{
                     value: showPercentage ? 'Change (%)' : 'Price ($)',
                     angle: -90,
                     position: 'insideLeft',
                     offset: 0,
-                    style: { textAnchor: 'middle', fontWeight: 600 }
+                    style: { 
+                      textAnchor: 'middle', 
+                      fontWeight: 600,
+                      fontSize: isMobile ? 12 : 14 
+                    }
                   }}
                 />
                 <Tooltip
@@ -303,15 +326,19 @@ const PositionTimelineChart: React.FC<PositionTimelineChartProps> = ({
                     return [
                       showPercentage 
                         ? `${Number(value).toFixed(1)}%` 
-                        : `${Number(value).toFixed(2)}`,
+                        : `$${Number(value).toFixed(2)}`,
                       displayName + type
                     ];
+                  }}
+                  contentStyle={{
+                    fontSize: isMobile ? '12px' : '14px'
                   }}
                 />
                 
                 <Line
                   type="monotone"
                   dataKey="SPY"
+                  name="SPY"
                   stroke="#888888"
                   strokeWidth={1}
                   dot={false}
@@ -323,6 +350,7 @@ const PositionTimelineChart: React.FC<PositionTimelineChartProps> = ({
                     <Line
                       type="monotone"
                       dataKey={`${ticker}_base`}
+                      name={`${ticker} (Base)`}
                       stroke={getTickerColor(ticker)}
                       strokeWidth={1}
                       strokeDasharray="3 3"
@@ -332,6 +360,7 @@ const PositionTimelineChart: React.FC<PositionTimelineChartProps> = ({
                     <Line
                       type="monotone"
                       dataKey={`${ticker}_closed`}
+                      name={`${ticker} (Closed)`}
                       stroke={getTickerColor(ticker)}
                       strokeWidth={2}
                       dot={false}
@@ -340,7 +369,8 @@ const PositionTimelineChart: React.FC<PositionTimelineChartProps> = ({
                     <Line
                       type="monotone"
                       dataKey={`${ticker}_open`}
-                      stroke="#2563eb"
+                      name={`${ticker} (Open)`}
+                      stroke={getTickerColor(ticker)}
                       strokeWidth={2}
                       dot={false}
                       connectNulls={false}
