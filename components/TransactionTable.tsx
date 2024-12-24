@@ -347,12 +347,13 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
               <ImportButton />
 
               <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button className="w-full sm:w-auto">
-                    <Plus className="mr-2 h-4 w-4" />
-                    Add Transaction
-                  </Button>
-                </DialogTrigger>
+              <DialogTrigger asChild>
+                <Button className="w-full sm:w-auto flex items-center justify-center">
+                  <Plus className="mr-2 h-4 w-4" />
+                  <span className="sm:hidden">Add</span>
+                  <span className="hidden sm:inline">Add Transaction</span>
+                </Button>
+              </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
                     <DialogTitle>Add New Transaction</DialogTitle>
