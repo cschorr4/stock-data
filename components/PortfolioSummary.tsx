@@ -1,9 +1,9 @@
 import React, { useRef, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
-  DollarSign, Activity, TrendingUp, 
+  DollarSign, Activity, TrendingUp, Clock, 
   PieChart, Target, Waypoints, BarChart3,
-  ArrowUpRight, ArrowDownRight
+  ArrowUpRight, ArrowDownRight, TrendingDown, Network, AlertTriangle
 } from 'lucide-react';
 
 interface Position {
@@ -25,6 +25,10 @@ interface Position {
   spyReturn?: number;
   buyDate: string;
   lastUpdated: string;
+  sector: string;
+  industry: string;
+  marketCap?: number;
+  beta?: number;
 }
 
 interface ClosedPosition {
@@ -39,6 +43,21 @@ interface ClosedPosition {
   holdingPeriod: number;
 }
 
+export interface SectorMetric {
+  name: string;
+  allocation: number;
+  return: number;
+  positions: number;
+}
+
+export interface IndustryMetric {
+  name: string;
+  allocation: number;
+  return: number;
+  positions: number;
+  sector: string;
+}
+
 interface PortfolioMetrics {
   totalValue: number;
   totalCost: number;
@@ -48,6 +67,13 @@ interface PortfolioMetrics {
   bestPerformer: Position | null;
   worstPerformer: Position | null;
   avgHoldingPeriodWinners: number;
+  portfolioBeta: number;
+  maxDrawdown: number;
+  sharpeRatio: number;
+  cashBalance: number;
+  buyingPower: number;
+  sectorMetrics: SectorMetric[];
+  industryMetrics: IndustryMetric[];
 }
 
 interface PortfolioTotals {
@@ -71,6 +97,97 @@ interface MetricCardProps {
   metric2Color: string;
   gradient: string;
 }
+
+
+
+const MetricCards: React.FC<{
+  metrics: PortfolioMetrics,
+  totals: PortfolioTotals,
+  positions: Position[]
+}> = ({ metrics, totals, positions }) => {
+  const defaultMetrics = {
+    sectorMetrics: [],
+    industryMetrics: []
+  };
+  
+  const { topSector = { name: '-', allocation: 0, return: 0, positions: 0 }, 
+          topIndustry = { name: '-', allocation: 0, return: 0, positions: 0, sector: '-' } 
+  } = calculateTopMetrics(positions, {...metrics, ...defaultMetrics});
+
+  return (
+    <>
+      <MetricCard
+        title="Portfolio Value"
+        icon={<DollarSign className="w-4 h-4 text-blue-600 dark:text-blue-400" />}
+        mainValue={formatCurrency(metrics.totalValue)}
+        mainValueColor="text-blue-600 dark:text-blue-400"
+        metric1Label="Daily P/L"
+        metric1Value={formatCurrency(totals.realizedProfits)}
+        metric1Color={totals.realizedProfits >= 0 ? 'text-green-600' : 'text-red-600'}
+        metric2Label="Total Return"
+        metric2Value={formatPercentage(totals.totalReturn)}
+        metric2Color={totals.totalReturn >= 0 ? 'text-green-600' : 'text-red-600'}
+        gradient="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-900"
+      />
+
+      <MetricCard
+        title="Risk Metrics"
+        icon={<AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400" />}
+        mainValue={formatPercentage(metrics.portfolioBeta)}
+        mainValueColor="text-amber-600 dark:text-amber-400"
+        metric1Label="Max Drawdown"
+        metric1Value={formatPercentage(metrics.maxDrawdown)}
+        metric1Color="text-red-600"
+        metric2Label="Sharpe Ratio"
+        metric2Value={metrics.sharpeRatio ? metrics.sharpeRatio.toFixed(2) : 'N/A'}
+        metric2Color={metrics.sharpeRatio >= 1.5 ? 'text-green-600' : 'text-gray-600'}
+        gradient="bg-gradient-to-br from-amber-50 to-yellow-50 dark:from-gray-800 dark:to-gray-900"
+      />
+
+      <MetricCard
+        title={`Top Sector (${topSector.name})`}
+        icon={<PieChart className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />}
+        mainValue={formatPercentage(topSector.allocation)}
+        mainValueColor="text-indigo-600 dark:text-indigo-400"
+        metric1Label="Return"
+        metric1Value={formatPercentage(topSector.return)}
+        metric1Color={topSector.return >= 0 ? 'text-green-600' : 'text-red-600'}
+        metric2Label="Positions"
+        metric2Value={topSector.positions}
+        metric2Color="text-gray-600"
+        gradient="bg-gradient-to-br from-indigo-50 to-violet-50 dark:from-gray-800 dark:to-gray-900"
+      />
+
+      <MetricCard
+        title={`Top Industry (${topIndustry.name})`}
+        icon={<Network className="w-4 h-4 text-violet-600 dark:text-violet-400" />}
+        mainValue={formatPercentage(topIndustry.allocation)}
+        mainValueColor="text-violet-600 dark:text-violet-400"
+        metric1Label="Return"
+        metric1Value={formatPercentage(topIndustry.return)}
+        metric1Color={topIndustry.return >= 0 ? 'text-green-600' : 'text-red-600'}
+        metric2Label="Sector"
+        metric2Value={topIndustry.sector}
+        metric2Color="text-gray-600"
+        gradient="bg-gradient-to-br from-violet-50 to-purple-50 dark:from-gray-800 dark:to-gray-900"
+      />
+
+      <MetricCard
+        title="Performance"
+        icon={<Target className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />}
+        mainValue={formatPercentage(metrics.winRate)}
+        mainValueColor="text-emerald-600 dark:text-emerald-400"
+        metric1Label="Avg Win"
+        metric1Value={formatPercentage(metrics.avgWinPercent)}
+        metric1Color="text-green-600"
+        metric2Label="Avg Loss"
+        metric2Value={formatPercentage(Math.abs(metrics.avgLossPercent))}
+        metric2Color="text-red-600"
+        gradient="bg-gradient-to-br from-emerald-50 to-green-50 dark:from-gray-800 dark:to-gray-900"
+      />
+    </>
+  );
+};
 
 const MetricCard: React.FC<MetricCardProps> = ({
   title,
@@ -164,29 +281,33 @@ const SwipeableContainer: React.FC<{children: React.ReactNode}> = ({ children })
   const containerRef = useRef<HTMLDivElement>(null);
   const innerRef = useRef<HTMLDivElement>(null);
   const [startX, setStartX] = useState(0);
+  const [scrollPosition, setScrollPosition] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
 
   const handleStart = (clientX: number) => {
     setIsDragging(true);
     setStartX(clientX);
     if (innerRef.current) {
-      innerRef.current.style.transform = 'none';
       innerRef.current.style.transition = 'none';
     }
   };
 
   const handleMove = (clientX: number) => {
-    if (!isDragging) return;
-    const diff = (clientX - startX) * 1.5;
+    if (!isDragging || !containerRef.current || !innerRef.current) return;
+    const diff = clientX - startX;
+    const maxScroll = innerRef.current.scrollWidth - containerRef.current.clientWidth;
+    const newPosition = Math.max(Math.min(scrollPosition - diff, maxScroll), 0);
     if (innerRef.current) {
-      innerRef.current.style.transform = `translateX(${diff}px)`;
+      innerRef.current.style.transform = `translateX(-${newPosition}px)`;
     }
   };
 
   const handleEnd = () => {
     setIsDragging(false);
     if (innerRef.current) {
-      innerRef.current.style.transform = 'none';
+      const currentTransform = getComputedStyle(innerRef.current).transform;
+      const matrix = new DOMMatrix(currentTransform);
+      setScrollPosition(-matrix.m41);
       innerRef.current.style.transition = 'transform 0.3s ease-out';
     }
   };
@@ -194,17 +315,17 @@ const SwipeableContainer: React.FC<{children: React.ReactNode}> = ({ children })
   return (
     <div className="w-full overflow-hidden">
       <style jsx>{`
-        @keyframes scroll {
-          0% { transform: translateX(100%); }
-          100% { transform: translateX(-100%); }
+        @keyframes slideLeft {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(calc(-280px * (var(--num-items) / 2))); }
         }
-        .continuous-scroll {
-          animation: ${React.Children.count(children) <= 3 ? 'none' : `scroll ${React.Children.count(children) < 4 ? '10s' : '30s'} linear infinite`};
+        .scroll-metrics {
+          animation: slideLeft 5s linear infinite;
         }
-        .fast-scroll {
-          animation: ${React.Children.count(children) <= 3 ? 'none' : `scroll ${React.Children.count(children) < 4 ? '5s' : '15s'} linear infinite`};
+        .scroll-stocks {
+          animation: slideLeft 40s linear infinite;
         }
-        .continuous-scroll.dragging {
+        .scroll-metrics:hover, .scroll-stocks:hover {
           animation-play-state: paused;
         }
       `}</style>
@@ -226,21 +347,35 @@ const SwipeableContainer: React.FC<{children: React.ReactNode}> = ({ children })
       >
         <div 
           ref={innerRef}
-          className={`flex gap-4 pb-4 ${children[0]?.type?.name === 'StockTicker' ? 'fast-scroll' : 'continuous-scroll'} ${isDragging ? 'dragging' : ''}`}
-          style={{ width: 'fit-content' }}
+          className={`flex gap-4 pb-4 ${
+            children[0]?.type?.name === 'StockTicker' ? 'scroll-stocks' : 'scroll-metrics'
+          } ${isDragging ? 'animation-play-state: paused' : ''}`}
+          style={{ 
+            width: 'fit-content',
+            transform: 'translateX(0)',
+            '--num-items': React.Children.count(children) * 2
+          } as React.CSSProperties}
         >
-          {React.Children.count(children) <= 3 ? children : (
-            <>
-              {React.Children.map(children, child => child)}
-              {React.Children.map(children, child => child)}
-              {React.Children.map(children, child => child)}
-              {React.Children.count(children) < 4 && React.Children.map(children, child => child)}
-            </>
-          )}
+          {React.Children.map(children, child => child)}
+          {React.Children.map(children, child => child)}
         </div>
       </div>
     </div>
   );
+};
+
+const calculateTopMetrics = (positions: Position[], metrics: PortfolioMetrics) => {
+  const defaultMetric = { name: '-', allocation: 0, return: 0, positions: 0, sector: '-' };
+  
+  const topSector = metrics.sectorMetrics?.length > 0 
+    ? metrics.sectorMetrics.reduce((a, b) => a.allocation > b.allocation ? a : b)
+    : defaultMetric;
+
+  const topIndustry = metrics.industryMetrics?.length > 0
+    ? metrics.industryMetrics.reduce((a, b) => a.allocation > b.allocation ? a : b)
+    : defaultMetric;
+
+  return { topSector, topIndustry };
 };
 
 const formatCurrency = (value: number): string => {
@@ -253,7 +388,8 @@ const formatCurrency = (value: number): string => {
   }).format(value);
 };
 
-const formatPercentage = (value: number, decimals = 1): string => {
+const formatPercentage = (value: number | undefined | null, decimals = 1): string => {
+  if (value == null) return '0%';
   return `${value.toFixed(decimals)}%`;
 };
 
@@ -268,10 +404,15 @@ const PortfolioSummary: React.FC<{
   openPositions,
   closedPositions
 }) => {
+  
   const ytdStart = new Date(new Date().getFullYear(), 0, 1);
   const ytdClosedProfits = closedPositions
     .filter(pos => new Date(pos.sellDate) >= ytdStart)
     .reduce((sum, pos) => sum + pos.profit, 0);
+
+  const avgPositionSize = openPositions.length > 0 
+    ? totals.currentValue / openPositions.length 
+    : 0;
 
   const largestPosition = openPositions.reduce((max, pos) => 
     pos.currentValue > (max?.currentValue || 0) ? pos : max
@@ -280,111 +421,13 @@ const PortfolioSummary: React.FC<{
   return (
     <div className="w-full">
       <div className="px-4">
-        <SwipeableContainer>
-          <MetricCard
-            title="Portfolio Value"
-            icon={<DollarSign className="w-4 h-4 text-blue-600 dark:text-blue-400" />}
-            mainValue={formatCurrency(metrics.totalValue)}
-            mainValueColor="text-blue-600 dark:text-blue-400"
-            metric1Label="Daily Change"
-            metric1Value={formatCurrency(totals.realizedProfits)}
-            metric1Color={totals.realizedProfits >= 0 ? 'text-green-600' : 'text-red-600'}
-            metric2Label="YTD Profit"
-            metric2Value={formatCurrency(ytdClosedProfits)}
-            metric2Color={ytdClosedProfits >= 0 ? 'text-green-600' : 'text-red-600'}
-            gradient="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-900"
-          />
-
-          <MetricCard
-            title="Performance"
-            icon={<TrendingUp className="w-4 h-4 text-orange-600 dark:text-orange-400" />}
-            mainValue={formatPercentage(totals.totalReturn)}
-            mainValueColor="text-orange-600 dark:text-orange-400"
-            metric1Label="vs SPY"
-            metric1Value={formatPercentage(metrics.bestPerformer?.spyReturn || 0)}
-            metric1Color={(metrics.bestPerformer?.spyReturn || 0) >= 0 ? 'text-green-600' : 'text-red-600'}
-            metric2Label="Best Position"
-            metric2Value={formatPercentage(metrics.avgWinPercent)}
-            metric2Color="text-green-600"
-            gradient="bg-gradient-to-br from-orange-50 to-amber-50 dark:from-gray-800 dark:to-gray-900"
-          />
-
-          <MetricCard
-            title="Risk Analysis"
-            icon={<Target className="w-4 h-4 text-red-600 dark:text-red-400" />}
-            mainValue={formatPercentage(Math.abs(metrics.avgLossPercent))}
-            mainValueColor="text-red-600 dark:text-red-400"
-            metric1Label="Max Drawdown"
-            metric1Value={formatPercentage(Math.min(...openPositions.map(p => p.percentChange)))}
-            metric1Color="text-red-600"
-            metric2Label="Risk Ratio"
-            metric2Value={formatPercentage(Math.abs(metrics.avgWinPercent / metrics.avgLossPercent))}
-            metric2Color="text-blue-600"
-            gradient="bg-gradient-to-br from-red-50 to-pink-50 dark:from-gray-800 dark:to-gray-900"
-          />
-
-          <MetricCard
-            title="Trading Stats"
-            icon={<Activity className="w-4 h-4 text-green-600 dark:text-green-400" />}
-            mainValue={formatPercentage(metrics.winRate)}
-            mainValueColor="text-green-600 dark:text-green-400"
-            metric1Label="Win/Loss"
-            metric1Value={`${openPositions.filter(p => p.percentChange > 0).length}/${openPositions.filter(p => p.percentChange < 0).length}`}
-            metric1Color="text-green-600"
-            metric2Label="Avg Days Held"
-            metric2Value={metrics.avgHoldingPeriodWinners}
-            metric2Color="text-green-600"
-            gradient="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-gray-800 dark:to-gray-900"
-          />
-
-          <MetricCard
-            title="Volatility"
-            icon={<BarChart3 className="w-4 h-4 text-purple-600 dark:text-purple-400" />}
-            mainValue={formatPercentage(
-              Math.sqrt(openPositions.reduce((sum, pos) => sum + Math.pow(pos.dayChangePercent, 2), 0) / openPositions.length)
-            )}
-            mainValueColor="text-purple-600 dark:text-purple-400"
-            metric1Label="Daily Range"
-            metric1Value={formatPercentage(
-              openPositions.reduce((sum, pos) => sum + ((pos.dayHigh || 0) - (pos.dayLow || 0)) / (pos.currentPrice || 1), 0) / openPositions.length
-            )}
-            metric1Color="text-purple-600"
-            metric2Label="Beta"
-            metric2Value={formatPercentage(metrics.bestPerformer?.spyReturn || 0)}
-            metric2Color="text-purple-600"
-            gradient="bg-gradient-to-br from-purple-50 to-violet-50 dark:from-gray-800 dark:to-gray-900"
-          />
-
-          <MetricCard
-            title="Sector Analysis"
-            icon={<PieChart className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />}
-            mainValue={openPositions.length}
-            mainValueColor="text-cyan-600 dark:text-cyan-400"
-            metric1Label="Sector Count"
-            metric1Value={new Set(openPositions.map(p => p.ticker.slice(0,2))).size}
-            metric1Color="text-cyan-600"
-            metric2Label="Concentration"
-            metric2Value={formatPercentage((largestPosition?.currentValue || 0) / metrics.totalValue * 100)}
-            metric2Color="text-cyan-600"
-            gradient="bg-gradient-to-br from-cyan-50 to-sky-50 dark:from-gray-800 dark:to-gray-900"
-          />
-
-          <MetricCard
-            title="Position Signals"
-            icon={<Waypoints className="w-4 h-4 text-yellow-600 dark:text-yellow-400" />}
-            mainValue={`${openPositions.filter(p => p.percentChange > 0 && p.dayChangePercent > 0).length}`}
-            mainValueColor="text-yellow-600 dark:text-yellow-400"
-            metric1Label="Trending Up"
-            metric1Value={openPositions.filter(p => p.percentChange > 0 && p.dayChangePercent > 0).length}
-            metric1Color="text-green-600"
-            metric2Label="Trending Down"
-            metric2Value={openPositions.filter(p => p.percentChange < 0 && p.dayChangePercent < 0).length}
-            metric2Color="text-red-600"
-            gradient="bg-gradient-to-br from-yellow-50 to-amber-50 dark:from-gray-800 dark:to-gray-900"
-          />
-
-          {/* Additional MetricCards as before */}
-        </SwipeableContainer>
+      <SwipeableContainer>
+  <MetricCards 
+    metrics={metrics}
+    totals={totals}
+    positions={openPositions}
+  />
+</SwipeableContainer>
       </div>
       
       <div className="px-4">
