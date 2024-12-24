@@ -323,7 +323,7 @@ const SwipeableContainer: React.FC<{children: React.ReactNode}> = ({ children })
           animation: slideLeft 5s linear infinite;
         }
         .scroll-stocks {
-          animation: slideLeft 40s linear infinite;
+          animation: slideLeft 20s linear infinite;
         }
         .scroll-metrics:hover, .scroll-stocks:hover {
           animation-play-state: paused;
@@ -405,18 +405,6 @@ const PortfolioSummary: React.FC<{
   closedPositions
 }) => {
   
-  const ytdStart = new Date(new Date().getFullYear(), 0, 1);
-  const ytdClosedProfits = closedPositions
-    .filter(pos => new Date(pos.sellDate) >= ytdStart)
-    .reduce((sum, pos) => sum + pos.profit, 0);
-
-  const avgPositionSize = openPositions.length > 0 
-    ? totals.currentValue / openPositions.length 
-    : 0;
-
-  const largestPosition = openPositions.reduce((max, pos) => 
-    pos.currentValue > (max?.currentValue || 0) ? pos : max
-  , openPositions[0]);
 
   return (
     <div className="w-full">
