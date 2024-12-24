@@ -13,6 +13,7 @@ interface ChartControlsProps {
   selectedTickers: string[];
   showPercentage: boolean;
   timeRange: string;
+  dateRange?: DateRange;
   onTickerSelect: (ticker: string) => void;
   onShowPercentageChange: (checked: boolean) => void;
   onTimeRangeChange: (value: string, dateRange?: { start: string; end: string }) => void;
