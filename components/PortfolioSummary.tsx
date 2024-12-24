@@ -1,11 +1,10 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, isValidElement} from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
   DollarSign, 
   PieChart, Target,
   ArrowUpRight, ArrowDownRight, Network, AlertTriangle
 } from 'lucide-react';
-import React, { isValidElement } from 'react';
 
 interface Position {
   ticker: string;
