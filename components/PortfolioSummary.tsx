@@ -1,9 +1,9 @@
 import React, { useRef, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
-  DollarSign, Activity, TrendingUp, Clock, 
+  DollarSign, Activity, TrendingUp, 
   PieChart, Target, Waypoints, BarChart3,
-  ArrowUpRight, ArrowDownRight, TrendingDown
+  ArrowUpRight, ArrowDownRight
 } from 'lucide-react';
 
 interface Position {
@@ -272,10 +272,6 @@ const PortfolioSummary: React.FC<{
   const ytdClosedProfits = closedPositions
     .filter(pos => new Date(pos.sellDate) >= ytdStart)
     .reduce((sum, pos) => sum + pos.profit, 0);
-
-  const avgPositionSize = openPositions.length > 0 
-    ? totals.currentValue / openPositions.length 
-    : 0;
 
   const largestPosition = openPositions.reduce((max, pos) => 
     pos.currentValue > (max?.currentValue || 0) ? pos : max
