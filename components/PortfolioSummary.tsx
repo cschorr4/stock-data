@@ -401,8 +401,7 @@ const PortfolioSummary: React.FC<{
 }> = ({
   metrics,
   totals,
-  openPositions,
-  closedPositions
+  openPositions
 }) => {
   
 
