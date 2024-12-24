@@ -180,10 +180,9 @@ export interface ChartControlsProps {
   selectedTickers: string[];
   showPercentage: boolean;
   timeRange: string;
-  dateRange?: { start: string; end: string };  // Add this line
   onTickerSelect: (ticker: string) => void;
   onShowPercentageChange: (checked: boolean) => void;
-  onTimeRangeChange: (value: string, dateRange?: { start: string; end: string }) => void;
+  onTimeRangeChange: (value: string) => void;
 }
 
 // Tooltip-related interfaces
