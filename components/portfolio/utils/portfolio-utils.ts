@@ -38,21 +38,36 @@ export const calculateRiskMetrics = (metrics: PortfolioMetrics, positions: Posit
   if (!positions.length) {
     return {
       portfolioBeta: 0,
-      sectorConcentration: 0,
-      riskScore: 0
+      maxDrawdown: 0,
+      sharpeRatio: 0
     };
   }
-
   const portfolioValue = _.sumBy(positions, 'currentValue');
   const weightedBeta = positions.reduce((acc, pos) => {
     const weight = pos.currentValue / portfolioValue;
     return acc + (pos.beta || 1) * weight;
   }, 0);
 
+  // Calculate max drawdown
+  const values = positions.map(pos => pos.currentValue / (pos.avgCost * pos.shares));
+  let maxDrawdown = 0;
+  let peak = values[0] || 1;
+  values.forEach(value => {
+    if (value > peak) peak = value;
+    const drawdown = (peak - value) / peak * 100;
+    if (drawdown > maxDrawdown) maxDrawdown = drawdown;
+  });
+
+  // Calculate Sharpe ratio
+  const returns = positions.map(pos => pos.percentChange);
+  const avgReturn = returns.length ? _.mean(returns) : 0;
+  const stdDev = Math.sqrt(_.meanBy(returns, ret => Math.pow(ret - avgReturn, 2)) || 0);
+  const sharpeRatio = stdDev !== 0 ? (avgReturn - 2.5) / stdDev : 0;
+
   return {
     portfolioBeta: weightedBeta,
-    sectorConcentration: calculateSectorConcentration(positions),
-    riskScore: calculateRiskScore(metrics, weightedBeta)
+    maxDrawdown,
+    sharpeRatio
   };
 };
 
