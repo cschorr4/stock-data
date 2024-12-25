@@ -1,39 +1,14 @@
-'use client';
-
 import React, { useState, useEffect, useCallback } from 'react';
-import {
-  Transaction,
-  Position,
-  ClosedPosition,
-  PortfolioMetrics,
-  PortfolioTotals,
-  ApiResponse,
-  MarketData, 
-  StockQuote
-} from '@/lib/types';
-
-// Component imports
-import PortfolioSummary from './PortfolioSummary';
+import { Transaction, Position, ClosedPosition, PortfolioMetrics, PortfolioTotals, ApiResponse, MarketData, StockQuote } from '@/lib/types';
+import PortfolioSummary from './portfolio/PortfolioSummary';
 import PositionTimelineChart from './charts/position-timeline/PositionTimeLineChart';
 import OpenPositionsTable from './OpenPositionsTable';
 import ClosedPositionsTable from './ClosedPositionsTable';
 import TransactionTable from './TransactionTable';
+import { getLocalStorage, setLocalStorage } from '@/lib/storage';
+import { fetchWithRetry } from '@/lib/fetch-helpers';
+import PositionTables from './portfolio/PositionTables';
 
-// Storage helpers with proper typing
-const getLocalStorage = <T,>(key: string, defaultValue: T): T => {
-  if (typeof window !== 'undefined') {
-    const saved = localStorage.getItem(key);
-    return saved ? JSON.parse(saved) : defaultValue;
-  }
-  return defaultValue;
-};
-
-
-const setLocalStorage = <T,>(key: string, value: T): void => {
-  if (typeof window !== 'undefined') {
-    localStorage.setItem(key, JSON.stringify(value));
-  }
-};
 
 const PortfolioTracker = () => {
   const [transactions, setTransactions] = useState<Transaction[]>(() => 
@@ -43,180 +18,199 @@ const PortfolioTracker = () => {
   const [spyData, setSpyData] = useState<Record<string, number>>({});
   const [isLoading, setIsLoading] = useState(true);
   
-    // Wrap calculatePositions in useCallback
-    const calculatePositions = useCallback(() => {
-      const positions = new Map<string, Array<{
-        price: number;
-        shares: number;
-        date: string;
-        holdingPeriod: number;
-      }>>();
-      const closedPositions: ClosedPosition[] = [];
+  const fetchStockData = useCallback(async (symbols: string[], buyDates: string[]) => {
+    try {
+      const response = await fetchWithRetry(
+        `/api/stock/realtime?symbols=${symbols.join(',')}&buyDates=${buyDates.join(',')}`
+      );
       
-      transactions
-        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-        .forEach(transaction => {
-          const { ticker, type, price, shares, date } = transaction;
-          const numericPrice = parseFloat(price.toString());
-          const numericShares = parseFloat(shares.toString());
-          
-          if (type === 'buy') {
-            if (!positions.has(ticker)) {
-              positions.set(ticker, []);
-            }
-            positions.get(ticker)?.push({ 
-              price: numericPrice,
-              shares: numericShares,
-              date,
-              holdingPeriod: Math.floor((new Date().getTime() - new Date(date).getTime()) / (1000 * 60 * 60 * 24))
-            });
-          } else if (type === 'sell') {
-            let remainingShares = numericShares;
-            const position = positions.get(ticker) || [];
-            const sellPrice = numericPrice;
-            
-            while (remainingShares > 0 && position.length > 0) {
-              const lot = position[0];
-              const sharesSold = Math.min(remainingShares, lot.shares);
-              const percentChange = ((sellPrice - lot.price) / lot.price) * 100;
-              const holdingPeriod = Math.floor((new Date(date).getTime() - new Date(lot.date).getTime()) / (1000 * 60 * 60 * 24));
-              
-              if (sharesSold === lot.shares) {
-                position.shift();
-              } else {
-                lot.shares -= sharesSold;
-              }
-              
-              closedPositions.push({
-                ticker,
-                buyDate: lot.date,
-                sellDate: date,
-                buyPrice: lot.price,
-                sellPrice,
-                shares: sharesSold,
-                profit: (sellPrice - lot.price) * sharesSold,
-                percentChange,
-                holdingPeriod
-              });
-              
-              remainingShares -= sharesSold;
-            }
-            
-            if (position.length === 0) {
-              positions.delete(ticker);
-            }
-          }
-        });
-  
-      const openPositions: Position[] = Array.from(positions.entries()).map(([ticker, lots]) => {
-        const totalShares = lots.reduce((sum, lot) => sum + lot.shares, 0);
-        const avgCost = lots.reduce((sum, lot) => sum + lot.price * lot.shares, 0) / totalShares;
-        const firstLot = lots[0];
-        const realtimeData = realtimePrices[ticker];
-        const currentPrice = realtimeData?.currentPrice || avgCost;
-        const currentValue = currentPrice * totalShares;
-        const originalValue = avgCost * totalShares;
-        const dollarChange = currentValue - originalValue;
-        const percentChange = ((currentValue / originalValue) - 1) * 100;
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
       
-        return {
-          ticker,
-          shares: totalShares,
-          avgCost,
-          currentPrice,
-          currentValue,
-          dollarChange,
-          percentChange,
-          dayChange: realtimeData?.change || 0,
-          dayChangePercent: realtimeData?.changePercent || 0,
-          volume: realtimeData?.volume,
-          dayHigh: realtimeData?.dayHigh,
-          dayLow: realtimeData?.dayLow,
-          peRatio: realtimeData?.peRatio,
-          forwardPE: realtimeData?.forwardPE,
-          industryPE: realtimeData?.industryPE,
-          spyReturn: spyData[ticker] || 0,
-          buyDate: firstLot.date,
-          lastUpdated: new Date().toISOString(),
-          sector: realtimeData?.sector || 'Unknown',   
-          industry: realtimeData?.industry || 'Unknown' 
-        };
-      });
-  
-      return { openPositions, closedPositions };
-    }, [transactions, realtimePrices, spyData]);
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching stock data:', error);
+      // Return empty data rather than failing completely
+      return {
+        quotes: symbols.map(symbol => ({
+          symbol,
+          currentPrice: 0,
+          change: 0,
+          changePercent: 0,
+          volume: 0,
+          dayHigh: 0,
+          dayLow: 0
+        }))
+      };
+    }
+  }, []);
 
-   
-    const calculateMetrics = useCallback(() => {
-      const { openPositions, closedPositions } = calculatePositions();
-      
-      const realizedProfits = closedPositions.reduce((sum, pos) => sum + pos.profit, 0);
-      const unrealizedProfits = openPositions.reduce((sum, pos) => sum + pos.dollarChange, 0);
-      const totalInvestment = openPositions.reduce((sum, pos) => sum + (pos.avgCost * pos.shares), 0);
-      const currentValue = openPositions.reduce((sum, pos) => sum + pos.currentValue, 0);
-      
-      const totals: PortfolioTotals = {
-        realizedProfits,
-        unrealizedProfits,
-        totalInvestment,
-        currentValue,
-        totalReturn: totalInvestment > 0 ? ((currentValue + realizedProfits) / totalInvestment - 1) * 100 : 0
-      };
+  const calculatePositions = useCallback(() => {
+    const positions = new Map<string, Array<{
+      price: number;
+      shares: number;
+      date: string;
+      holdingPeriod: number;
+    }>>();
+    const closedPositions: ClosedPosition[] = [];
     
-      const winningPositions = closedPositions.filter(pos => pos.profit > 0);
-      const losingPositions = closedPositions.filter(pos => pos.profit < 0);
-      
-      // Calculate max drawdown using peak to trough
-      const values = openPositions.map(pos => pos.currentValue / (pos.avgCost * pos.shares));
-      let maxDrawdown = 0;
-      let peak = values[0] || 1;
-      
-      values.forEach(value => {
-        if (value > peak) peak = value;
-        const drawdown = (peak - value) / peak * 100;
-        if (drawdown > maxDrawdown) maxDrawdown = drawdown;
+    transactions
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+      .forEach(transaction => {
+        const { ticker, type, price, shares, date } = transaction;
+        const numericPrice = parseFloat(price.toString());
+        const numericShares = parseFloat(shares.toString());
+        
+        if (type === 'buy') {
+          if (!positions.has(ticker)) {
+            positions.set(ticker, []);
+          }
+          positions.get(ticker)?.push({ 
+            price: numericPrice,
+            shares: numericShares,
+            date,
+            holdingPeriod: Math.floor((new Date().getTime() - new Date(date).getTime()) / (1000 * 60 * 60 * 24))
+          });
+        } else if (type === 'sell') {
+          let remainingShares = numericShares;
+          const position = positions.get(ticker) || [];
+          const sellPrice = numericPrice;
+          
+          while (remainingShares > 0 && position.length > 0) {
+            const lot = position[0];
+            const sharesSold = Math.min(remainingShares, lot.shares);
+            const percentChange = ((sellPrice - lot.price) / lot.price) * 100;
+            const holdingPeriod = Math.floor((new Date(date).getTime() - new Date(lot.date).getTime()) / (1000 * 60 * 60 * 24));
+            
+            if (sharesSold === lot.shares) {
+              position.shift();
+            } else {
+              lot.shares -= sharesSold;
+            }
+            
+            closedPositions.push({
+              ticker,
+              buyDate: lot.date,
+              sellDate: date,
+              buyPrice: lot.price,
+              sellPrice,
+              shares: sharesSold,
+              profit: (sellPrice - lot.price) * sharesSold,
+              percentChange,
+              holdingPeriod,
+              spyReturn: spyData[ticker] || 0
+            });
+            
+            remainingShares -= sharesSold;
+          }
+          
+          if (position.length === 0) {
+            positions.delete(ticker);
+          }
+        }
       });
+
+    const openPositions: Position[] = Array.from(positions.entries()).map(([ticker, lots]) => {
+      const totalShares = lots.reduce((sum, lot) => sum + lot.shares, 0);
+      const avgCost = lots.reduce((sum, lot) => sum + lot.price * lot.shares, 0) / totalShares;
+      const firstLot = lots[0];
+      const realtimeData = realtimePrices[ticker];
+      const currentPrice = realtimeData?.currentPrice || avgCost;
+      const currentValue = currentPrice * totalShares;
+      const originalValue = avgCost * totalShares;
+      const dollarChange = currentValue - originalValue;
+      const percentChange = ((currentValue / originalValue) - 1) * 100;
     
-      const metrics: PortfolioMetrics = {
-        totalValue: currentValue,
-        totalCost: totalInvestment,
-        winRate: (winningPositions.length / (winningPositions.length + losingPositions.length)) * 100 || 0,
-        avgWinPercent: winningPositions.length > 0 
-          ? winningPositions.reduce((sum, pos) => sum + pos.percentChange, 0) / winningPositions.length 
-          : 0,
-        avgLossPercent: losingPositions.length > 0
-          ? losingPositions.reduce((sum, pos) => sum + pos.percentChange, 0) / losingPositions.length
-          : 0,
-        bestPerformer: openPositions.length > 0 
-          ? openPositions.reduce((best, pos) => 
-              pos.percentChange > best.percentChange ? pos : best
-            , openPositions[0])
-          : null,
-        worstPerformer: openPositions.length > 0
-          ? openPositions.reduce((worst, pos) => 
-              pos.percentChange < worst.percentChange ? pos : worst
-            , openPositions[0])
-          : null,
-        avgHoldingPeriodWinners: winningPositions.length > 0
-          ? Math.floor(winningPositions.reduce((sum, pos) => sum + pos.holdingPeriod, 0) / winningPositions.length)
-          : 0,
-        maxDrawdown,
-        portfolioBeta: 1,
-        sharpeRatio: 0,
-        cashBalance: 0,
-        buyingPower: 0,
-        sectorMetrics: [],
-        industryMetrics: []
+      return {
+        ticker,
+        shares: totalShares,
+        avgCost,
+        currentPrice,
+        currentValue,
+        dollarChange,
+        percentChange,
+        dayChange: realtimeData?.change || 0,
+        dayChangePercent: realtimeData?.changePercent || 0,
+        volume: realtimeData?.volume,
+        dayHigh: realtimeData?.dayHigh,
+        dayLow: realtimeData?.dayLow,
+        peRatio: realtimeData?.peRatio,
+        forwardPE: realtimeData?.forwardPE,
+        industryPE: realtimeData?.industryPE,
+        spyReturn: spyData[ticker] || 0,
+        buyDate: firstLot.date,
+        lastUpdated: new Date().toISOString(),
+        sector: realtimeData?.sector || 'Unknown',   
+        industry: realtimeData?.industry || 'Unknown' 
       };
+    });
+
+    return { openPositions, closedPositions };
+  }, [transactions, realtimePrices, spyData]);
+
+  const calculateMetrics = useCallback(() => {
+    const { openPositions, closedPositions } = calculatePositions();
     
-      return { metrics, totals, openPositions, closedPositions };
-    }, [calculatePositions]);
-  // Fetch realtime prices with calculatePositions in dependencies
+    const totalValueOpen = openPositions.reduce((sum, pos) => sum + pos.currentValue, 0);
+    const totalCostOpen = openPositions.reduce((sum, pos) => sum + (pos.avgCost * pos.shares), 0);
+    const realizedProfits = closedPositions.reduce((sum, pos) => sum + pos.profit, 0);
+    const unrealizedProfits = openPositions.reduce((sum, pos) => sum + pos.dollarChange, 0);
+    
+    const totals: PortfolioTotals = {
+      realizedProfits,
+      unrealizedProfits,
+      totalInvestment: totalCostOpen,
+      currentValue: totalValueOpen,
+      totalReturn: totalCostOpen > 0 ? ((totalValueOpen + realizedProfits) / totalCostOpen - 1) * 100 : 0
+    };
+  
+    const winningPositions = closedPositions.filter(pos => pos.profit > 0);
+    const losingPositions = closedPositions.filter(pos => pos.profit < 0);
+    
+    // Calculate sector and industry metrics
+    const { sectorMetrics, industryMetrics } = calculateDiversificationMetrics(openPositions);
+    
+    // Calculate portfolio beta and other risk metrics
+    const { portfolioBeta, maxDrawdown, sharpeRatio } = calculateRiskMetrics(openPositions);
+  
+    const metrics: PortfolioMetrics = {
+      totalValue: totalValueOpen,
+      totalCost: totalCostOpen,
+      winRate: (winningPositions.length / (winningPositions.length + losingPositions.length)) * 100 || 0,
+      avgWinPercent: winningPositions.length > 0 
+        ? winningPositions.reduce((sum, pos) => sum + pos.percentChange, 0) / winningPositions.length 
+        : 0,
+      avgLossPercent: losingPositions.length > 0
+        ? losingPositions.reduce((sum, pos) => sum + pos.percentChange, 0) / losingPositions.length
+        : 0,
+      bestPerformer: openPositions.length > 0 
+        ? openPositions.reduce((best, pos) => pos.percentChange > best.percentChange ? pos : best, openPositions[0])
+        : null,
+      worstPerformer: openPositions.length > 0
+        ? openPositions.reduce((worst, pos) => pos.percentChange < worst.percentChange ? pos : worst, openPositions[0])
+        : null,
+      avgHoldingPeriodWinners: winningPositions.length > 0
+        ? Math.floor(winningPositions.reduce((sum, pos) => sum + pos.holdingPeriod, 0) / winningPositions.length)
+        : 0,
+      maxDrawdown,
+      portfolioBeta,
+      sharpeRatio,
+      cashBalance: 0,
+      buyingPower: 0,
+      sectorMetrics,
+      industryMetrics
+    };
+  
+    return { metrics, totals, openPositions, closedPositions };
+  }, [calculatePositions]);
+
   useEffect(() => {
     const fetchPrices = async () => {
       const uniqueTransactions = transactions
         .map(t => t.ticker)
         .filter((ticker, index, array) => array.indexOf(ticker) === index);
+        
       if (uniqueTransactions.length === 0) {
         setIsLoading(false);
         return;
@@ -230,27 +224,23 @@ const PortfolioTracker = () => {
           return firstBuy?.date || new Date().toISOString();
         });
   
-        const symbols = uniqueTransactions.join(',');
-        const buyDates = symbolBuyDates.join(',');
-        
-        const response = await fetch(`/api/stock/realtime?symbols=${symbols}&buyDates=${buyDates}`);
-        const data = await response.json() as ApiResponse;
+        const data = await fetchStockData(uniqueTransactions, symbolBuyDates);
         
         if (data.quotes) {
           const priceMap = data.quotes.reduce((acc: MarketData, quote: StockQuote) => ({
             ...acc,
             [quote.symbol]: {
-              currentPrice: quote.currentPrice,
-              change: quote.change,
-              changePercent: quote.changePercent,
-              volume: quote.volume,
-              dayHigh: quote.dayHigh,
-              dayLow: quote.dayLow,
+              currentPrice: quote.currentPrice || 0,
+              change: quote.change || 0,
+              changePercent: quote.changePercent || 0,
+              volume: quote.volume || 0,
+              dayHigh: quote.dayHigh || 0,
+              dayLow: quote.dayLow || 0,
               peRatio: quote.peRatio,
               forwardPE: quote.forwardPE,
               industryPE: quote.industryPE,
-              sector: quote.sector,          // Add these
-              industry: quote.industry,      // Add these
+              sector: quote.sector || 'Unknown',
+              industry: quote.industry || 'Unknown',
             }
           }), {} as MarketData);
           
@@ -264,7 +254,7 @@ const PortfolioTracker = () => {
           setSpyData(spyComparisons);
         }
       } catch (error) {
-        console.error('Error fetching prices:', error);
+        console.error('Error in price fetching:', error);
       } finally {
         setIsLoading(false);
       }
@@ -274,19 +264,6 @@ const PortfolioTracker = () => {
     const interval = setInterval(fetchPrices, 300000); // Update every 5 minutes
     return () => clearInterval(interval);
   }, [transactions]);
-
-  // SPY comparison effect with calculatePositions in dependencies
-  useEffect(() => {
-    const { openPositions, closedPositions } = calculatePositions();
-    
-    const updateSpyComparisons = async () => {
-      // ... rest of SPY comparison code
-    };
-    
-    if (openPositions.length > 0 || closedPositions.length > 0) {
-      updateSpyComparisons();
-    }
-  }, [transactions, calculatePositions]); // Added calculatePositions to dependencies
 
   // Transaction handlers
   const handleTransactionAdd = (transaction: Transaction) => {
@@ -317,38 +294,140 @@ const PortfolioTracker = () => {
   const { metrics, totals, openPositions, closedPositions } = calculateMetrics();
 
   if (isLoading) {
-    return <div>Loading portfolio data...</div>;
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+      </div>
+    );
   }
 
   return (
-    <div className="space-y-1">
-      <h1 className="text-xl font-bold px-2 py-0.5">Portfolio Tracker</h1>
+    <div className="space-y-8 p-4 md:space-y-12">
+    <header className="flex items-center justify-between">
+      <h1 className="text-2xl font-bold">Portfolio Tracker</h1>
+      <div className="text-sm text-gray-500">
+        Last updated: {new Date().toLocaleTimeString()}
+      </div>
+    </header>
+    
+    <section className="bg-card rounded-lg shadow-sm">
       <PortfolioSummary
         metrics={metrics}
         totals={totals}
         openPositions={openPositions}
         closedPositions={closedPositions}
       />
-      <div className="mt-1">
+    </section>
+    
+    <section className="bg-card rounded-lg shadow-sm">
+      <div className="h-[460px] md:h-[525px] p-4">
         <PositionTimelineChart 
           transactions={transactions}
           openPositions={openPositions}
           closedPositions={closedPositions}
         />
       </div>
-      <div className="space-y-1">
-        <OpenPositionsTable positions={openPositions} />
-        <ClosedPositionsTable positions={closedPositions} />
-        <TransactionTable
-          transactions={transactions}
-          onTransactionAdd={handleTransactionAdd}
-          onTransactionEdit={handleTransactionEdit}
-          onTransactionDelete={handleTransactionDelete}
-          onTransactionsDeleteAll={handleTransactionsDeleteAll}
-        />
-      </div>
-    </div>
+    </section>
+    
+    <section className="bg-card rounded-lg shadow-sm">
+      <PositionTables 
+        openPositions={openPositions}
+        closedPositions={closedPositions}
+      />
+    </section>
+    
+    <section className="bg-card rounded-lg shadow-sm">
+      <TransactionTable
+        transactions={transactions}
+        onTransactionAdd={handleTransactionAdd}
+        onTransactionEdit={handleTransactionEdit}
+        onTransactionDelete={handleTransactionDelete}
+        onTransactionsDeleteAll={handleTransactionsDeleteAll}
+      />
+    </section>
+  </div>
   );
 };
-//test
+
+// Helper functions
+const calculateDiversificationMetrics = (positions: Position[]) => {
+  const totalValue = positions.reduce((sum, pos) => sum + pos.currentValue, 0);
+  
+  // Sector metrics
+  const sectorGroups = positions.reduce((acc, pos) => {
+    const sector = pos.sector || 'Unknown';
+    if (!acc[sector]) {
+      acc[sector] = { value: 0, positions: 0, return: 0 };
+    }
+    acc[sector].value += pos.currentValue;
+    acc[sector].positions += 1;
+    acc[sector].return += pos.percentChange;
+    return acc;
+  }, {} as Record<string, { value: number; positions: number; return: number; }>);
+
+  const sectorMetrics = Object.entries(sectorGroups).map(([name, data]) => ({
+    name,
+    allocation: (data.value / totalValue) * 100,
+    return: data.return / data.positions,
+    positions: data.positions
+  }));
+
+  // Industry metrics
+  const industryGroups = positions.reduce((acc, pos) => {
+    const industry = pos.industry || 'Unknown';
+    if (!acc[industry]) {
+      acc[industry] = { value: 0, positions: 0, return: 0, sector: pos.sector || 'Unknown' };
+    }
+    acc[industry].value += pos.currentValue;
+    acc[industry].positions += 1;
+    acc[industry].return += pos.percentChange;
+    return acc;
+  }, {} as Record<string, { value: number; positions: number; return: number; sector: string; }>);
+
+  const industryMetrics = Object.entries(industryGroups).map(([name, data]) => ({
+    name,
+    allocation: (data.value / totalValue) * 100,
+    return: data.return / data.positions,
+    positions: data.positions,
+    sector: data.sector
+  }));
+
+  return { sectorMetrics, industryMetrics };
+};
+
+const calculateRiskMetrics = (positions: Position[]) => {
+  const totalValue = positions.reduce((sum, pos) => sum + pos.currentValue, 0);
+  
+  // Calculate portfolio beta as weighted average of individual stock betas
+  const portfolioBeta = positions.reduce((beta, pos) => {
+    const weight = pos.currentValue / totalValue;
+    return beta + (pos.beta || 1) * weight;
+  }, 0);
+
+  // Calculate max drawdown using peak to trough analysis
+  const values = positions.map(pos => pos.currentValue / (pos.avgCost * pos.shares));
+  let maxDrawdown = 0;
+  let peak = values[0] || 1;
+  
+  values.forEach(value => {
+    if (value > peak) peak = value;
+    const drawdown = (peak - value) / peak * 100;
+    if (drawdown > maxDrawdown) maxDrawdown = drawdown;
+  });
+
+  // Calculate Sharpe ratio (simplified)
+  const returns = positions.map(pos => pos.percentChange);
+  const avgReturn = returns.reduce((sum, ret) => sum + ret, 0) / returns.length;
+  const stdDev = Math.sqrt(
+    returns.reduce((sum, ret) => sum + Math.pow(ret - avgReturn, 2), 0) / returns.length
+  );
+  const sharpeRatio = stdDev !== 0 ? (avgReturn - 2.5) / stdDev : 0; // Assuming 2.5% risk-free rate
+
+  return {
+    portfolioBeta,
+    maxDrawdown,
+    sharpeRatio
+  };
+};
+
 export default PortfolioTracker;
