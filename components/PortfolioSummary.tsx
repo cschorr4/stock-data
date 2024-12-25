@@ -285,10 +285,8 @@ const SwipeableContainer: React.FC<{children: React.ReactNode}> = ({ children })
   
   const childCount = React.Children.count(children);
   const isStockTicker = Array.isArray(children) && children.length > 0 && children[0]?.type?.name === 'StockTicker';
-  const shouldScroll = isStockTicker ? childCount > 2 : true;
 
   const handleStart = (clientX: number) => {
-    if (!shouldScroll) return;
     setIsDragging(true);
     setStartX(clientX);
     if (innerRef.current) {
@@ -297,7 +295,7 @@ const SwipeableContainer: React.FC<{children: React.ReactNode}> = ({ children })
   };
 
   const handleMove = (clientX: number) => {
-    if (!isDragging || !containerRef.current || !innerRef.current || !shouldScroll) return;
+    if (!isDragging || !containerRef.current || !innerRef.current) return;
     const diff = clientX - startX;
     const maxScroll = innerRef.current.scrollWidth - containerRef.current.clientWidth;
     const newPosition = Math.max(Math.min(scrollPosition - diff, maxScroll), 0);
@@ -308,7 +306,7 @@ const SwipeableContainer: React.FC<{children: React.ReactNode}> = ({ children })
 
   const handleEnd = () => {
     setIsDragging(false);
-    if (innerRef.current && shouldScroll) {
+    if (innerRef.current) {
       const currentTransform = getComputedStyle(innerRef.current).transform;
       const matrix = new DOMMatrix(currentTransform);
       setScrollPosition(-matrix.m41);
@@ -326,16 +324,13 @@ const SwipeableContainer: React.FC<{children: React.ReactNode}> = ({ children })
         .scroll-metrics {
           animation: slideLeft 5s linear infinite;
         }
-        .scroll-stocks {
-          animation: ${shouldScroll ? 'slideLeft 20s linear infinite' : 'none'};
-        }
-        .scroll-metrics:hover, .scroll-stocks:hover {
+        .scroll-metrics:hover {
           animation-play-state: paused;
         }
       `}</style>
       <div 
         ref={containerRef}
-        className={`relative overflow-x-hidden ${shouldScroll ? 'cursor-grab active:cursor-grabbing' : ''}`}
+        className="relative overflow-x-hidden cursor-grab active:cursor-grabbing"
         onTouchStart={(e) => handleStart(e.touches[0].clientX)}
         onTouchMove={(e) => handleMove(e.touches[0].clientX)}
         onTouchEnd={handleEnd}
@@ -351,17 +346,16 @@ const SwipeableContainer: React.FC<{children: React.ReactNode}> = ({ children })
       >
         <div 
           ref={innerRef}
-          className={`flex gap-4 pb-4 ${isStockTicker ? 'scroll-stocks' : 'scroll-metrics'} 
-            ${isDragging ? 'animation-play-state: paused' : ''} 
-            ${!shouldScroll ? 'justify-center' : ''}`}
+          className={`flex gap-4 pb-4 ${isStockTicker ? '' : 'scroll-metrics'} 
+            ${isDragging ? 'animation-play-state: paused' : ''}`}
           style={{ 
-            width: shouldScroll ? 'fit-content' : '100%',
+            width: 'fit-content',
             transform: 'translateX(0)',
             '--num-items': childCount * 2
           } as React.CSSProperties}
         >
           {React.Children.map(children, child => child)}
-          {shouldScroll && React.Children.map(children, child => child)}
+          {!isStockTicker && React.Children.map(children, child => child)}
         </div>
       </div>
     </div>
