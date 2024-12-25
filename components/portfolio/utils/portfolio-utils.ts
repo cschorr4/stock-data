@@ -34,7 +34,7 @@ export const calculateSectorData = (positions: Position[]) => {
   }));
 };
 
-const calculateRiskMetrics = (metrics: PortfolioMetrics, positions: Position[]) => {
+export const calculateRiskMetrics = (metrics: PortfolioMetrics, positions: Position[]) => {
   if (!positions.length) {
     return {
       portfolioBeta: 0,
