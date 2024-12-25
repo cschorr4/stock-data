@@ -6,6 +6,7 @@ import TransactionTable from './TransactionTable';
 import { getLocalStorage, setLocalStorage } from '@/lib/storage';
 import { fetchWithRetry } from '@/lib/fetch-helpers';
 import PositionTables from './portfolio/PositionTables';
+import { calculateRiskMetrics } from './portfolio/utils/portfolio-utils';
 
 
 const PortfolioTracker = () => {
@@ -170,7 +171,7 @@ const PortfolioTracker = () => {
     const { sectorMetrics, industryMetrics } = calculateDiversificationMetrics(openPositions);
     
     // Calculate portfolio beta and other risk metrics
-    const { portfolioBeta, maxDrawdown, sharpeRatio } = calculateRiskMetrics(openPositions);
+    const { portfolioBeta, maxDrawdown, sharpeRatio } = calculateRiskMetrics(metrics, openPositions);
   
     const metrics: PortfolioMetrics = {
       totalValue: totalValueOpen,
