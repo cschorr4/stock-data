@@ -324,9 +324,6 @@ const SwipeableContainer: React.FC<{children: React.ReactNode}> = ({ children })
         .scroll-metrics {
           animation: slideLeft 5s linear infinite;
         }
-        .scroll-metrics:hover {
-          animation-play-state: paused;
-        }
       `}</style>
       <div 
         ref={containerRef}
@@ -346,12 +343,11 @@ const SwipeableContainer: React.FC<{children: React.ReactNode}> = ({ children })
       >
         <div 
           ref={innerRef}
-          className={`flex gap-4 pb-4 ${isStockTicker ? '' : 'scroll-metrics'} 
-            ${isDragging ? 'animation-play-state: paused' : ''}`}
+          className={`flex gap-4 pb-4 ${!isStockTicker ? 'scroll-metrics hover:animation-pause' : ''}`}
           style={{ 
             width: 'fit-content',
             transform: 'translateX(0)',
-            '--num-items': childCount * 2
+            '--num-items': childCount * (isStockTicker ? 1 : 2)
           } as React.CSSProperties}
         >
           {React.Children.map(children, child => child)}
