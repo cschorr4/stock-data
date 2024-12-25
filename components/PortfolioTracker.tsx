@@ -393,7 +393,7 @@ const calculateDiversificationMetrics = (positions: Position[]) => {
   return { sectorMetrics, industryMetrics };
 };
 
-const calculateRiskMetrics = (positions: Position[]) => {
+export const Metrics = (positions: Position[]) => {
   const totalValue = positions.reduce((sum, pos) => sum + pos.currentValue, 0);
   
   // Calculate portfolio beta as weighted average of individual stock betas
