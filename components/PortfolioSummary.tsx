@@ -284,9 +284,8 @@ const SwipeableContainer: React.FC<{children: React.ReactNode}> = ({ children })
   const [isDragging, setIsDragging] = useState(false);
   
   const childCount = React.Children.count(children);
-
-  // Don't enable scrolling for 2 or fewer items
-  const shouldScroll = childCount > 2;
+  const isStockTicker = Array.isArray(children) && children.length > 0 && children[0]?.type?.name === 'StockTicker';
+  const shouldScroll = isStockTicker ? childCount > 2 : true;
 
   const handleStart = (clientX: number) => {
     if (!shouldScroll) return;
@@ -325,7 +324,7 @@ const SwipeableContainer: React.FC<{children: React.ReactNode}> = ({ children })
           100% { transform: translateX(calc(-280px * (var(--num-items) / 2))); }
         }
         .scroll-metrics {
-          animation: ${shouldScroll ? 'slideLeft 5s linear infinite' : 'none'};
+          animation: slideLeft 5s linear infinite;
         }
         .scroll-stocks {
           animation: ${shouldScroll ? 'slideLeft 20s linear infinite' : 'none'};
@@ -352,11 +351,9 @@ const SwipeableContainer: React.FC<{children: React.ReactNode}> = ({ children })
       >
         <div 
           ref={innerRef}
-          className={`flex gap-4 pb-4 ${
-            Array.isArray(children) && children.length > 0 && children[0]?.type?.name === 'StockTicker'
-              ? 'scroll-stocks'
-              : 'scroll-metrics'
-          } ${isDragging ? 'animation-play-state: paused' : ''} ${!shouldScroll ? 'justify-center' : ''}`}
+          className={`flex gap-4 pb-4 ${isStockTicker ? 'scroll-stocks' : 'scroll-metrics'} 
+            ${isDragging ? 'animation-play-state: paused' : ''} 
+            ${!shouldScroll ? 'justify-center' : ''}`}
           style={{ 
             width: shouldScroll ? 'fit-content' : '100%',
             transform: 'translateX(0)',
