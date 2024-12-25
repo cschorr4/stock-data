@@ -22,6 +22,7 @@ export interface StockQuote {
   spyReturn?: number;
   sector?: string;
   industry?: string;
+  beta?: number;
 }
 
 export interface ApiResponse {
@@ -49,6 +50,7 @@ export interface Position {
   spyReturn?: number;
   sector: string;
   industry: string;
+  beta?: number; 
 }
 
 export interface ClosedPosition {
@@ -124,6 +126,7 @@ export interface MarketData {
     spyReturn?: number;
     sector?: string;
     industry?: string;
+    beta?: number;
   };
 }
 
