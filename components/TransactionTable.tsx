@@ -383,7 +383,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
             onClick={() => setIsDeleteAllDialogOpen(true)}
           >
             <Trash2 className="mr-2 h-4 w-4"/>
-            <span>Remove All</span>
+            <span className="ml-2 hidden md:inline">Remove All</span>
           </Button>
         </TooltipTrigger>
         <TooltipContent>Delete all transactions</TooltipContent>
