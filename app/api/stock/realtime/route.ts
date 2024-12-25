@@ -14,6 +14,8 @@ interface FormattedQuote {
   peRatio?: number | null;
   forwardPE?: number | null;
   spyReturn: number | null;
+  sector: string;       // Add these
+  industry: string;     // Add these
 }
 
 interface QuoteCache {
@@ -58,7 +60,7 @@ async function getQuoteWithCache(symbol: string, buyDate: string): Promise<Forma
 
     // Then get the detailed summary with fundamentals
     const quoteSummary = await yahooFinance.quoteSummary(symbol, {
-      modules: ['price', 'summaryDetail', 'defaultKeyStatistics']
+      modules: ['price', 'summaryDetail', 'defaultKeyStatistics', 'summaryProfile'] 
     });
     console.log(`Quote summary data for ${symbol}:`, JSON.stringify(quoteSummary, null, 2));
 
@@ -79,7 +81,9 @@ async function getQuoteWithCache(symbol: string, buyDate: string): Promise<Forma
       dayLow: quote.regularMarketDayLow ?? null,
       peRatio: trailingPE,
       forwardPE: forwardPE,
-      spyReturn
+      spyReturn,
+      sector: quoteSummary.summaryProfile?.sector ?? 'Unknown',
+      industry: quoteSummary.summaryProfile?.industry ?? 'Unknown'
     };
 
     console.log(`Formatted quote for ${symbol}:`, formattedQuote);

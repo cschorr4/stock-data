@@ -28,6 +28,7 @@ const getLocalStorage = <T,>(key: string, defaultValue: T): T => {
   return defaultValue;
 };
 
+
 const setLocalStorage = <T,>(key: string, value: T): void => {
   if (typeof window !== 'undefined') {
     localStorage.setItem(key, JSON.stringify(value));
@@ -136,58 +137,16 @@ const PortfolioTracker = () => {
           industryPE: realtimeData?.industryPE,
           spyReturn: spyData[ticker] || 0,
           buyDate: firstLot.date,
-          lastUpdated: new Date().toISOString()
+          lastUpdated: new Date().toISOString(),
+          sector: realtimeData?.sector || 'Unknown',   
+          industry: realtimeData?.industry || 'Unknown' 
         };
       });
   
       return { openPositions, closedPositions };
     }, [transactions, realtimePrices, spyData]);
 
-    // Wrap calculateMetrics in useCallback
-    const calculateSectorMetrics = (positions: Position[]): SectorMetric[] => {
-      const totalValue = positions.reduce((sum, pos) => sum + pos.currentValue, 0);
-      
-      const sectorMap = positions.reduce((map, pos) => {
-        const existing = map.get(pos.sector) || { value: 0, return: 0, count: 0 };
-        map.set(pos.sector, {
-          value: existing.value + pos.currentValue,
-          return: existing.return + pos.percentChange,
-          count: existing.count + 1
-        });
-        return map;
-      }, new Map<string, { value: number; return: number; count: number }>());
-    
-      return Array.from(sectorMap.entries()).map(([name, data]) => ({
-        name,
-        allocation: (data.value / totalValue) * 100,
-        return: data.return / data.count,
-        positions: data.count
-      }));
-    };
-    
-    const calculateIndustryMetrics = (positions: Position[]): IndustryMetric[] => {
-      const totalValue = positions.reduce((sum, pos) => sum + pos.currentValue, 0);
-      
-      const industryMap = positions.reduce((map, pos) => {
-        const existing = map.get(pos.industry) || { value: 0, return: 0, count: 0, sector: pos.sector };
-        map.set(pos.industry, {
-          value: existing.value + pos.currentValue,
-          return: existing.return + pos.percentChange,
-          count: existing.count + 1,
-          sector: pos.sector
-        });
-        return map;
-      }, new Map<string, { value: number; return: number; count: number; sector: string }>());
-    
-      return Array.from(industryMap.entries()).map(([name, data]) => ({
-        name,
-        allocation: (data.value / totalValue) * 100,
-        return: data.return / data.count,
-        positions: data.count,
-        sector: data.sector
-      }));
-    };
-    
+   
     const calculateMetrics = useCallback(() => {
       const { openPositions, closedPositions } = calculatePositions();
       
@@ -289,7 +248,9 @@ const PortfolioTracker = () => {
               dayLow: quote.dayLow,
               peRatio: quote.peRatio,
               forwardPE: quote.forwardPE,
-              industryPE: quote.industryPE
+              industryPE: quote.industryPE,
+              sector: quote.sector,          // Add these
+              industry: quote.industry,      // Add these
             }
           }), {} as MarketData);
           

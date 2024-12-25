@@ -20,6 +20,8 @@ export interface StockQuote {
   forwardPE?: number;
   industryPE?: number;
   spyReturn?: number;
+  sector?: string;
+  industry?: string;
 }
 
 export interface ApiResponse {
@@ -45,6 +47,8 @@ export interface Position {
   forwardPE?: number;
   industryPE?: number;
   spyReturn?: number;
+  sector: string;
+  industry: string;
 }
 
 export interface ClosedPosition {
@@ -77,6 +81,13 @@ export interface PortfolioMetrics {
   bestPerformer: Position | null;
   worstPerformer: Position | null;
   avgHoldingPeriodWinners: number;
+  maxDrawdown: number;
+  portfolioBeta: number;
+  sharpeRatio: number;
+  cashBalance: number;
+  buyingPower: number;
+  sectorMetrics: any[];  // or proper type if available
+  industryMetrics: any[];  // or proper type if available
 }
 
 export interface PortfolioTotals {
@@ -111,6 +122,8 @@ export interface MarketData {
     forwardPE?: number;
     industryPE?: number;
     spyReturn?: number;
+    sector?: string;
+    industry?: string;
   };
 }
 
