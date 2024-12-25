@@ -282,8 +282,14 @@ const SwipeableContainer: React.FC<{children: React.ReactNode}> = ({ children })
   const [startX, setStartX] = useState(0);
   const [scrollPosition, setScrollPosition] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
+  
+  const childCount = React.Children.count(children);
+
+  // Don't enable scrolling for 2 or fewer items
+  const shouldScroll = childCount > 2;
 
   const handleStart = (clientX: number) => {
+    if (!shouldScroll) return;
     setIsDragging(true);
     setStartX(clientX);
     if (innerRef.current) {
@@ -292,7 +298,7 @@ const SwipeableContainer: React.FC<{children: React.ReactNode}> = ({ children })
   };
 
   const handleMove = (clientX: number) => {
-    if (!isDragging || !containerRef.current || !innerRef.current) return;
+    if (!isDragging || !containerRef.current || !innerRef.current || !shouldScroll) return;
     const diff = clientX - startX;
     const maxScroll = innerRef.current.scrollWidth - containerRef.current.clientWidth;
     const newPosition = Math.max(Math.min(scrollPosition - diff, maxScroll), 0);
@@ -303,7 +309,7 @@ const SwipeableContainer: React.FC<{children: React.ReactNode}> = ({ children })
 
   const handleEnd = () => {
     setIsDragging(false);
-    if (innerRef.current) {
+    if (innerRef.current && shouldScroll) {
       const currentTransform = getComputedStyle(innerRef.current).transform;
       const matrix = new DOMMatrix(currentTransform);
       setScrollPosition(-matrix.m41);
@@ -319,10 +325,10 @@ const SwipeableContainer: React.FC<{children: React.ReactNode}> = ({ children })
           100% { transform: translateX(calc(-280px * (var(--num-items) / 2))); }
         }
         .scroll-metrics {
-          animation: slideLeft 5s linear infinite;
+          animation: ${shouldScroll ? 'slideLeft 5s linear infinite' : 'none'};
         }
         .scroll-stocks {
-          animation: slideLeft 20s linear infinite;
+          animation: ${shouldScroll ? 'slideLeft 20s linear infinite' : 'none'};
         }
         .scroll-metrics:hover, .scroll-stocks:hover {
           animation-play-state: paused;
@@ -330,7 +336,7 @@ const SwipeableContainer: React.FC<{children: React.ReactNode}> = ({ children })
       `}</style>
       <div 
         ref={containerRef}
-        className="relative overflow-x-hidden cursor-grab active:cursor-grabbing"
+        className={`relative overflow-x-hidden ${shouldScroll ? 'cursor-grab active:cursor-grabbing' : ''}`}
         onTouchStart={(e) => handleStart(e.touches[0].clientX)}
         onTouchMove={(e) => handleMove(e.touches[0].clientX)}
         onTouchEnd={handleEnd}
@@ -350,15 +356,15 @@ const SwipeableContainer: React.FC<{children: React.ReactNode}> = ({ children })
             Array.isArray(children) && children.length > 0 && children[0]?.type?.name === 'StockTicker'
               ? 'scroll-stocks'
               : 'scroll-metrics'
-          } ${isDragging ? 'animation-play-state: paused' : ''}`}          
+          } ${isDragging ? 'animation-play-state: paused' : ''} ${!shouldScroll ? 'justify-center' : ''}`}
           style={{ 
-            width: 'fit-content',
+            width: shouldScroll ? 'fit-content' : '100%',
             transform: 'translateX(0)',
-            '--num-items': React.Children.count(children) * 2
+            '--num-items': childCount * 2
           } as React.CSSProperties}
         >
           {React.Children.map(children, child => child)}
-          {React.Children.map(children, child => child)}
+          {shouldScroll && React.Children.map(children, child => child)}
         </div>
       </div>
     </div>
