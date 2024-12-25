@@ -23,9 +23,9 @@ export const getColorForValue = (value: number): string => {
 };
 
 export const calculateSectorData = (positions: Position[]) => {
+  if (!positions.length) return [];
   const sectorGroups = _.groupBy(positions, 'sector');
   const totalValue = _.sumBy(positions, 'currentValue');
-
   return Object.entries(sectorGroups).map(([sector, posArray]) => ({
     sector,
     allocation: (_.sumBy(posArray, 'currentValue') / totalValue) * 100,
@@ -34,7 +34,15 @@ export const calculateSectorData = (positions: Position[]) => {
   }));
 };
 
-export const calculateRiskMetrics = (metrics: PortfolioMetrics, positions: Position[]) => {
+const calculateRiskMetrics = (metrics: PortfolioMetrics, positions: Position[]) => {
+  if (!positions.length) {
+    return {
+      portfolioBeta: 0,
+      sectorConcentration: 0,
+      riskScore: 0
+    };
+  }
+
   const portfolioValue = _.sumBy(positions, 'currentValue');
   const weightedBeta = positions.reduce((acc, pos) => {
     const weight = pos.currentValue / portfolioValue;
@@ -49,9 +57,9 @@ export const calculateRiskMetrics = (metrics: PortfolioMetrics, positions: Posit
 };
 
 const calculateSectorConcentration = (positions: Position[]): number => {
+  if (!positions.length) return 0;
   const sectorGroups = _.groupBy(positions, 'sector');
   const totalValue = _.sumBy(positions, 'currentValue');
-  
   return Object.values(sectorGroups).reduce((acc, posArray) => {
     const sectorWeight = _.sumBy(posArray, 'currentValue') / totalValue;
     return acc + Math.pow(sectorWeight, 2);
