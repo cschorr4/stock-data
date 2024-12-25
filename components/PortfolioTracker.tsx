@@ -1,9 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Transaction, Position, ClosedPosition, PortfolioMetrics, PortfolioTotals, ApiResponse, MarketData, StockQuote } from '@/lib/types';
+import { Transaction, Position, ClosedPosition, PortfolioMetrics, PortfolioTotals, MarketData, StockQuote } from '@/lib/types';
 import PortfolioSummary from './portfolio/PortfolioSummary';
 import PositionTimelineChart from './charts/position-timeline/PositionTimeLineChart';
-import OpenPositionsTable from './OpenPositionsTable';
-import ClosedPositionsTable from './ClosedPositionsTable';
 import TransactionTable from './TransactionTable';
 import { getLocalStorage, setLocalStorage } from '@/lib/storage';
 import { fetchWithRetry } from '@/lib/fetch-helpers';

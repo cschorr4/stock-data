@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { DollarSign, PieChart, Target, Network, AlertTriangle } from 'lucide-react';
+import { DollarSign, PieChart, Target, AlertTriangle } from 'lucide-react';
 import { Position, PortfolioMetrics, PortfolioTotals, ClosedPosition } from '@/lib/types';
 import MetricCard from './MetricCard';
 import StockCard from './StockCard';
