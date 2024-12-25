@@ -10,7 +10,7 @@ interface StockCardProps {
   metrics: PortfolioMetrics;
 }
 
-const StockCard: React.FC<StockCardProps> = ({ position, metrics }) => {
+const StockCard: React.FC<StockCardProps> = ({ position }) => {
   const isPositive = position.percentChange >= 0;
   const dayChangeColor = getDayChangeColor(position.dayChangePercent);
   
