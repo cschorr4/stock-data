@@ -31,48 +31,55 @@ const MetricCard: React.FC<MetricCardProps> = ({
   metric2Color,
   gradient,
   tooltipContent
-}) => (
-  <HoverCard>
-    <HoverCardTrigger asChild>
-      <Card className={`w-[280px] ${gradient} transition-all duration-200 hover:scale-105 cursor-pointer`}>
-        <CardHeader className="space-y-0 p-3">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-base font-bold">{title}</CardTitle>
-            {icon}
-          </div>
-          <p className={`text-2xl font-bold ${mainValueColor} flex items-center gap-2`}>
-            {mainValue}
-            {typeof mainValue === 'string' ? 
-              parseFloat(mainValue.replace(/[^0-9.-]+/g, '')) > 0 ? 
+}) => {
+  const getTrendValue = (value: string | number): number => {
+    if (typeof value === 'string') {
+      return parseFloat(value.replace(/[^0-9.-]+/g, '')) || 0;
+    }
+    return value || 0;
+  };
+
+  const trendValue = getTrendValue(mainValue);
+
+  return (
+    <HoverCard>
+      <HoverCardTrigger asChild>
+        <Card className={`w-72 ${gradient} transition-all duration-200 hover:scale-105 cursor-pointer`}>
+          <CardHeader className="space-y-0 p-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-base font-bold">{title}</CardTitle>
+              {icon}
+            </div>
+            <p className={`text-2xl font-bold ${mainValueColor} flex items-center gap-2`}>
+              {mainValue}
+              {trendValue > 0 ? 
                 <TrendingUp className="h-4 w-4 text-green-500" /> : 
                 <TrendingDown className="h-4 w-4 text-red-500" />
-              : mainValue > 0 ?
-                <TrendingUp className="h-4 w-4 text-green-500" /> :
-                <TrendingDown className="h-4 w-4 text-red-500" />
-            }
-          </p>
-        </CardHeader>
-        <CardContent className="p-3 pt-0">
-          <div className="space-y-1">
-            <div className="flex justify-between text-xs">
-              <span className="text-gray-600 dark:text-gray-400">{metric1Label}</span>
-              <span className={`font-medium ${metric1Color}`}>{metric1Value}</span>
+              }
+            </p>
+          </CardHeader>
+          <CardContent className="p-3 pt-0">
+            <div className="space-y-1">
+              <div className="flex justify-between text-xs">
+                <span className="text-gray-600 dark:text-gray-400">{metric1Label}</span>
+                <span className={`font-medium ${metric1Color}`}>{metric1Value}</span>
+              </div>
+              <div className="flex justify-between text-xs">
+                <span className="text-gray-600 dark:text-gray-400">{metric2Label}</span>
+                <span className={`font-medium ${metric2Color}`}>{metric2Value}</span>
+              </div>
             </div>
-            <div className="flex justify-between text-xs">
-              <span className="text-gray-600 dark:text-gray-400">{metric2Label}</span>
-              <span className={`font-medium ${metric2Color}`}>{metric2Value}</span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    </HoverCardTrigger>
-    <HoverCardContent className="w-80 p-4">
-      <div className="space-y-2">
-        <h4 className="text-sm font-semibold">{title} Details</h4>
-        <p className="text-sm text-gray-600 dark:text-gray-400">{tooltipContent}</p>
-      </div>
-    </HoverCardContent>
-  </HoverCard>
-);
+          </CardContent>
+        </Card>
+      </HoverCardTrigger>
+      <HoverCardContent className="w-80 p-4">
+        <div className="space-y-2">
+          <h4 className="text-sm font-semibold">{title} Details</h4>
+          <p className="text-sm text-gray-600 dark:text-gray-400">{tooltipContent}</p>
+        </div>
+      </HoverCardContent>
+    </HoverCard>
+  );
+};
 
 export default MetricCard;
