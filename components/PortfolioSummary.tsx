@@ -277,41 +277,7 @@ const StockTicker: React.FC<{position: Position}> = ({ position }) => {
 };
 
 const SwipeableContainer: React.FC<{children: React.ReactNode}> = ({ children }) => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const innerRef = useRef<HTMLDivElement>(null);
-  const [startX, setStartX] = useState(0);
-  const [scrollPosition, setScrollPosition] = useState(0);
-  const [isDragging, setIsDragging] = useState(false);
-  
   const isStockTicker = Array.isArray(children) && children.length > 0 && children[0]?.type?.name === 'StockTicker';
-
-  const handleStart = (clientX: number) => {
-    setIsDragging(true);
-    setStartX(clientX);
-    if (innerRef.current) {
-      innerRef.current.style.transition = 'none';
-    }
-  };
-
-  const handleMove = (clientX: number) => {
-    if (!isDragging || !containerRef.current || !innerRef.current) return;
-    const diff = clientX - startX;
-    const maxScroll = innerRef.current.scrollWidth - containerRef.current.clientWidth;
-    const newPosition = Math.max(Math.min(scrollPosition - diff, maxScroll), 0);
-    if (innerRef.current) {
-      innerRef.current.style.transform = `translateX(-${newPosition}px)`;
-    }
-  };
-
-  const handleEnd = () => {
-    setIsDragging(false);
-    if (innerRef.current) {
-      const currentTransform = getComputedStyle(innerRef.current).transform;
-      const matrix = new DOMMatrix(currentTransform);
-      setScrollPosition(-matrix.m41);
-      innerRef.current.style.transition = 'transform 0.3s ease-out';
-    }
-  };
 
   if (isStockTicker) {
     return (
