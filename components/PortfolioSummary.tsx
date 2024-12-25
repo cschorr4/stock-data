@@ -283,7 +283,6 @@ const SwipeableContainer: React.FC<{children: React.ReactNode}> = ({ children })
   const [scrollPosition, setScrollPosition] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   
-  const childCount = React.Children.count(children);
   const isStockTicker = Array.isArray(children) && children.length > 0 && children[0]?.type?.name === 'StockTicker';
 
   const handleStart = (clientX: number) => {
@@ -314,44 +313,34 @@ const SwipeableContainer: React.FC<{children: React.ReactNode}> = ({ children })
     }
   };
 
+  if (isStockTicker) {
+    return (
+      <div className="w-full overflow-x-auto">
+        <div className="flex gap-4 pb-4">
+          {children}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full overflow-hidden">
       <style jsx>{`
         @keyframes slideLeft {
           0% { transform: translateX(0); }
-          100% { transform: translateX(calc(-280px * (var(--num-items) / 2))); }
+          100% { transform: translateX(-50%); }
         }
-        .scroll-metrics {
-          animation: slideLeft 5s linear infinite;
+        .scroll-container {
+          animation: slideLeft 20s linear infinite;
+        }
+        .scroll-container:hover {
+          animation-play-state: paused;
         }
       `}</style>
-      <div 
-        ref={containerRef}
-        className="relative overflow-x-hidden cursor-grab active:cursor-grabbing"
-        onTouchStart={(e) => handleStart(e.touches[0].clientX)}
-        onTouchMove={(e) => handleMove(e.touches[0].clientX)}
-        onTouchEnd={handleEnd}
-        onMouseDown={(e) => handleStart(e.clientX)}
-        onMouseMove={(e) => handleMove(e.clientX)}
-        onMouseUp={handleEnd}
-        onMouseLeave={() => isDragging && handleEnd()}
-        style={{
-          scrollbarWidth: 'none',
-          msOverflowStyle: 'none',
-          WebkitOverflowScrolling: 'touch'
-        }}
-      >
-        <div 
-          ref={innerRef}
-          className={`flex gap-4 pb-4 ${!isStockTicker ? 'scroll-metrics hover:animation-pause' : ''}`}
-          style={{ 
-            width: 'fit-content',
-            transform: 'translateX(0)',
-            '--num-items': childCount * (isStockTicker ? 1 : 2)
-          } as React.CSSProperties}
-        >
-          {React.Children.map(children, child => child)}
-          {!isStockTicker && React.Children.map(children, child => child)}
+      <div className="relative overflow-hidden">
+        <div className="scroll-container flex gap-4 pb-4">
+          {children}
+          {children}
         </div>
       </div>
     </div>
