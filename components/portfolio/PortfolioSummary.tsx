@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import _ from 'lodash';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { DollarSign, PieChart, Target, AlertTriangle } from 'lucide-react';
-import { Position, PortfolioMetrics, PortfolioTotals, ClosedPosition } from '@/lib/types';
+import type { Position, PortfolioMetrics, PortfolioTotals, ClosedPosition } from '@/lib/types';
 import MetricCard from './MetricCard';
 import StockCard from './StockCard';
 import {
@@ -12,6 +12,13 @@ import {
   calculateSectorData,
   calculateRiskMetrics
 } from './utils/portfolio-utils';
+
+interface PortfolioSummaryProps {
+  metrics: PortfolioMetrics;
+  totals: PortfolioTotals;
+  openPositions: Position[];
+  closedPositions: ClosedPosition[];
+}
 
 const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
   metrics,
