@@ -121,3 +121,12 @@ swiper-slide {
   opacity: 1;
   background: hsl(var(--primary));
 }
+@keyframes carousel {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-25%); }
+ }
+ 
+ .animate-carousel {
+  animation: carousel 8s linear infinite;
+  width: max-content;
+ }

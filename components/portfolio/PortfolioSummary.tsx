@@ -106,37 +106,40 @@ const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
         </div>
       </div>
 
-      <div className="relative overflow-hidden">
-        <div className="flex space-x-4 p-4 infinite-scroll">
-          {[...openPositions, ...openPositions, ...openPositions]
-            .sort((a, b) => b.currentValue - a.currentValue)
-            .map((position, index) => (
-              <div key={`${position.ticker}-${index}`} className="flex-none">
-                <StockCard
-                  position={position}
-                  metrics={metrics}
-                />
-              </div>
-            ))}
-        </div>
-      </div>
+      <div className="relative overflow-x-hidden w-full">
+ <div className={`flex ${openPositions.length > 3 ? 'animate-carousel' : ''}`}>
+   {(openPositions.length > 3 ? [1, 2, 3, 4] : [1]).map(setIndex => (
+     <div key={setIndex} className="flex space-x-4 p-4">
+       {openPositions
+         .sort((a, b) => b.currentValue - a.currentValue)
+         .map((position, index) => (
+           <div key={`${position.ticker}-${setIndex}-${index}`} className="flex-none">
+             <StockCard position={position} metrics={metrics} />
+           </div>
+       ))}
+     </div>
+   ))}
+ </div>
+</div>
+
 
       <style jsx global>{`
-        @keyframes scroll {
-          0% {
-            transform: translateX(0);
-          }
-          100% {
-            transform: translateX(-33.33%);
-          }
-        }
-        .infinite-scroll {
-          animation: scroll 10s linear infinite;
-          will-change: transform;
-        }
-        .infinite-scroll:hover {
-          animation-play-state: paused;
-        }
+                  @keyframes scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+.infinite-scroll {
+  animation: scroll 20s linear infinite;
+  will-change: transform;
+  margin-right: -50%;
+}
+.infinite-scroll:hover {
+  animation-play-state: paused;
+}
       `}</style>
     </div>
   );
