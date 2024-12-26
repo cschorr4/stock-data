@@ -18,8 +18,7 @@ import {
   DollarSign,
   TrendingUp,
   Banknote,
-  Network,
-  Scale
+  Network
 } from 'lucide-react';
 import { Position, PortfolioMetrics, PortfolioTotals } from '@/lib/types';
 import { formatCurrency, formatPercentage } from './utils/portfolio-utils';
@@ -65,7 +64,6 @@ const sectorIcons: Record<string, React.ReactNode> = {
 const metricIcons = {
   shares: <BarChart3 className="w-4 h-4" />,
   holdingPeriod: <Clock className="w-4 h-4" />,
-  pe: <Scale className="w-4 h-4" />,
   positive: <ChevronUp className="w-4 h-4 text-green-500" />,
   negative: <ChevronDown className="w-4 h-4 text-red-500" />
 };
@@ -75,14 +73,9 @@ const StockCard: React.FC<StockCardProps> = ({ position, totals }) => {
   const portfolioAllocation = totals ? (position.currentValue / totals.currentValue) * 100 : 0;
   const sectorIcon = sectorIcons[position.sector] || sectorIcons.Default;
   const trendIcon = position.percentChange >= 0 ? metricIcons.positive : metricIcons.negative;
-
-  // Calculate PE ratio comparison percentages
-  const maxPE = Math.max(position.peRatio || 0, position.industryPE || 0);
-  const stockPEPercent = ((position.peRatio || 0) / maxPE) * 100;
-  const industryPEPercent = ((position.industryPE || 0) / maxPE) * 100;
   
   return (
-    <Card className="w-[300px] h-[240px] relative overflow-hidden bg-white dark:bg-gray-900">
+    <Card className="w-[300px] h-[180px] relative overflow-hidden bg-white dark:bg-gray-900">
       <CardContent className="p-4 h-full">
         <div className="h-full flex flex-col justify-between">
           {/* Header */}
@@ -156,48 +149,6 @@ const StockCard: React.FC<StockCardProps> = ({ position, totals }) => {
             <div className="text-right font-medium">
               P/L: {formatPercentage(position.percentChange)}
             </div>
-          </div>
-
-          {/* PE Ratio Comparison */}
-          <div className="space-y-1">
-            <div className="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400">
-              <div className="flex items-center gap-1">
-                {metricIcons.pe}
-                <span>PE Ratio Comparison</span>
-              </div>
-            </div>
-            {position.peRatio && position.industryPE ? (
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-gray-500 w-14">Stock</span>
-                  <div className="flex-1 h-2 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-blue-500 dark:bg-blue-400 rounded-full"
-                      style={{ width: `${stockPEPercent}%` }}
-                    />
-                  </div>
-                  <span className="text-xs text-gray-600 dark:text-gray-400 w-12 text-right">
-                    {position.peRatio.toFixed(1)}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-gray-500 w-14">Industry</span>
-                  <div className="flex-1 h-2 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-gray-400 dark:bg-gray-600 rounded-full"
-                      style={{ width: `${industryPEPercent}%` }}
-                    />
-                  </div>
-                  <span className="text-xs text-gray-600 dark:text-gray-400 w-12 text-right">
-                    {position.industryPE.toFixed(1)}
-                  </span>
-                </div>
-              </div>
-            ) : (
-              <div className="h-[42px] flex items-center justify-center text-xs text-gray-500">
-                No PE ratio data available
-              </div>
-            )}
           </div>
         </div>
       </CardContent>
