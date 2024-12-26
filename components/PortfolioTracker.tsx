@@ -6,8 +6,7 @@ import TransactionTable from './TransactionTable';
 import { getLocalStorage, setLocalStorage } from '@/lib/storage';
 import { fetchWithRetry } from '@/lib/fetch-helpers';
 import PositionTables from './portfolio/PositionTables';
-import { calculateRiskMetrics } from './portfolio/utils/portfolio-utils';
-
+import { calculateMetricsFromPositions } from './portfolio/utils/portfolio-utils';
 
 const PortfolioTracker = () => {
   const [transactions, setTransactions] = useState<Transaction[]>(() => 
@@ -30,7 +29,6 @@ const PortfolioTracker = () => {
       return await response.json();
     } catch (error) {
       console.error('Error fetching stock data:', error);
-      // Return empty data rather than failing completely
       return {
         quotes: symbols.map(symbol => ({
           symbol,
@@ -155,7 +153,7 @@ const PortfolioTracker = () => {
     const totalCostOpen = openPositions.reduce((sum, pos) => sum + (pos.avgCost * pos.shares), 0);
     const realizedProfits = closedPositions.reduce((sum, pos) => sum + pos.profit, 0);
     const unrealizedProfits = openPositions.reduce((sum, pos) => sum + pos.dollarChange, 0);
-    
+        
     const totals: PortfolioTotals = {
       realizedProfits,
       unrealizedProfits,
@@ -167,11 +165,8 @@ const PortfolioTracker = () => {
     const winningPositions = closedPositions.filter(pos => pos.profit > 0);
     const losingPositions = closedPositions.filter(pos => pos.profit < 0);
     
-    // Calculate sector and industry metrics
     const { sectorMetrics, industryMetrics } = calculateDiversificationMetrics(openPositions);
-    
-    // Calculate portfolio beta and other risk metrics
-    const { portfolioBeta, maxDrawdown, sharpeRatio } = calculateRiskMetrics(metrics, openPositions);
+    const { portfolioBeta, maxDrawdown, sharpeRatio } = calculateMetricsFromPositions(openPositions);
   
     const metrics: PortfolioMetrics = {
       totalValue: totalValueOpen,
@@ -262,7 +257,7 @@ const PortfolioTracker = () => {
     fetchPrices();
     const interval = setInterval(fetchPrices, 300000); // Update every 5 minutes
     return () => clearInterval(interval);
-  }, [transactions]);
+  }, [transactions, fetchStockData]); 
 
   // Transaction handlers
   const handleTransactionAdd = (transaction: Transaction) => {
@@ -350,7 +345,7 @@ const PortfolioTracker = () => {
 
 // Helper functions
 const calculateDiversificationMetrics = (positions: Position[]) => {
-  const totalValue = positions.reduce((sum, pos) => sum + pos.currentValue, 0);
+  const totalValue = positions.reduce((sum, pos) => sum + pos.currentValue, 0); // Add initial value 0
   
   // Sector metrics
   const sectorGroups = positions.reduce((acc, pos) => {
@@ -394,39 +389,5 @@ const calculateDiversificationMetrics = (positions: Position[]) => {
   return { sectorMetrics, industryMetrics };
 };
 
-export const Metrics = (positions: Position[]) => {
-  const totalValue = positions.reduce((sum, pos) => sum + pos.currentValue, 0);
-  
-  // Calculate portfolio beta as weighted average of individual stock betas
-  const portfolioBeta = positions.reduce((beta, pos) => {
-    const weight = pos.currentValue / totalValue;
-    return beta + (pos.beta || 1) * weight;
-  }, 0);
-
-  // Calculate max drawdown using peak to trough analysis
-  const values = positions.map(pos => pos.currentValue / (pos.avgCost * pos.shares));
-  let maxDrawdown = 0;
-  let peak = values[0] || 1;
-  
-  values.forEach(value => {
-    if (value > peak) peak = value;
-    const drawdown = (peak - value) / peak * 100;
-    if (drawdown > maxDrawdown) maxDrawdown = drawdown;
-  });
-
-  // Calculate Sharpe ratio (simplified)
-  const returns = positions.map(pos => pos.percentChange);
-  const avgReturn = returns.reduce((sum, ret) => sum + ret, 0) / returns.length;
-  const stdDev = Math.sqrt(
-    returns.reduce((sum, ret) => sum + Math.pow(ret - avgReturn, 2), 0) / returns.length
-  );
-  const sharpeRatio = stdDev !== 0 ? (avgReturn - 2.5) / stdDev : 0; // Assuming 2.5% risk-free rate
-
-  return {
-    portfolioBeta,
-    maxDrawdown,
-    sharpeRatio
-  };
-};
 
 export default PortfolioTracker;
