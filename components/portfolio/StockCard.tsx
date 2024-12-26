@@ -8,20 +8,13 @@ import {
   Clock,
   ChevronUp,
   ChevronDown,
-  Building,
+  Building2,
   Car,
   Store,
-  Plane,
-  Factory,
   Cpu,
-  Pill,
+  Laptop,
+  HeartPulse,
   Wrench,
-  Gem,
-  Radio,
-  Wheat,
-  Trees,
-  Flask,
-  Shield,
   DollarSign,
   TrendingUp,
   Banknote,
@@ -41,19 +34,18 @@ interface StockCardProps {
 const sectorIcons: Record<string, React.ReactNode> = {
   // Consumer Sectors
   'Consumer Cyclical': <ShoppingCart className="w-4 h-4" />,
-  'Consumer Defensive': <Shield className="w-4 h-4" />,
+  'Consumer Defensive': <Store className="w-4 h-4" />,
   'Retail': <Store className="w-4 h-4" />,
   
   // Industrial & Manufacturing
   'Auto Manufacturers': <Car className="w-4 h-4" />,
-  'Aerospace': <Plane className="w-4 h-4" />,
-  'Industrial': <Factory className="w-4 h-4" />,
+  'Industrial': <Wrench className="w-4 h-4" />,
   'Manufacturing': <Wrench className="w-4 h-4" />,
   
   // Technology
   'Technology': <Cpu className="w-4 h-4" />,
-  'Communications': <Radio className="w-4 h-4" />,
-  'Networking': <Network className="w-4 h-4" />,
+  'Communications': <Network className="w-4 h-4" />,
+  'Software': <Laptop className="w-4 h-4" />,
   
   // Financial Services
   'Financial': <Wallet className="w-4 h-4" />,
@@ -61,14 +53,11 @@ const sectorIcons: Record<string, React.ReactNode> = {
   'Investment': <TrendingUp className="w-4 h-4" />,
   'Insurance': <DollarSign className="w-4 h-4" />,
   
-  // Healthcare & Basic Materials
-  'Healthcare': <Pill className="w-4 h-4" />,
-  'Biotechnology': <Flask className="w-4 h-4" />,
-  'Basic Materials': <Gem className="w-4 h-4" />,
+  // Real Estate
+  'Real Estate': <Building2 className="w-4 h-4" />,
   
-  // Natural Resources
-  'Agriculture': <Wheat className="w-4 h-4" />,
-  'Forestry': <Trees className="w-4 h-4" />,
+  // Healthcare
+  'Healthcare': <HeartPulse className="w-4 h-4" />,
   
   'Default': <Globe className="w-4 h-4" />
 };
@@ -82,7 +71,6 @@ const metricIcons = {
 };
 
 const StockCard: React.FC<StockCardProps> = ({ position, totals }) => {
-  const performanceClass = getPerformanceClass(position.percentChange);
   const holdingPeriod = Math.floor((new Date().getTime() - new Date(position.buyDate).getTime()) / (1000 * 60 * 60 * 24));
   const portfolioAllocation = totals ? (position.currentValue / totals.currentValue) * 100 : 0;
   const sectorIcon = sectorIcons[position.sector] || sectorIcons.Default;
@@ -211,53 +199,6 @@ const StockCard: React.FC<StockCardProps> = ({ position, totals }) => {
       </CardContent>
     </Card>
   );
-};
-
-const getPerformanceClass = (percentChange: number) => {
-  if (percentChange >= 10) return {
-    pattern: 'bg-white dark:bg-gray-900',
-    backgroundPattern: `repeating-linear-gradient(
-      45deg,
-      transparent,
-      transparent 10px,
-      rgba(0,0,0,0.05) 10px,
-      rgba(0,0,0,0.05) 20px
-    )`,
-    percentChange
-  };
-  if (percentChange > 0) return {
-    pattern: 'bg-white dark:bg-gray-900',
-    backgroundPattern: `repeating-linear-gradient(
-      -45deg,
-      transparent,
-      transparent 8px,
-      rgba(0,0,0,0.03) 8px,
-      rgba(0,0,0,0.03) 16px
-    )`,
-    percentChange
-  };
-  if (percentChange > -10) return {
-    pattern: 'bg-white dark:bg-gray-900',
-    backgroundPattern: `repeating-linear-gradient(
-      90deg,
-      transparent,
-      transparent 8px,
-      rgba(0,0,0,0.03) 8px,
-      rgba(0,0,0,0.03) 16px
-    )`,
-    percentChange
-  };
-  return {
-    pattern: 'bg-white dark:bg-gray-900',
-    backgroundPattern: `repeating-linear-gradient(
-      0deg,
-      transparent,
-      transparent 8px,
-      rgba(0,0,0,0.05) 8px,
-      rgba(0,0,0,0.05) 16px
-    )`,
-    percentChange
-  };
 };
 
 export default StockCard;
