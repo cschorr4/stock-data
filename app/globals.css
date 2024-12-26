@@ -127,6 +127,6 @@ swiper-slide {
  }
  
  .animate-carousel {
-  animation: carousel 8s linear infinite;
+  animation: carousel 15s linear infinite;
   width: max-content;
  }

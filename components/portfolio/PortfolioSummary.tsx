@@ -114,7 +114,7 @@ const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
          .sort((a, b) => b.currentValue - a.currentValue)
          .map((position, index) => (
            <div key={`${position.ticker}-${setIndex}-${index}`} className="flex-none">
-             <StockCard position={position} metrics={metrics} />
+             <StockCard position={position} metrics={metrics} totals={totals} />
            </div>
        ))}
      </div>
