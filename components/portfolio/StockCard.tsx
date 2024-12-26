@@ -82,9 +82,9 @@ const StockCard: React.FC<StockCardProps> = ({ position, totals }) => {
   const industryPEPercent = ((position.industryPE || 0) / maxPE) * 100;
   
   return (
-    <Card className="w-[300px] relative overflow-hidden bg-white dark:bg-gray-900">
-      <CardContent className="p-4">
-        <div className="space-y-3">
+    <Card className="w-[300px] h-[240px] relative overflow-hidden bg-white dark:bg-gray-900">
+      <CardContent className="p-4 h-full">
+        <div className="h-full flex flex-col justify-between">
           {/* Header */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -159,14 +159,14 @@ const StockCard: React.FC<StockCardProps> = ({ position, totals }) => {
           </div>
 
           {/* PE Ratio Comparison */}
-          {position.peRatio && position.industryPE && (
-            <div className="space-y-1">
-              <div className="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400">
-                <div className="flex items-center gap-1">
-                  {metricIcons.pe}
-                  <span>PE Ratio Comparison</span>
-                </div>
+          <div className="space-y-1">
+            <div className="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400">
+              <div className="flex items-center gap-1">
+                {metricIcons.pe}
+                <span>PE Ratio Comparison</span>
               </div>
+            </div>
+            {position.peRatio && position.industryPE ? (
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
                   <span className="text-xs text-gray-500 w-14">Stock</span>
@@ -193,8 +193,12 @@ const StockCard: React.FC<StockCardProps> = ({ position, totals }) => {
                   </span>
                 </div>
               </div>
-            </div>
-          )}
+            ) : (
+              <div className="h-[42px] flex items-center justify-center text-xs text-gray-500">
+                No PE ratio data available
+              </div>
+            )}
+          </div>
         </div>
       </CardContent>
     </Card>
