@@ -1,6 +1,5 @@
 import React, { useMemo } from 'react';
 import _ from 'lodash';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { DollarSign, PieChart, Target, AlertTriangle } from 'lucide-react';
 import type { Position, PortfolioMetrics, PortfolioTotals, ClosedPosition } from '@/lib/types';
 import MetricCard from './MetricCard';
@@ -46,8 +45,8 @@ const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
 
   return (
     <div className="w-full space-y-4">
-      <ScrollArea className="w-full whitespace-nowrap rounded-lg">
-        <div className="flex space-x-4 p-4">
+      <div className="w-full overflow-hidden">
+        <div className="flex space-x-4 p-4 min-w-fit">
           <MetricCard
             title="Portfolio Value"
             icon={<DollarSign className="w-4 h-4 text-blue-600 dark:text-blue-400" />}
@@ -105,20 +104,40 @@ const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
             tooltipContent={`${topSector.sector} represents ${formatPercentage(topSector.allocation)} of portfolio with ${topSector.positions} positions.`}
           />
         </div>
-      </ScrollArea>
-      <ScrollArea className="w-full rounded-lg">
-        <div className="flex space-x-4 p-4">
-          {openPositions
+      </div>
+
+      <div className="relative overflow-hidden">
+        <div className="flex space-x-4 p-4 infinite-scroll">
+          {[...openPositions, ...openPositions, ...openPositions]
             .sort((a, b) => b.currentValue - a.currentValue)
-            .map(position => (
-              <StockCard
-                key={position.ticker}
-                position={position}
-                metrics={metrics}
-              />
+            .map((position, index) => (
+              <div key={`${position.ticker}-${index}`} className="flex-none">
+                <StockCard
+                  position={position}
+                  metrics={metrics}
+                />
+              </div>
             ))}
         </div>
-      </ScrollArea>
+      </div>
+
+      <style jsx global>{`
+        @keyframes scroll {
+          0% {
+            transform: translateX(0);
+          }
+          100% {
+            transform: translateX(-33.33%);
+          }
+        }
+        .infinite-scroll {
+          animation: scroll 10s linear infinite;
+          will-change: transform;
+        }
+        .infinite-scroll:hover {
+          animation-play-state: paused;
+        }
+      `}</style>
     </div>
   );
 };
