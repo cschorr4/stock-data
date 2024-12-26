@@ -29,7 +29,17 @@ const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
   const riskMetrics = useMemo(() => calculateRiskMetrics(metrics, openPositions), [metrics, openPositions]);
 
   const topSector = useMemo(() => 
-    sectorData.reduce((a, b) => a.allocation > b.allocation ? a : b),
+    sectorData.length ? _.maxBy(sectorData, 'allocation') || {
+      sector: 'None',
+      allocation: 0,
+      return: 0,
+      positions: 0
+    } : {
+      sector: 'None',
+      allocation: 0,
+      return: 0,
+      positions: 0
+    }, 
     [sectorData]
   );
 

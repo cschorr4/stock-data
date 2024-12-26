@@ -1,4 +1,3 @@
-// portfolio-utils.ts
 import { Position, PortfolioMetrics } from '@/lib/types';
 import _ from 'lodash';
 
@@ -46,37 +45,33 @@ export const calculateRiskMetrics = (metrics: PortfolioMetrics, positions: Posit
     };
   }
 
-  // Calculate portfolio beta and value
-  const portfolioValue = _.sumBy(positions, 'currentValue');
-  const weightedBeta = positions.reduce((acc, pos) => {
+  const portfolioValue = _.sumBy(positions, 'currentValue') || 0;
+  const weightedBeta = portfolioValue > 0 ? _.sumBy(positions, pos => {
     const weight = pos.currentValue / portfolioValue;
-    return acc + (pos.beta || 1) * weight;
-  }, 0);
+    return (pos.beta || 1) * weight;
+  }) : 0;
 
-  // Calculate max drawdown
   const values = positions.map(pos => pos.currentValue / (pos.avgCost * pos.shares));
   let maxDrawdown = 0;
   let peak = values[0] || 1;
+  
   values.forEach(value => {
     if (value > peak) peak = value;
     const drawdown = (peak - value) / peak * 100;
     if (drawdown > maxDrawdown) maxDrawdown = drawdown;
   });
 
-  // Calculate Sharpe ratio
   const returns = positions.map(pos => pos.percentChange);
-  const avgReturn = returns.length ? _.mean(returns) : 0;
+  const avgReturn = _.mean(returns) || 0;
   const stdDev = Math.sqrt(_.meanBy(returns, ret => Math.pow(ret - avgReturn, 2)) || 0);
   const sharpeRatio = stdDev !== 0 ? (avgReturn - 2.5) / stdDev : 0;
 
-  // Calculate sector concentration
   const sectorGroups = _.groupBy(positions, 'sector');
-  const sectorConcentration = Object.values(sectorGroups).reduce((acc, posArray) => {
+  const sectorConcentration = portfolioValue > 0 ? _.sumBy(Object.values(sectorGroups), posArray => {
     const sectorWeight = _.sumBy(posArray, 'currentValue') / portfolioValue;
-    return acc + Math.pow(sectorWeight, 2);
-  }, 0);
+    return Math.pow(sectorWeight, 2);
+  }) : 0;
 
-  // Calculate risk score
   const volatilityScore = Math.min(maxDrawdown / 20, 1);
   const betaScore = Math.min(Math.abs(weightedBeta - 1), 1);
   const concentrationScore = Math.min(metrics.industryMetrics.length / 10, 1);
@@ -111,17 +106,15 @@ export const calculateMetricsFromPositions = (positions: Position[]) => {
   });
 
   const returns = positions.map(pos => pos.percentChange);
-  const avgReturn = returns.reduce((sum, ret) => sum + ret, 0) / returns.length;
-  const stdDev = Math.sqrt(
-    returns.reduce((sum, ret) => sum + Math.pow(ret - avgReturn, 2), 0) / returns.length
-  );
+  const avgReturn = _.mean(returns) || 0;
+  const stdDev = Math.sqrt(_.meanBy(returns, ret => Math.pow(ret - avgReturn, 2)) || 0);
   const sharpeRatio = stdDev !== 0 ? (avgReturn - 2.5) / stdDev : 0;
 
-  const totalValue = positions.reduce((sum, pos) => sum + pos.currentValue, 0);
-  const portfolioBeta = positions.reduce((beta, pos) => {
+  const totalValue = _.sumBy(positions, 'currentValue') || 0;
+  const portfolioBeta = totalValue > 0 ? _.sumBy(positions, pos => {
     const weight = pos.currentValue / totalValue;
-    return beta + (pos.beta || 1) * weight;
-  }, 0);
+    return (pos.beta || 1) * weight;
+  }) : 0;
 
   return { portfolioBeta, maxDrawdown, sharpeRatio };
 };
