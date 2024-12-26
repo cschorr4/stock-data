@@ -1,23 +1,17 @@
 import React, { useMemo } from 'react';
+import _ from 'lodash';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { DollarSign, PieChart, Target, AlertTriangle } from 'lucide-react';
 import { Position, PortfolioMetrics, PortfolioTotals, ClosedPosition } from '@/lib/types';
 import MetricCard from './MetricCard';
 import StockCard from './StockCard';
-import { 
-  formatCurrency, 
-  formatPercentage, 
+import {
+  formatCurrency,
+  formatPercentage,
   getColorForValue,
   calculateSectorData,
   calculateRiskMetrics
 } from './utils/portfolio-utils';
-
-interface PortfolioSummaryProps {
-  metrics: PortfolioMetrics;
-  totals: PortfolioTotals;
-  openPositions: Position[];
-  closedPositions: ClosedPosition[];
-}
 
 const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
   metrics,
@@ -27,7 +21,7 @@ const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
 }) => {
   const sectorData = useMemo(() => calculateSectorData(openPositions), [openPositions]);
   const riskMetrics = useMemo(() => calculateRiskMetrics(metrics, openPositions), [metrics, openPositions]);
-
+  
   const topSector = useMemo(() => 
     sectorData.length ? _.maxBy(sectorData, 'allocation') || {
       sector: 'None',
@@ -61,7 +55,6 @@ const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
             gradient="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20"
             tooltipContent={`Portfolio value of ${formatCurrency(metrics.totalValue)} with ${formatPercentage(totals.totalReturn)} total return.`}
           />
-
           <MetricCard
             title="Risk Profile"
             icon={<AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400" />}
@@ -76,7 +69,6 @@ const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
             gradient="bg-gradient-to-br from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20"
             tooltipContent={`Portfolio beta of ${riskMetrics.portfolioBeta.toFixed(2)} with ${formatPercentage(metrics.maxDrawdown)} maximum drawdown.`}
           />
-
           <MetricCard
             title="Performance"
             icon={<Target className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />}
@@ -91,7 +83,6 @@ const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
             gradient="bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20"
             tooltipContent={`Win rate of ${formatPercentage(metrics.winRate)} across ${openPositions.length + closedPositions.length} total positions.`}
           />
-
           <MetricCard
             title={`Sector Analysis`}
             icon={<PieChart className="w-4 h-4 text-violet-600 dark:text-violet-400" />}
@@ -108,7 +99,6 @@ const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
           />
         </div>
       </ScrollArea>
-
       <ScrollArea className="w-full rounded-lg">
         <div className="flex space-x-4 p-4">
           {openPositions
