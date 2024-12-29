@@ -393,64 +393,10 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                 </div>
               ) : (
                 getFilteredAndSortedTransactions.map(transaction => (
-                  <Card key={`${transaction.id}-mobile`} className="mb-4 p-4">
-                    <div className="flex justify-between items-start mb-3">
-                      <div>
-                        <div className="flex items-center gap-2 mb-2">
-                          <span className="font-bold text-lg">{transaction.ticker}</span>
-                          <Badge variant={
-                            transaction.type === 'buy' 
-                              ? 'default'
-                              : transaction.type === 'sell'
-                              ? 'sand'
-                              : 'blue'
-                          }>
-                            {transaction.type.toUpperCase()}
-                          </Badge>
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                          {dateFormat(new Date(transaction.date), "yyyy.MM.dd")}
-                        </div>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            setSelectedTransaction(transaction);
-                            setIsEditDialogOpen(true);
-                          }}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => {
-                            setSelectedTransaction(transaction);
-                            setIsDeleteDialogOpen(true);
-                          }}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-3 text-sm">
-                      <div>
-                        <p className="text-muted-foreground">Price</p>
-                        <p className="font-medium">${transaction.price.toFixed(2)}</p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground">Shares</p>
-                        <p className="font-medium">{transaction.shares}</p>
-                      </div>
-                      <div className="col-span-2">
-                        <p className="text-muted-foreground">Total</p>
-                        <p className="font-medium">${(transaction.price * transaction.shares).toFixed(2)}</p>
-                      </div>
-                    </div>
-                  </Card>
+                  <MobileTransaction 
+                    key={`${transaction.id}-mobile`} 
+                    transaction={transaction} 
+                  />
                 ))
               )}
             </div>
