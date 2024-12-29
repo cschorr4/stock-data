@@ -1,7 +1,5 @@
 import React from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { HoverCard, HoverCardTrigger, HoverCardContent } from '@/components/ui/hover-card';
-import { TrendingUp, TrendingDown } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
 
 interface MetricCardProps {
   title: string;
@@ -15,7 +13,6 @@ interface MetricCardProps {
   metric2Value: string | number;
   metric2Color: string;
   gradient: string;
-  tooltipContent: string;
 }
 
 const MetricCard: React.FC<MetricCardProps> = ({
@@ -29,57 +26,54 @@ const MetricCard: React.FC<MetricCardProps> = ({
   metric2Label,
   metric2Value,
   metric2Color,
-  gradient,
-  tooltipContent
-}) => {
-  const getTrendValue = (value: string | number): number => {
-    if (typeof value === 'string') {
-      return parseFloat(value.replace(/[^0-9.-]+/g, '')) || 0;
-    }
-    return value || 0;
-  };
-
-  const trendValue = getTrendValue(mainValue);
-
-  return (
-    <HoverCard>
-      <HoverCardTrigger asChild>
-        <Card className={`w-72 ${gradient} transition-all duration-200 hover:scale-105 cursor-pointer`}>
-          <CardHeader className="space-y-0 p-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-base font-bold">{title}</CardTitle>
+  gradient
+}) => (
+  <Card 
+    className={`flex-none w-[calc(100vw-2rem)] sm:w-72 ${gradient} 
+    rounded-xl border-0 shadow-sm transition-all duration-200 
+    hover:shadow-md touch-pan-x select-none`}
+  >
+    <CardContent className="p-4">
+      <div className="space-y-3">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="rounded-full bg-white/10 p-1.5">
               {icon}
             </div>
-            <p className={`text-2xl font-bold ${mainValueColor} flex items-center gap-2`}>
-              {mainValue}
-              {trendValue > 0 ? 
-                <TrendingUp className="h-4 w-4 text-green-500" /> : 
-                <TrendingDown className="h-4 w-4 text-red-500" />
-              }
-            </p>
-          </CardHeader>
-          <CardContent className="p-3 pt-0">
-            <div className="space-y-1">
-              <div className="flex justify-between text-xs">
-                <span className="text-gray-600 dark:text-gray-400">{metric1Label}</span>
-                <span className={`font-medium ${metric1Color}`}>{metric1Value}</span>
-              </div>
-              <div className="flex justify-between text-xs">
-                <span className="text-gray-600 dark:text-gray-400">{metric2Label}</span>
-                <span className={`font-medium ${metric2Color}`}>{metric2Value}</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </HoverCardTrigger>
-      <HoverCardContent className="w-80 p-4">
-        <div className="space-y-2">
-          <h4 className="text-sm font-semibold">{title} Details</h4>
-          <p className="text-sm text-gray-600 dark:text-gray-400">{tooltipContent}</p>
+            <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+              {title}
+            </span>
+          </div>
         </div>
-      </HoverCardContent>
-    </HoverCard>
-  );
-};
+
+        {/* Main Value */}
+        <div className={`text-2xl font-semibold ${mainValueColor}`}>
+          {mainValue}
+        </div>
+
+        {/* Metrics */}
+        <div className="grid grid-cols-2 gap-x-4">
+          <div>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">
+              {metric1Label}
+            </p>
+            <p className={`text-sm font-medium ${metric1Color}`}>
+              {metric1Value}
+            </p>
+          </div>
+          <div>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">
+              {metric2Label}
+            </p>
+            <p className={`text-sm font-medium ${metric2Color}`}>
+              {metric2Value}
+            </p>
+          </div>
+        </div>
+      </div>
+    </CardContent>
+  </Card>
+);
 
 export default MetricCard;

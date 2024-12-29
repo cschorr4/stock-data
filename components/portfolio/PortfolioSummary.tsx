@@ -45,7 +45,8 @@ const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
 
   return (
     <div className="w-full space-y-4">
-      <div className="w-full overflow-hidden">
+      <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory px-4 pb-4 
+  touch-pan-x scrollbar-none -mx-4">
         <div className="flex space-x-4 p-4 min-w-fit">
           <MetricCard
             title="Portfolio Value"
@@ -106,7 +107,8 @@ const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
         </div>
       </div>
 
-      <div className="relative overflow-x-hidden w-full">
+      <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory px-4 pb-4 
+  touch-pan-x scrollbar-none -mx-4">
  <div className={`flex ${openPositions.length > 3 ? 'animate-carousel' : ''}`}>
    {(openPositions.length > 3 ? [1, 2, 3, 4] : [1]).map(setIndex => (
      <div key={setIndex} className="flex space-x-4 p-4">

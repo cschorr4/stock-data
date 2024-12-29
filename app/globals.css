@@ -130,3 +130,11 @@ swiper-slide {
   animation: carousel 15s linear infinite;
   width: max-content;
  }
+
+ .scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
