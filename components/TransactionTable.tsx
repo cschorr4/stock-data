@@ -230,7 +230,8 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
           <span className="hidden sm:ml-2 sm:inline">Import</span>
         </Button>
       </>
-    );
+      );
+    };
   };
 
   const MobileTransaction = ({ transaction }: { transaction: Transaction }) => (
@@ -653,5 +654,4 @@ return (
     </AlertDialog>
   </>
 );
-
 export default TransactionTable;
