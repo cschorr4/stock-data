@@ -311,78 +311,81 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
   return (
     <>
       <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
-        <div className="flex items-center justify-between p-6">
-          <div className="flex items-center gap-2">
-            <h3 className="text-2xl font-semibold leading-none tracking-tight">Transaction Log</h3>
-            <Badge variant="secondary">
-              {transactions.length} transactions
-            </Badge>
+        {/* Header with Action Buttons */}
+        <div className="p-6">
+          <div className="flex flex-col gap-4">
+            {/* Title Row */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <h3 className="text-2xl font-semibold leading-none tracking-tight">Transaction Log</h3>
+                <Badge variant="secondary">
+                  {transactions.length} transactions
+                </Badge>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-9 w-9 p-0"
+                onClick={() => setIsOpen(!isOpen)}
+              >
+                <ChevronRight className={cn(
+                  "h-4 w-4 transition-transform duration-200",
+                  isOpen ? "rotate-90" : ""
+                )} />
+              </Button>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              <Button size="sm" onClick={() => setIsAddDialogOpen(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Add
+              </Button>
+
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <Download className="h-4 w-4 mr-2" />
+                    Export
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuItem onClick={() => handleExport('json')}>
+                    Export as JSON
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleExport('csv')}>
+                    Export as CSV
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              <ImportButton className="w-full" />
+
+              {transactions.length > 0 && (
+                <Button 
+                  variant="destructive" 
+                  size="sm"
+                  onClick={() => setIsDeleteAllDialogOpen(true)}
+                >
+                  <Trash2 className="h-4 w-4 mr-2"/>
+                  Remove All
+                </Button>
+              )}
+            </div>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-9 w-9 p-0"
-            onClick={() => setIsOpen(!isOpen)}
-          >
-            <ChevronRight className={cn(
-              "h-4 w-4 transition-transform duration-200",
-              isOpen ? "rotate-90" : ""
-            )} />
-          </Button>
         </div>
 
+        {/* Collapsible Content */}
         {isOpen && (
-          <div className="p-6 pt-0">
-            {/* Controls Section */}
-            <div className="mb-6 space-y-4">
-              {/* Search and Actions Row */}
-              <div className="flex flex-col gap-4">
-                {/* Search Input */}
-                <Input
-                  placeholder="Filter by ticker..."
-                  value={filter}
-                  onChange={(e) => setFilter(e.target.value)}
-                  className="w-full"
-                />
-                
-                {/* Action Buttons */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                  <Button size="sm" onClick={() => setIsAddDialogOpen(true)}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add
-                  </Button>
-
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="outline" size="sm">
-                        <Download className="h-4 w-4 mr-2" />
-                        Export
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent>
-                      <DropdownMenuItem onClick={() => handleExport('json')}>
-                        Export as JSON
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleExport('csv')}>
-                        Export as CSV
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-
-                  <ImportButton className="w-full" />
-
-                  {transactions.length > 0 && (
-                    <Button 
-                      variant="destructive" 
-                      size="sm"
-                      onClick={() => setIsDeleteAllDialogOpen(true)}
-                    >
-                      <Trash2 className="h-4 w-4 mr-2"/>
-                      Remove All
-                    </Button>
-                  )}
-                </div>
-              </div>
+          <div className="px-6 pb-6">
+            {/* Search Bar */}
+            <div className="mb-6">
+              <Input
+                placeholder="Filter by ticker..."
+                value={filter}
+                onChange={(e) => setFilter(e.target.value)}
+                className="w-full"
+              />
             </div>
 
             {/* Mobile View */}
