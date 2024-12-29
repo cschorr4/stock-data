@@ -43,6 +43,22 @@ const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
     [sectorData]
   );
 
+  // Calculate additional performance metrics using closed positions
+  const performanceMetrics = useMemo(() => {
+    const totalTrades = closedPositions.length;
+    const winningTrades = closedPositions.filter(pos => pos.profit > 0).length;
+    const avgHoldingPeriod = totalTrades > 0 
+      ? Math.round(closedPositions.reduce((sum, pos) => sum + pos.holdingPeriod, 0) / totalTrades)
+      : 0;
+    
+    return {
+      totalTrades,
+      winningTrades,
+      avgHoldingPeriod,
+      winRate: totalTrades > 0 ? (winningTrades / totalTrades) * 100 : 0
+    };
+  }, [closedPositions]);
+
   return (
     <div className="w-full space-y-4">
       {/* Metric Cards */}
@@ -69,18 +85,18 @@ const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
           metric1Label="Max Drawdown"
           metric1Value={formatPercentage(metrics.maxDrawdown)}
           metric1Color="text-red-600 dark:text-red-400"
-          metric2Label="Risk Score"
-          metric2Value={formatPercentage(riskMetrics.riskScore)}
-          metric2Color={getColorForValue(-riskMetrics.riskScore)}
+          metric2Label="Avg Hold Time"
+          metric2Value={`${performanceMetrics.avgHoldingPeriod}d`}
+          metric2Color="text-gray-600 dark:text-gray-400"
           gradient="bg-gradient-to-br from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20"
         />
         <MetricCard
           title="Performance"
           icon={<Target className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />}
-          mainValue={formatPercentage(metrics.winRate)}
+          mainValue={formatPercentage(performanceMetrics.winRate)}
           mainValueColor="text-emerald-600 dark:text-emerald-400"
-          metric1Label="Avg Win"
-          metric1Value={formatPercentage(metrics.avgWinPercent)}
+          metric1Label="Winning Trades"
+          metric1Value={`${performanceMetrics.winningTrades}/${performanceMetrics.totalTrades}`}
           metric1Color="text-green-600 dark:text-green-400"
           metric2Label="Avg Loss"
           metric2Value={formatPercentage(Math.abs(metrics.avgLossPercent))}
@@ -95,9 +111,9 @@ const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
           metric1Label="Top Sector"
           metric1Value={topSector.sector}
           metric1Color="text-gray-600 dark:text-gray-400"
-          metric2Label="Concentration"
-          metric2Value={formatPercentage(riskMetrics.sectorConcentration * 100)}
-          metric2Color={getColorForValue(-riskMetrics.sectorConcentration * 100)}
+          metric2Label="Active Positions"
+          metric2Value={`${openPositions.length}`}
+          metric2Color="text-gray-600 dark:text-gray-400"
           gradient="bg-gradient-to-br from-violet-50 to-purple-50 dark:from-violet-900/20 dark:to-purple-900/20"
         />
       </div>
