@@ -309,7 +309,8 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
   );
 
   return (
-    <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
+    <>
+      <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
         <div className="flex items-center justify-between p-6">
           <div className="flex items-center gap-2">
             <h3 className="text-2xl font-semibold leading-none tracking-tight">Transaction Log</h3>
@@ -648,7 +649,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+    </>
   );
-};
-
-export default TransactionTable;
+}
+  export default TransactionTable
