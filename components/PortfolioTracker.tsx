@@ -1,9 +1,15 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, Layout, LineChart, History, Settings, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from "@/components/ui/resizable";
 import { Transaction, Position, ClosedPosition, PortfolioMetrics, PortfolioTotals, MarketData, StockQuote } from '@/lib/types';
 import PortfolioSummary from './portfolio/PortfolioSummary';
 import PositionTimelineChart from './charts/position-timeline/PositionTimeLineChart';
@@ -13,6 +19,7 @@ import { getLocalStorage, setLocalStorage } from '@/lib/storage';
 import { fetchWithRetry } from '@/lib/fetch-helpers';
 import PositionTables from './portfolio/PositionTables';
 import { calculateMetricsFromPositions } from './portfolio/utils/portfolio-utils';
+import { cn } from '@/lib/utils';
 
 const PortfolioTracker = () => {
   // States
@@ -23,6 +30,35 @@ const PortfolioTracker = () => {
   const [spyData, setSpyData] = useState<Record<string, number>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [selectedView, setSelectedView] = useState<'overview' | 'positions' | 'transactions' | 'settings'>('overview');
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
+
+  const navigation = [
+    {
+      id: 'overview',
+      name: 'Dashboard',
+      icon: Layout,
+      current: selectedView === 'overview'
+    },
+    {
+      id: 'positions',
+      name: 'Positions',
+      icon: LineChart,
+      current: selectedView === 'positions'
+    },
+    {
+      id: 'transactions',
+      name: 'Transactions',
+      icon: History,
+      current: selectedView === 'transactions'
+    },
+    {
+      id: 'settings',
+      name: 'Settings',
+      icon: Settings,
+      current: selectedView === 'settings'
+    }
+  ];
 
   const fetchStockData = useCallback(async (symbols: string[], buyDates: string[]) => {
     try {
@@ -265,7 +301,7 @@ const PortfolioTracker = () => {
     fetchPrices();
     const interval = setInterval(fetchPrices, 300000); // Update every 5 minutes
     return () => clearInterval(interval);
-  }, [transactions, fetchStockData]); 
+  }, [transactions, fetchStockData]);
 
   // Transaction handlers
   const handleTransactionAdd = (transaction: Transaction) => {
@@ -293,69 +329,169 @@ const PortfolioTracker = () => {
     setLocalStorage('stockTransactions', []);
   };
 
-  const { metrics, totals, openPositions, closedPositions } = calculateMetrics();
+  const MainContent = () => {
+    const { metrics, totals, openPositions, closedPositions } = calculateMetrics();
+    
+    switch (selectedView) {
+      case 'overview':
+        return (
+          <>
+            <section className="bg-card rounded-lg shadow-sm mb-6">
+              <PortfolioSummary
+                metrics={metrics}
+                totals={totals}
+                openPositions={openPositions}
+                closedPositions={closedPositions}
+              />
+            </section>
+            
+            <section className="bg-card rounded-lg shadow-sm">
+              <div className="h-[460px] md:h-[525px] p-4">
+                <PositionTimelineChart 
+                  transactions={transactions}
+                  openPositions={openPositions}
+                  closedPositions={closedPositions}
+                />
+              </div>
+            </section>
+          </>
+        );
+      
+      case 'positions':
+        return (
+          <section className="bg-card rounded-lg shadow-sm">
+            <PositionTables 
+              openPositions={openPositions}
+              closedPositions={closedPositions}
+            />
+          </section>
+        );
+      
+      case 'transactions':
+        return (
+          <section className="bg-card rounded-lg shadow-sm">
+            <TransactionTable
+              transactions={transactions}
+              onTransactionAdd={handleTransactionAdd}
+              onTransactionEdit={handleTransactionEdit}
+              onTransactionDelete={handleTransactionDelete}
+              onTransactionsDeleteAll={handleTransactionsDeleteAll}
+            />
+          </section>
+        );
+      
+      case 'settings':
+        return (
+          <div className="bg-card rounded-lg shadow-sm p-6">
+            <h2 className="text-xl font-semibold mb-4">Settings</h2>
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-lg font-medium mb-2">Display Settings</h3>
+                <div className="space-y-2">
+                  {/* Add settings options here */}
+                </div>
+              </div>
+              <div>
+                <h3 className="text-lg font-medium mb-2">Data Management</h3>
+                <div className="space-y-2">
+                  {/* Add data management options here */}
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      
+      default:
+        return null;
+    }
+  };
+
+  const SideNav = () => (
+    <div className="flex h-full flex-col gap-4">
+      <div className="flex h-[60px] items-center px-6 border-b">
+        <h1 className="text-xl font-semibold">Portfolio Tracker</h1>
+      </div>
+      <div className="px-2 py-2">
+        <Button 
+          className="w-full justify-start" 
+          size="sm"
+          onClick={() => setIsAddDialogOpen(true)}
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Add Transaction
+        </Button>
+      </div>
+      <nav className="flex-1 px-2 py-2">
+        {navigation.map((item) => (
+          <Button
+            key={item.id}
+            variant={item.current ? "secondary" : "ghost"}
+            className={cn(
+              "w-full justify-start mb-1",
+              item.current ? "bg-muted" : "hover:bg-muted"
+            )}
+            onClick={() => {
+              setSelectedView(item.id as typeof selectedView);
+              setIsMobileOpen(false); // Close mobile nav when clicking
+            }}
+          >
+            <item.icon className="h-4 w-4 mr-2" />
+            {item.name}
+          </Button>
+        ))}
+      </nav>
+      <div className="flex-shrink-0 px-4 py-4 border-t">
+        <div className="text-sm text-muted-foreground">
+          Last updated: {new Date().toLocaleTimeString()}
+        </div>
+      </div>
+    </div>
+  );
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
+      <div className="flex items-center justify-center h-screen">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-8 p-4 md:space-y-12">
-      <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <h1 className="text-2xl font-bold">Portfolio Tracker</h1>
-          <Button 
-            size="sm"
-            onClick={() => setIsAddDialogOpen(true)}
+    <>
+      {/* Mobile Nav */}
+      <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
+        <SheetTrigger asChild>
+          <Button
+            variant="ghost"
+            className="sm:hidden fixed top-4 left-4 z-40"
           >
-            <Plus className="h-4 w-4 mr-2" />
-            Add Transaction
+            <Menu className="h-4 w-4" />
           </Button>
-        </div>
-        <div className="text-sm text-gray-500">
-          Last updated: {new Date().toLocaleTimeString()}
-        </div>
-      </header>
-    
-      <section className="bg-card rounded-lg shadow-sm">
-        <PortfolioSummary
-          metrics={metrics}
-          totals={totals}
-          openPositions={openPositions}
-          closedPositions={closedPositions}
-        />
-      </section>
-      
-      <section className="bg-card rounded-lg shadow-sm">
-        <div className="h-[460px] md:h-[525px] p-4">
-          <PositionTimelineChart 
-            transactions={transactions}
-            openPositions={openPositions}
-            closedPositions={closedPositions}
-          />
-        </div>
-      </section>
-      
-      <section className="bg-card rounded-lg shadow-sm">
-        <PositionTables 
-          openPositions={openPositions}
-          closedPositions={closedPositions}
-        />
-      </section>
-      
-      <section className="bg-card rounded-lg shadow-sm">
-      <TransactionTable
-          transactions={transactions}
-          onTransactionAdd={handleTransactionAdd}
-          onTransactionEdit={handleTransactionEdit}
-          onTransactionDelete={handleTransactionDelete}
-          onTransactionsDeleteAll={handleTransactionsDeleteAll}
-        />
-      </section>
+        </SheetTrigger>
+        <SheetContent side="left" className="w-64 p-0">
+          <SideNav />
+        </SheetContent>
+      </Sheet>
+
+      {/* Desktop Layout */}
+      <ResizablePanelGroup direction="horizontal" className="min-h-screen">
+        <ResizablePanel
+          defaultSize={20}
+          minSize={15}
+          maxSize={20}
+          className="hidden sm:block"
+        >
+          <SideNav />
+        </ResizablePanel>
+        
+        <ResizableHandle withHandle />
+        
+        <ResizablePanel defaultSize={80}>
+          <main className="p-6 max-w-7xl mx-auto">
+            <MainContent />
+          </main>
+        </ResizablePanel>
+      </ResizablePanelGroup>
 
       {/* Add Transaction Dialog */}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
@@ -372,11 +508,11 @@ const PortfolioTracker = () => {
           />
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   );
 };
 
-// Helper functions
+// Helper function for diversification metrics
 const calculateDiversificationMetrics = (positions: Position[]) => {
   const totalValue = positions.reduce((sum, pos) => sum + pos.currentValue, 0);
   

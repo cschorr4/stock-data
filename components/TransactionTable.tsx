@@ -13,7 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Card } from '@/components/ui/card';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -309,225 +309,203 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
   );
 
   return (
-    <>
-      <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
-        {/* Header with Action Buttons */}
-        <div className="p-6">
-          <div className="flex flex-col gap-4">
-            {/* Title Row */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <h3 className="text-2xl font-semibold leading-none tracking-tight">Transaction Log</h3>
-                <Badge variant="secondary">
-                  {transactions.length} transactions
-                </Badge>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-9 w-9 p-0"
-                onClick={() => setIsOpen(!isOpen)}
-              >
-                <ChevronRight className={cn(
-                  "h-4 w-4 transition-transform duration-200",
-                  isOpen ? "rotate-90" : ""
-                )} />
-              </Button>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-              <Button size="sm" onClick={() => setIsAddDialogOpen(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                Add
-              </Button>
-
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm">
-                    <Download className="h-4 w-4 mr-2" />
-                    Export
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                  <DropdownMenuItem onClick={() => handleExport('json')}>
-                    Export as JSON
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleExport('csv')}>
-                    Export as CSV
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-
-              <ImportButton className="w-full" />
-
-              {transactions.length > 0 && (
-                <Button 
-                  variant="destructive" 
-                  size="sm"
-                  onClick={() => setIsDeleteAllDialogOpen(true)}
-                >
-                  <Trash2 className="h-4 w-4 mr-2"/>
-                  Remove All
-                </Button>
-              )}
-            </div>
+    <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
+      <div className="flex flex-col space-y-4 p-6">
+        <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+          <div className="flex items-center gap-2">
+            <h3 className="text-2xl font-semibold leading-none tracking-tight">Transaction Log</h3>
+            <Badge variant="secondary">
+              {transactions.length} transactions
+            </Badge>
+          </div>
+          
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+            <Input
+              placeholder="Filter by ticker..."
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+              className="w-full sm:w-64"
+            />
+            
+            <div className="flex items-center space-x-2">
+            <TooltipProvider>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="sm" className="min-w-10">
+              <Download className="h-4 w-4" />
+              <span className="hidden sm:ml-2 sm:inline">Export</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuItem onClick={() => handleExport('json')}>
+              Export as JSON
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleExport('csv')}>
+              Export as CSV
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </TooltipTrigger>
+      <TooltipContent>Export transactions</TooltipContent>
+    </Tooltip>
+  </TooltipProvider>
+  <ImportButton className="min-w-10" />
+  
+  
+  <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+    <DialogTrigger asChild>
+      <Button size="sm">
+        <Plus className="mr-2 h-4 w-4" />
+       <span className="sm:hidden">Add Transaction</span> 
+        <span className="hidden sm:inline">Add Transaction</span>
+      </Button>
+    </DialogTrigger>
+    <DialogContent>
+      <DialogHeader>
+        <DialogTitle>Add New Transaction</DialogTitle>
+      </DialogHeader>
+      <TransactionForm
+        onSubmit={(transaction: Transaction) => {
+          onTransactionAdd(transaction);
+          setIsAddDialogOpen(false);
+        }}
+        onCancel={() => setIsAddDialogOpen(false)}
+      />
+    </DialogContent>
+  </Dialog>
+  {transactions.length > 0 && (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+        <Button 
+            variant="destructive" 
+            size="sm"
+            onClick={() => setIsDeleteAllDialogOpen(true)}
+          >
+            <Trash2 className="mr-2 h-4 w-4"/>
+            <span className="ml-2 hidden md:inline">Remove All</span>
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>Delete all transactions</TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  )}
+</div>
           </div>
         </div>
-
-        {/* Collapsible Content */}
-        {isOpen && (
-          <div className="px-6 pb-6">
-            {/* Search Bar */}
-            <div className="mb-6">
-              <Input
-                placeholder="Filter by ticker..."
-                value={filter}
-                onChange={(e) => setFilter(e.target.value)}
-                className="w-full"
-              />
-            </div>
-
-            {/* Mobile View */}
-            <div className="md:hidden space-y-4">
-              {getFilteredAndSortedTransactions.length === 0 ? (
-                <div className="text-center text-muted-foreground py-8">
-                  No transactions found
-                </div>
-              ) : (
-                getFilteredAndSortedTransactions.map(transaction => (
-                  <MobileTransaction 
-                    key={`${transaction.id}-mobile`} 
-                    transaction={transaction} 
-                  />
-                ))
-              )}
-            </div>
-
-            {/* Desktop View */}
-            <div className="hidden md:block">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>
-                      <Button 
-                        variant="ghost" 
-                        onClick={() => handleSort('date')}
-                        className="w-full text-left font-medium"
-                      >
-                        Date
-                        <ArrowUpDown className="ml-2 h-4 w-4 inline-block" />
-                      </Button>
-                    </TableHead>
-                    <TableHead>
-                      <Button 
-                        variant="ghost" 
-                        onClick={() => handleSort('ticker')}
-                        className="w-full text-left font-medium"
-                      >
-                        Ticker
-                        <ArrowUpDown className="ml-2 h-4 w-4 inline-block" />
-                      </Button>
-                    </TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Price</TableHead>
-                    <TableHead>Shares</TableHead>
-                    <TableHead>Total</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {getFilteredAndSortedTransactions.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
-                        No transactions found
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    getFilteredAndSortedTransactions.map(transaction => (
-                      <TableRow key={transaction.id}>
-                        <TableCell>{dateFormat(new Date(transaction.date), "yyyy.MM.dd")}</TableCell>
-                        <TableCell className="font-medium">{transaction.ticker}</TableCell>
-                        <TableCell>
-                          <Badge variant={
-                            transaction.type === 'buy' 
-                              ? 'default'
-                              : transaction.type === 'sell'
-                              ? 'sand'
-                              : 'blue'
-                          }>
-                            {transaction.type.toUpperCase()}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>${transaction.price.toFixed(2)}</TableCell>
-                        <TableCell>{transaction.shares}</TableCell>
-                        <TableCell>${(transaction.price * transaction.shares).toFixed(2)}</TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex justify-end gap-2">
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button
-                                    variant="outline"
-                                    size="icon"
-                                    onClick={() => {
-                                      setSelectedTransaction(transaction);
-                                      setIsEditDialogOpen(true);
-                                    }}
-                                  >
-                                    <Pencil className="h-4 w-4" />
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>Edit transaction</TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button
-                                    variant="destructive"
-                                    size="icon"
-                                    onClick={() => {
-                                      setSelectedTransaction(transaction);
-                                      setIsDeleteDialogOpen(true);
-                                    }}
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>Delete transaction</TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-          </div>
-        )}
       </div>
 
-      {/* Add Transaction Dialog */}
-      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Add New Transaction</DialogTitle>
-          </DialogHeader>
-          <TransactionForm
-            onSubmit={(transaction: Transaction) => {
-              onTransactionAdd(transaction);
-              setIsAddDialogOpen(false);
-            }}
-            onCancel={() => setIsAddDialogOpen(false)}
+      {/* Mobile View */}
+      <div className="md:hidden px-4 pb-4">
+        {getFilteredAndSortedTransactions.map(transaction => (
+          <MobileTransaction 
+            key={`${transaction.id}-mobile`}
+            transaction={transaction}
           />
-        </DialogContent>
-      </Dialog>
+        ))}
+      </div>
 
-      {/* Edit Transaction Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+      {/* Desktop View */}
+      <div className="hidden md:block">
+        <div className="overflow-x-auto px-6 pb-6">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>
+                  <Button 
+                    variant="ghost" 
+                    onClick={() => handleSort('date')}
+                    className="w-full text-left font-medium"
+                  >
+                    Date
+                    <ArrowUpDown className="ml-2 h-4 w-4 inline-block" />
+                  </Button>
+                </TableHead>
+                <TableHead>
+                  <Button 
+                    variant="ghost" 
+                    onClick={() => handleSort('ticker')}
+                    className="w-full text-left font-medium"
+                  >
+                    Ticker
+                    <ArrowUpDown className="ml-2 h-4 w-4 inline-block" />
+                  </Button>
+                </TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead>Price</TableHead>
+                <TableHead>Shares</TableHead>
+                <TableHead>Total</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+            {getFilteredAndSortedTransactions.map(transaction => (
+              <TableRow key={transaction.id}>
+                <TableCell>{dateFormat(new Date(transaction.date), "yyyy.MM.dd")}</TableCell>
+                <TableCell className="font-medium">{transaction.ticker}</TableCell>
+                <TableCell>
+                  <Badge variant={
+      transaction.type === 'buy' 
+        ? 'default'
+        : transaction.type === 'sell'
+        ? 'sand'
+        : 'blue'  // for dividend
+    }>
+                    {transaction.type.toUpperCase()}
+                  </Badge>
+                </TableCell>
+                <TableCell>${transaction.price.toFixed(2)}</TableCell>
+                <TableCell>{transaction.shares}</TableCell>
+                <TableCell>${(transaction.price * transaction.shares).toFixed(2)}</TableCell>
+                <TableCell className="text-right">
+                  <div className="flex justify-end gap-2">
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => {
+                              setSelectedTransaction(transaction);
+                              setIsEditDialogOpen(true);
+                            }}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Edit transaction</TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="destructive"
+                            size="icon"
+                            onClick={() => {
+                              setSelectedTransaction(transaction);
+                              setIsDeleteDialogOpen(true);
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Delete transaction</TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+          </Table>
+        </div>
+      </div>
+
+            {/* Edit Dialog */}
+            <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Edit Transaction</DialogTitle>
@@ -598,7 +576,8 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </>
+    </div>
   );
-}
-  export default TransactionTable
+};
+
+export default TransactionTable;
