@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { format as dateFormat } from 'date-fns';
 import Papa from 'papaparse';
-import { Download, Upload, Plus, Pencil, Trash2, ArrowUpDown, ChevronRight } from 'lucide-react';
+import { Download, Upload, Plus, Pencil, Trash2, ArrowUpDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -19,7 +19,6 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/components/ui/use-toast';
-import { cn } from '@/lib/utils';
 import { Transaction } from '@/lib/types';
 import TransactionForm from './TransactionForm';
 import { validateTransaction, exportToJSON, exportToCSV, downloadFile } from '@/lib/transactions';
@@ -61,7 +60,6 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
   onTransactionsDeleteAll,
 }) => {
   const { toast } = useToast();
-  const [isOpen, setIsOpen] = useState(false);
   const [filter, setFilter] = React.useState('');
   const [sortConfig, setSortConfig] = React.useState<{
     key: keyof Transaction;
