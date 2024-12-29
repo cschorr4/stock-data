@@ -1,21 +1,29 @@
+'use client';
+
 import React, { useState, useEffect, useCallback } from 'react';
+import { Plus } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Transaction, Position, ClosedPosition, PortfolioMetrics, PortfolioTotals, MarketData, StockQuote } from '@/lib/types';
 import PortfolioSummary from './portfolio/PortfolioSummary';
 import PositionTimelineChart from './charts/position-timeline/PositionTimeLineChart';
 import TransactionTable from './TransactionTable';
+import TransactionForm from './TransactionForm';
 import { getLocalStorage, setLocalStorage } from '@/lib/storage';
 import { fetchWithRetry } from '@/lib/fetch-helpers';
 import PositionTables from './portfolio/PositionTables';
 import { calculateMetricsFromPositions } from './portfolio/utils/portfolio-utils';
 
 const PortfolioTracker = () => {
+  // States
   const [transactions, setTransactions] = useState<Transaction[]>(() => 
     getLocalStorage<Transaction[]>('stockTransactions', [])
   );
   const [realtimePrices, setRealtimePrices] = useState<MarketData>({});
   const [spyData, setSpyData] = useState<Record<string, number>>({});
   const [isLoading, setIsLoading] = useState(true);
-  
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+
   const fetchStockData = useCallback(async (symbols: string[], buyDates: string[]) => {
     try {
       const response = await fetchWithRetry(
@@ -297,55 +305,80 @@ const PortfolioTracker = () => {
 
   return (
     <div className="space-y-8 p-4 md:space-y-12">
-    <header className="flex items-center justify-between">
-      <h1 className="text-2xl font-bold">Portfolio Tracker</h1>
-      <div className="text-sm text-gray-500">
-        Last updated: {new Date().toLocaleTimeString()}
-      </div>
-    </header>
+      <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <h1 className="text-2xl font-bold">Portfolio Tracker</h1>
+          <Button 
+            size="sm"
+            onClick={() => setIsAddDialogOpen(true)}
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add Transaction
+          </Button>
+        </div>
+        <div className="text-sm text-gray-500">
+          Last updated: {new Date().toLocaleTimeString()}
+        </div>
+      </header>
     
-    <section className="bg-card rounded-lg shadow-sm">
-      <PortfolioSummary
-        metrics={metrics}
-        totals={totals}
-        openPositions={openPositions}
-        closedPositions={closedPositions}
-      />
-    </section>
-    
-    <section className="bg-card rounded-lg shadow-sm">
-      <div className="h-[460px] md:h-[525px] p-4">
-        <PositionTimelineChart 
-          transactions={transactions}
+      <section className="bg-card rounded-lg shadow-sm">
+        <PortfolioSummary
+          metrics={metrics}
+          totals={totals}
           openPositions={openPositions}
           closedPositions={closedPositions}
         />
-      </div>
-    </section>
-    
-    <section className="bg-card rounded-lg shadow-sm">
-      <PositionTables 
-        openPositions={openPositions}
-        closedPositions={closedPositions}
-      />
-    </section>
-    
-    <section className="bg-card rounded-lg shadow-sm">
+      </section>
+      
+      <section className="bg-card rounded-lg shadow-sm">
+        <div className="h-[460px] md:h-[525px] p-4">
+          <PositionTimelineChart 
+            transactions={transactions}
+            openPositions={openPositions}
+            closedPositions={closedPositions}
+          />
+        </div>
+      </section>
+      
+      <section className="bg-card rounded-lg shadow-sm">
+        <PositionTables 
+          openPositions={openPositions}
+          closedPositions={closedPositions}
+        />
+      </section>
+      
+      <section className="bg-card rounded-lg shadow-sm">
       <TransactionTable
-        transactions={transactions}
-        onTransactionAdd={handleTransactionAdd}
-        onTransactionEdit={handleTransactionEdit}
-        onTransactionDelete={handleTransactionDelete}
-        onTransactionsDeleteAll={handleTransactionsDeleteAll}
-      />
-    </section>
-  </div>
+          transactions={transactions}
+          onTransactionAdd={handleTransactionAdd}
+          onTransactionEdit={handleTransactionEdit}
+          onTransactionDelete={handleTransactionDelete}
+          onTransactionsDeleteAll={handleTransactionsDeleteAll}
+        />
+      </section>
+
+      {/* Add Transaction Dialog */}
+      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add New Transaction</DialogTitle>
+          </DialogHeader>
+          <TransactionForm
+            onSubmit={(transaction: Transaction) => {
+              handleTransactionAdd(transaction);
+              setIsAddDialogOpen(false);
+            }}
+            onCancel={() => setIsAddDialogOpen(false)}
+          />
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 };
 
 // Helper functions
 const calculateDiversificationMetrics = (positions: Position[]) => {
-  const totalValue = positions.reduce((sum, pos) => sum + pos.currentValue, 0); // Add initial value 0
+  const totalValue = positions.reduce((sum, pos) => sum + pos.currentValue, 0);
   
   // Sector metrics
   const sectorGroups = positions.reduce((acc, pos) => {
@@ -388,6 +421,5 @@ const calculateDiversificationMetrics = (positions: Position[]) => {
 
   return { sectorMetrics, industryMetrics };
 };
-
 
 export default PortfolioTracker;
