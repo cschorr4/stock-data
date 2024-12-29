@@ -29,26 +29,26 @@ const MetricCard: React.FC<MetricCardProps> = ({
   gradient
 }) => (
   <Card 
-    className={`flex-none w-[calc(100vw-2rem)] sm:w-72 ${gradient} 
+    className={`flex-none w-[260px] xs:w-[220px] sm:w-[240px] md:w-[280px] ${gradient} 
     rounded-xl border-0 shadow-sm transition-all duration-200 
     hover:shadow-md touch-pan-x select-none`}
   >
-    <CardContent className="p-4">
-      <div className="space-y-3">
+    <CardContent className="p-3 sm:p-4">
+      <div className="space-y-2 sm:space-y-3">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="rounded-full bg-white/10 p-1.5">
               {icon}
             </div>
-            <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+            <span className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400">
               {title}
             </span>
           </div>
         </div>
 
         {/* Main Value */}
-        <div className={`text-2xl font-semibold ${mainValueColor}`}>
+        <div className={`text-xl sm:text-2xl font-semibold ${mainValueColor}`}>
           {mainValue}
         </div>
 
@@ -58,7 +58,7 @@ const MetricCard: React.FC<MetricCardProps> = ({
             <p className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">
               {metric1Label}
             </p>
-            <p className={`text-sm font-medium ${metric1Color}`}>
+            <p className={`text-xs sm:text-sm font-medium ${metric1Color}`}>
               {metric1Value}
             </p>
           </div>
@@ -66,7 +66,7 @@ const MetricCard: React.FC<MetricCardProps> = ({
             <p className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">
               {metric2Label}
             </p>
-            <p className={`text-sm font-medium ${metric2Color}`}>
+            <p className={`text-xs sm:text-sm font-medium ${metric2Color}`}>
               {metric2Value}
             </p>
           </div>
