@@ -1,5 +1,6 @@
 import React from 'react';
 import { cn } from "@/lib/utils";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface ViewSwitcherProps {
   children: React.ReactNode;
@@ -7,17 +8,17 @@ interface ViewSwitcherProps {
   setSelectedView: (view: string) => void;
 }
 
-export default function ViewSwitcher({ 
-  children,
-  selectedView, 
-  setSelectedView 
-}: ViewSwitcherProps) {
+export default function ViewSwitcher({ children, selectedView, setSelectedView }: ViewSwitcherProps) {
   return (
     <div className={cn(
-      "flex h-full flex-col",
+      "h-screen",
       selectedView === "menu" ? "block" : "hidden lg:block"
     )}>
-      {children}
+      <ScrollArea className="h-full">
+        <div className="h-full px-4 py-6 lg:px-8">
+          {children}
+        </div>
+      </ScrollArea>
     </div>
   );
 }

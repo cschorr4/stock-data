@@ -1,6 +1,6 @@
 import React from 'react';
 import { Sidebar } from './nav';
-import ViewSwitcher from './view-switcher';
+import ViewSwitcher from '@/components/view-switcher';
 
 interface PortfolioLayoutProps {
   children: React.ReactNode;
