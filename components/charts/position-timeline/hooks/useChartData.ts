@@ -12,7 +12,6 @@ interface PositionState {
 }
 
 export const usePositionTimeline = (
-  transactions: Transaction[],
   openPositions: Position[],
   closedPositions: ClosedPosition[]
 ): Record<string, PositionState> => {
@@ -21,9 +20,7 @@ export const usePositionTimeline = (
 
     [...openPositions, ...closedPositions].forEach(pos => {
       if (!states[pos.ticker]) {
-        states[pos.ticker] = {
-          periods: []
-        };
+        states[pos.ticker] = { periods: [] };
       }
     });
 
@@ -44,7 +41,7 @@ export const usePositionTimeline = (
     });
 
     return states;
-  }, [transactions, openPositions, closedPositions]);
+  }, [openPositions, closedPositions]);
 };
 
 interface ChartPoint {
@@ -88,7 +85,7 @@ export const useChartDataProcessing = (
           ? ((value - baseValue) / baseValue) * 100
           : value;
 
-        let activeStatus = state.periods.reduce<'inactive' | 'open' | 'closed'>((status, period) => {
+        const activeStatus = state.periods.reduce<'inactive' | 'open' | 'closed'>((status, period) => {
           const startDate = new Date(period.start);
           const endDate = period.end ? new Date(period.end) : null;
           
