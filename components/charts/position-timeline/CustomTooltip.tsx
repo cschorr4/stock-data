@@ -46,7 +46,7 @@ export const CustomTooltip: React.FC<CustomTooltipProps> = ({
         const shares = positionData[label]?.[ticker]?.shares || 0;
         const value = entry.value;
         
-        if (value === undefined || value === null) return null; 
+        if (value === undefined || value === null) return null;
 
         return (
           <div key={index} className="text-sm">

@@ -9,8 +9,6 @@ import {
   Tooltip,
   ResponsiveContainer
 } from 'recharts';
-
-import CustomTooltip from './CustomTooltip';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ChartControls } from './ChartControls';
@@ -319,16 +317,23 @@ const PositionTimelineChart: React.FC<PositionTimelineChartProps> = ({
                   }}
                 />
                 <Tooltip
-  content={
-    <CustomTooltip 
-      showPercentage={showPercentage} 
-      getTickerColor={getTickerColor}
-      isMobile={isMobile}
-    />
-  }
-  // Prevent tooltip from going outside chart bounds
-  coordinate={{ x: 0, y: 0 }}
-/>
+                  labelFormatter={(label) => format(new Date(label), 'PPP')}
+                  formatter={(value, name: string | number) => {
+                    const nameStr = String(name);
+                    const displayName = nameStr.replace(/_closed|_open|_base/, '');
+                    const type = nameStr.includes('_open') ? ' (Open)' : 
+                               nameStr.includes('_closed') ? ' (Closed)' : '';
+                    return [
+                      showPercentage 
+                        ? `${Number(value).toFixed(1)}%` 
+                        : `$${Number(value).toFixed(2)}`,
+                      displayName + type
+                    ];
+                  }}
+                  contentStyle={{
+                    fontSize: isMobile ? '12px' : '14px'
+                  }}
+                />
                 
                 <Line
                   type="monotone"
