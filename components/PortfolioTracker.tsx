@@ -253,7 +253,7 @@ const PortfolioTracker = () => {
         setIsLoading(false);
         return;
       }
-      /test
+      
       try {
         const symbolBuyDates = uniqueTransactions.map(ticker => {
           const firstBuy = transactions
