@@ -35,7 +35,7 @@ const PositionTimelineChart: React.FC<PositionTimelineChartProps> = ({
       setIsLoading(true);
       setError(null);
       try {
-        const tickers = [...new Set([...selectedTickers, 'SPY'])];
+        const tickers = Array.from(new Set([...selectedTickers, 'SPY']));
         let url = `/api/stock/chart?`;
         
         if (timeRange === 'Custom' && dateRange?.from && dateRange?.to) {
