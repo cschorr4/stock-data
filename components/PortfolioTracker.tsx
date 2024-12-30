@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Plus, Layout, LineChart, History, Settings, Menu } from 'lucide-react';
+import { Plus, Layout, LineChart, CheckSquare, History, Settings, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -16,7 +16,8 @@ import TransactionTable from './TransactionTable';
 import TransactionForm from './TransactionForm';
 import { getLocalStorage, setLocalStorage } from '@/lib/storage';
 import { fetchWithRetry } from '@/lib/fetch-helpers';
-import PositionTables from './portfolio/PositionTables';
+import OpenPositionsTable from './OpenPositionsTable'
+import ClosedPositionsTable from './ClosedPositionsTable'
 import { calculateMetricsFromPositions } from './portfolio/utils/portfolio-utils';
 import { cn } from '@/lib/utils';
 
@@ -29,35 +30,17 @@ const PortfolioTracker = () => {
   const [spyData, setSpyData] = useState<Record<string, number>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [selectedView, setSelectedView] = useState<'overview' | 'positions' | 'transactions' | 'settings'>('overview');
+  const [selectedView, setSelectedView] = useState<'overview' | 'open-positions' | 'closed-positions' | 'transactions' | 'settings'>('overview');
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   const navigation = [
-    {
-      id: 'overview',
-      name: 'Dashboard',
-      icon: Layout,
-      current: selectedView === 'overview'
-    },
-    {
-      id: 'positions',
-      name: 'Positions',
-      icon: LineChart,
-      current: selectedView === 'positions'
-    },
-    {
-      id: 'transactions',
-      name: 'Transactions',
-      icon: History,
-      current: selectedView === 'transactions'
-    },
-    {
-      id: 'settings',
-      name: 'Settings',
-      icon: Settings,
-      current: selectedView === 'settings'
-    }
+    { id: 'overview', name: 'Dashboard', icon: Layout, current: selectedView === 'overview' },
+    { id: 'open-positions', name: 'Open Positions', icon: LineChart, current: selectedView === 'open-positions' },
+    { id: 'closed-positions', name: 'Closed Positions', icon: CheckSquare, current: selectedView === 'closed-positions' },
+    { id: 'transactions', name: 'Transactions', icon: History, current: selectedView === 'transactions' },
+    { id: 'settings', name: 'Settings', icon: Settings, current: selectedView === 'settings' }
   ];
+  
 
   const fetchStockData = useCallback(async (symbols: string[], buyDates: string[]) => {
     try {
@@ -330,41 +313,33 @@ const PortfolioTracker = () => {
 
   const MainContent = () => {
     const { metrics, totals, openPositions, closedPositions } = calculateMetrics();
-    
+  
     switch (selectedView) {
       case 'overview':
         return (
           <>
             <section className="bg-card rounded-lg shadow-sm mb-6">
-              <PortfolioSummary
-                metrics={metrics}
-                totals={totals}
-                openPositions={openPositions}
-                closedPositions={closedPositions}
-              />
+              <PortfolioSummary metrics={metrics} totals={totals} openPositions={openPositions} closedPositions={closedPositions} />
             </section>
-            
             <section className="bg-card rounded-lg shadow-sm">
               <div className="h-[460px] md:h-[525px] p-4">
-                <PositionTimelineChart 
-                  openPositions={openPositions}
-                  closedPositions={closedPositions}
-                />
+                <PositionTimelineChart openPositions={openPositions} closedPositions={closedPositions} />
               </div>
             </section>
           </>
         );
-      
-      case 'positions':
+      case 'open-positions':
         return (
           <section className="bg-card rounded-lg shadow-sm">
-            <PositionTables 
-              openPositions={openPositions}
-              closedPositions={closedPositions}
-            />
+            <OpenPositionsTable positions={openPositions} />
           </section>
         );
-      
+      case 'closed-positions':
+        return (
+          <section className="bg-card rounded-lg shadow-sm">
+            <ClosedPositionsTable positions={closedPositions} />
+          </section>
+        );
       case 'transactions':
         return (
           <section className="bg-card rounded-lg shadow-sm">
@@ -377,7 +352,6 @@ const PortfolioTracker = () => {
             />
           </section>
         );
-      
       case 'settings':
         return (
           <div className="bg-card rounded-lg shadow-sm p-6">
@@ -398,11 +372,11 @@ const PortfolioTracker = () => {
             </div>
           </div>
         );
-      
       default:
         return null;
     }
   };
+  
 
   const SideNav = () => (
     <div className="flex h-full flex-col gap-4">
