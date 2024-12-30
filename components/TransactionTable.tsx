@@ -197,7 +197,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
   interface ImportButtonProps {
     className?: string;
   }
-  
+   
   const ImportButton = ({ className }: ImportButtonProps) => {
     const inputRef = React.useRef<HTMLInputElement>(null);
   
