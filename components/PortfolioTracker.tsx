@@ -4,12 +4,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Plus, Layout, LineChart, History, Settings, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import {
-  ResizableHandle,
-  ResizablePanel,
-  ResizablePanelGroup,
-} from "@/components/ui/resizable";
 import { Transaction, Position, ClosedPosition, PortfolioMetrics, PortfolioTotals, MarketData, StockQuote } from '@/lib/types';
 import PortfolioSummary from './portfolio/PortfolioSummary';
 import PositionTimelineChart from './charts/position-timeline/PositionTimeLineChart';
