@@ -1,386 +1,174 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { format } from 'date-fns';
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer
-} from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ChartControls } from './ChartControls';
-import { Transaction } from '@/lib/types'
+import { usePositionTimeline, useChartDataProcessing } from './hooks/useChartData';
+import { DateRange } from "react-day-picker";
 
-interface Position {
-  ticker: string;
-  buyDate: string;
-  sellDate?: string;
-}
-
-interface StockDataPoint {
-  date: string;
-  close?: number;
-  price?: number;
-}
-
-interface ChartDataPoint {
-  date: string;
-  [key: string]: number | string | undefined;
-}
-
-interface ProcessedDataPoint extends ChartDataPoint {
-  SPY?: number;
-}
-
-interface TickerData {
-  ticker: string;
-  data: StockDataPoint[];
-}
-interface PositionTimelineChartProps {
-  transactions: Transaction[];
-  openPositions: Position[];
-  closedPositions: Position[];
-}
-
-const PositionTimelineChart: React.FC<PositionTimelineChartProps> = ({
-  openPositions,
-  closedPositions
-}) => {
+const PositionTimelineChart = ({ transactions, openPositions, closedPositions }) => {
   const [timeRange, setTimeRange] = useState('6M');
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [dateRange, setDateRange] = useState<DateRange>();
   const [showPercentage, setShowPercentage] = useState(false);
-  const [selectedTickers, setSelectedTickers] = useState<string[]>(['SPY']);
-  const [allTickers, setAllTickers] = useState<string[]>(['SPY']);
-  const [chartData, setChartData] = useState<ProcessedDataPoint[]>([]);
-  const [isMobile, setIsMobile] = useState(false);
+  const [selectedTickers, setSelectedTickers] = useState(['SPY']);
+  const [chartData, setChartData] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [isMobile] = useState(() => window.innerWidth < 768);
+
+  const positionStates = usePositionTimeline(transactions, openPositions, closedPositions, showPercentage);
+  const processedChartData = useChartDataProcessing(chartData, positionStates, showPercentage);
 
   useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.matchMedia('(max-width: 768px)').matches);
-    };
-    
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  const getBaselineValues = (data: ProcessedDataPoint[], tickers: string[]): Record<string, number> => {
-    const baselines: Record<string, number> = {};
-    tickers.forEach(ticker => {
-      const firstPoint = data.find(point => 
-        point[`${ticker}_base`] !== undefined || 
-        point[`${ticker}_closed`] !== undefined || 
-        point[`${ticker}_open`] !== undefined || 
-        point[ticker] !== undefined
-      );
-      if (firstPoint) {
-        const value = firstPoint[`${ticker}_base`] || 
-                     firstPoint[`${ticker}_closed`] || 
-                     firstPoint[`${ticker}_open`] || 
-                     firstPoint[ticker];
-        if (typeof value === 'number') {
-          baselines[ticker] = value;
-        }
-      }
-    });
-    return baselines;
-  };
-
-  useEffect(() => {
-    const uniqueTickers = Array.from(new Set([
-      ...openPositions.map(p => p.ticker),
-      ...closedPositions.map(p => p.ticker),
-      'SPY'
-    ]));
-    setAllTickers(uniqueTickers);
-  }, [openPositions, closedPositions]);
-
-  const handleTickerSelect = (ticker: string) => {
-    if (ticker === 'SPY') return;
-    setSelectedTickers(current =>
-      current.includes(ticker)
-        ? current.filter(t => t !== ticker)
-        : [...current, ticker]
-    );
-  };
-
-  useEffect(() => {
-    const fetchStockData = async () => {
+    const fetchData = async () => {
       setIsLoading(true);
       setError(null);
-      
       try {
-        const uniqueTickers = new Set([...selectedTickers]);
-        if (!uniqueTickers.has('SPY')) uniqueTickers.add('SPY');
-        const tickers = Array.from(uniqueTickers);
-
-        if (tickers.length === 0) {
-          setChartData([]);
-          setIsLoading(false);
-          return;
+        const tickers = [...new Set([...selectedTickers, 'SPY'])];
+        let url = `/api/stock/chart?`;
+        
+        if (timeRange === 'Custom' && dateRange?.from && dateRange?.to) {
+          url += `start=${format(dateRange.from, 'yyyy-MM-dd')}&end=${format(dateRange.to, 'yyyy-MM-dd')}`;
+        } else {
+          url += `range=${timeRange}`;
         }
 
-        const tickerDataPromises = tickers.map(async ticker => {
-          try {
-            const response = await fetch(`/api/stock/chart?symbol=${ticker}&range=${timeRange}`);
-            if (!response.ok) throw new Error(`Failed to fetch data for ${ticker}`);
-            const data = await response.json();
-            return { ticker, data: data.error ? [] : data } as TickerData;
-          } catch (err) {
-            console.error(`Error fetching ${ticker}:`, err);
-            return { ticker, data: [] } as TickerData;
-          }
-        });
+        const responses = await Promise.all(
+          tickers.map(ticker => 
+            fetch(`${url}&symbol=${ticker}`).then(res => res.json())
+          )
+        );
 
-        const results = await Promise.all(tickerDataPromises);
-        
         const allDates = new Set<string>();
-        results.forEach(({ data }) => {
-          data.forEach((point: StockDataPoint) => allDates.add(point.date));
-        });
+        responses.forEach(data => data.forEach(point => allDates.add(point.date)));
 
-        const initialProcessedData = Array.from(allDates).sort().map(date => {
-          const point: ChartDataPoint = { date };
-          const dateObj = new Date(date);
-
-          results.forEach(({ ticker, data }) => {
-            const dataPoint = data.find((p: StockDataPoint) => p.date === date);
-            if (!dataPoint) return;
-
-            const value = dataPoint.close ?? dataPoint.price;
-            if (value === undefined) return;
-
-            if (ticker === 'SPY') {
-              point[ticker] = value;
-            } else {
-              point[`${ticker}_base`] = value;
-
-              const isInClosedPeriod = closedPositions.some(position => {
-                if (position.ticker !== ticker) return false;
-                const buyDate = new Date(position.buyDate);
-                const sellDate = position.sellDate ? new Date(position.sellDate) : new Date();
-                return dateObj >= buyDate && dateObj <= sellDate;
-              });
-
-              const isInOpenPeriod = openPositions.some(position => {
-                if (position.ticker !== ticker) return false;
-                const buyDate = new Date(position.buyDate);
-                return dateObj >= buyDate;
-              });
-
-              if (isInClosedPeriod) {
-                point[`${ticker}_closed`] = value;
+        const combinedData = Array.from(allDates)
+          .sort()
+          .map(date => {
+            const point = { date };
+            tickers.forEach((ticker, idx) => {
+              const tickerData = responses[idx].find(d => d.date === date);
+              if (tickerData) {
+                point[ticker] = tickerData.close || tickerData.price;
               }
-              if (isInOpenPeriod) {
-                point[`${ticker}_open`] = value;
-              }
-            }
+            });
+            return point;
           });
 
-          return point;
-        });
-
-        const baselines = getBaselineValues(initialProcessedData, tickers);
-        const processedData = initialProcessedData.map(point => {
-          const newPoint: ChartDataPoint = { date: point.date };
-          Object.entries(point).forEach(([key, value]) => {
-            if (key === 'date') return;
-            
-            if (typeof value === 'number') {
-              const ticker = key.split('_')[0];
-              if (showPercentage && baselines[ticker]) {
-                newPoint[key] = ((value - baselines[ticker]) / baselines[ticker]) * 100;
-              } else {
-                newPoint[key] = value;
-              }
-            }
-          });
-          return newPoint;
-        });
-
-        setChartData(processedData);
-      } catch (error) {
-        console.error('Error processing chart data:', error);
+        setChartData(combinedData);
+      } catch (err) {
+        console.error('Error fetching chart data:', err);
         setError('Failed to load chart data');
       }
-      
       setIsLoading(false);
     };
 
-    fetchStockData();
-  }, [timeRange, selectedTickers, showPercentage, openPositions, closedPositions]);
+    fetchData();
+  }, [timeRange, dateRange, selectedTickers]);
 
-  const getTickerColor = (ticker: string): string => {
-    const colors: Record<string, string> = {
-      SPY: '#888888',
-      AAPL: '#2563eb',
-      LLY: '#dc2626'
-    };
-    return colors[ticker] || '#16a34a';
+  const handleTimeRangeChange = (range: string, customRange?: DateRange) => {
+    if (range === 'Custom' && customRange) {
+      setDateRange(customRange);
+      setTimeRange('Custom');
+    } else {
+      setDateRange(undefined);
+      setTimeRange(range);
+    }
   };
 
-  if (isLoading) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Position Timeline</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="h-64 flex items-center justify-center">
-            Loading chart data...
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
+  if (isLoading) return <div>Loading chart data...</div>;
+  if (error) return <Alert variant="destructive"><AlertDescription>{error}</AlertDescription></Alert>;
 
   return (
-    <Card className="w-full">
-      <CardHeader className={`flex ${isMobile ? 'flex-col' : 'flex-row'} items-center justify-between space-y-4`}>
-        <CardTitle>Position Timeline</CardTitle>
-        <ChartControls
-          allTickers={allTickers}
-          selectedTickers={selectedTickers}
-          showPercentage={showPercentage}
-          timeRange={timeRange}
-          onTickerSelect={handleTickerSelect}
-          onShowPercentageChange={setShowPercentage}
-          onTimeRangeChange={setTimeRange}
-        />
+    <Card>
+      <CardHeader>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <CardTitle>Position Timeline</CardTitle>
+          <ChartControls
+            allTickers={Object.keys(positionStates)}
+            selectedTickers={selectedTickers}
+            showPercentage={showPercentage}
+            timeRange={timeRange}
+            onTickerSelect={(ticker) => {
+              setSelectedTickers(current => 
+                current.includes(ticker) 
+                  ? current.filter(t => t !== ticker)
+                  : [...current, ticker]
+              );
+            }}
+            onShowPercentageChange={setShowPercentage}
+            onTimeRangeChange={handleTimeRangeChange}
+          />
+        </div>
       </CardHeader>
       <CardContent>
-        {error ? (
-          <Alert variant="destructive">
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        ) : chartData.length === 0 ? (
-          <div className="h-64 flex items-center justify-center text-muted-foreground">
-            No position data to display
-          </div>
-        ) : (
-          <div className={`${isMobile ? 'h-72' : 'h-96'}`}>
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart 
-                data={chartData}
-                margin={isMobile ? 
-                  { top: 5, right: 10, left: 0, bottom: 40 } : 
-                  { top: 5, right: 30, left: 20, bottom: 20 }
+        <div className={`h-${isMobile ? '64' : '96'}`}>
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={processedChartData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis
+                dataKey="date"
+                tickFormatter={(date) => format(new Date(date), 'MMM d')}
+                angle={-45}
+                textAnchor="end"
+                height={isMobile ? 60 : 30}
+                tick={{ fontSize: isMobile ? 10 : 12 }}
+              />
+              <YAxis
+                tickFormatter={(value) => 
+                  showPercentage ? `${value.toFixed(1)}%` : `$${value.toFixed(0)}`
                 }
-              >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis 
-                  dataKey="date"
-                  tickFormatter={(date) => format(new Date(date), 'MMM d')}
-                  angle={-45}
-                  textAnchor="end"
-                  height={50}
-                  interval={isMobile ? 'preserveStartEnd' : 'preserveStartEnd'}
-                  stroke="#000000"
-                  strokeWidth={1}
-                  tick={{ fontSize: isMobile ? 10 : 12, fontWeight: 500 }}
-                  label={{ 
-                    value: 'Date',
-                    position: 'bottom',
-                    offset: 0,
-                    style: { 
-                      textAnchor: 'middle', 
-                      fontWeight: 600,
-                      fontSize: isMobile ? 12 : 14 
-                    }
-                  }}
-                />
-                <YAxis 
-                  tickFormatter={(value) => 
-                    showPercentage 
-                      ? `${value.toFixed(1)}%` 
-                      : `$${value.toFixed(0)}`
-                  }
-                  width={isMobile ? 45 : 60}
-                  domain={['auto', 'auto']}
-                  stroke="#000000"
-                  strokeWidth={1}
-                  tick={{ fontSize: isMobile ? 10 : 12, fontWeight: 500 }}
-                  label={{
-                    value: showPercentage ? 'Change (%)' : 'Price ($)',
-                    angle: -90,
-                    position: 'insideLeft',
-                    offset: 0,
-                    style: { 
-                      textAnchor: 'middle', 
-                      fontWeight: 600,
-                      fontSize: isMobile ? 12 : 14 
-                    }
-                  }}
-                />
-                <Tooltip
-                  labelFormatter={(label) => format(new Date(label), 'PPP')}
-                  formatter={(value, name: string | number) => {
-                    const nameStr = String(name);
-                    const displayName = nameStr.replace(/_closed|_open|_base/, '');
-                    const type = nameStr.includes('_open') ? ' (Open)' : 
-                               nameStr.includes('_closed') ? ' (Closed)' : '';
-                    return [
-                      showPercentage 
-                        ? `${Number(value).toFixed(1)}%` 
-                        : `$${Number(value).toFixed(2)}`,
-                      displayName + type
-                    ];
-                  }}
-                  contentStyle={{
-                    fontSize: isMobile ? '12px' : '14px'
-                  }}
-                />
-                
-                <Line
-                  type="monotone"
-                  dataKey="SPY"
-                  name="SPY"
-                  stroke="#888888"
-                  strokeWidth={1}
-                  dot={false}
-                  connectNulls={true}
-                />
-                
-                {selectedTickers.filter(ticker => ticker !== 'SPY').map((ticker) => (
-                  <React.Fragment key={ticker}>
-                    <Line
-                      type="monotone"
-                      dataKey={`${ticker}_base`}
-                      name={`${ticker} (Base)`}
-                      stroke={getTickerColor(ticker)}
-                      strokeWidth={1}
-                      strokeDasharray="3 3"
-                      dot={false}
-                      connectNulls={true}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey={`${ticker}_closed`}
-                      name={`${ticker} (Closed)`}
-                      stroke={getTickerColor(ticker)}
-                      strokeWidth={2}
-                      dot={false}
-                      connectNulls={false}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey={`${ticker}_open`}
-                      name={`${ticker} (Open)`}
-                      stroke={getTickerColor(ticker)}
-                      strokeWidth={2}
-                      dot={false}
-                      connectNulls={false}
-                    />
-                  </React.Fragment>
-                ))}
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        )}
+                width={55}
+              />
+              <Tooltip
+                labelFormatter={(label) => format(new Date(label), 'PPP')}
+                formatter={(value: number, name: string) => {
+                  const displayName = name.split('_')[0];
+                  const formattedValue = showPercentage 
+                    ? `${value.toFixed(1)}%` 
+                    : `$${value.toFixed(2)}`;
+                  return [formattedValue, displayName];
+                }}
+              />
+              
+              <Line
+                type="monotone"
+                dataKey="SPY"
+                stroke="#888888"
+                strokeWidth={1}
+                dot={false}
+              />
+
+              {selectedTickers.filter(ticker => ticker !== 'SPY').map((ticker) => (
+                <React.Fragment key={ticker}>
+                  <Line
+                    type="monotone"
+                    dataKey={`${ticker}_inactive`}
+                    stroke="#888888"
+                    strokeWidth={1}
+                    strokeDasharray="3 3"
+                    dot={false}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey={`${ticker}_open`}
+                    stroke="#2563eb"
+                    strokeWidth={2}
+                    dot={false}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey={`${ticker}_closed`}
+                    stroke="#dc2626"
+                    strokeWidth={2}
+                    dot={false}
+                  />
+                </React.Fragment>
+              ))}
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
       </CardContent>
     </Card>
   );

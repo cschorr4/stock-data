@@ -1,45 +1,108 @@
-import { useState, useEffect } from 'react';
-import { ChartDataPoint, Transaction, TickerData } from '@/lib/types';
-import { processChartData, processDataForDisplay } from '../utils/dataProcessing';
+import { useMemo } from 'react';
+import { Transaction, Position, ClosedPosition } from '@/lib/types';
 
-interface SharesData {
-  [date: string]: {
-    [ticker: string]: {
-      shares: number;
-    };
-  };
+interface PositionPeriod {
+  start: string;
+  end: string | null;
+  type: 'open' | 'closed';
 }
 
-export const useChartData = (
-  tickerData: TickerData[],
+interface PositionState {
+  periods: PositionPeriod[];
+}
+
+export const usePositionTimeline = (
   transactions: Transaction[],
-  tickers: string[],
+  openPositions: Position[],
+  closedPositions: ClosedPosition[],
   showPercentage: boolean
-) => {
-  const [chartData, setChartData] = useState<ChartDataPoint[]>([]);
-  const [positionData, setPositionData] = useState<SharesData>({});
-  const [rawData, setRawData] = useState<ChartDataPoint[]>([]);
+): Record<string, PositionState> => {
+  return useMemo(() => {
+    const states: Record<string, PositionState> = {};
 
-  useEffect(() => {
-    if (!tickers || tickers.length === 0 || !transactions) {
-      return;
-    }
-
-    const processData = async () => {
-      try {
-        const { sharesData, rawData: newRawData } = 
-          await processChartData(tickerData, tickers, transactions);
-        
-        setRawData(newRawData);
-        setChartData(processDataForDisplay(newRawData, showPercentage));
-        setPositionData(sharesData);
-      } catch (error) {
-        console.error('Error processing chart data:', error);
+    [...openPositions, ...closedPositions].forEach(pos => {
+      if (!states[pos.ticker]) {
+        states[pos.ticker] = {
+          periods: []
+        };
       }
-    };
+    });
 
-    processData();
-  }, [tickerData, transactions, tickers, showPercentage]);
+    closedPositions.forEach(pos => {
+      states[pos.ticker].periods.push({
+        start: pos.buyDate,
+        end: pos.sellDate,
+        type: 'closed'
+      });
+    });
 
-  return { chartData, positionData, rawData };
+    openPositions.forEach(pos => {
+      states[pos.ticker].periods.push({
+        start: pos.buyDate,
+        end: null,
+        type: 'open'
+      });
+    });
+
+    return states;
+  }, [transactions, openPositions, closedPositions]);
+};
+
+interface ChartPoint {
+  date: string;
+  [key: string]: number | string;
+}
+
+export const useChartDataProcessing = (
+  chartData: ChartPoint[],
+  positionStates: Record<string, PositionState>,
+  showPercentage: boolean
+): ChartPoint[] => {
+  return useMemo(() => {
+    if (!chartData.length) return [];
+
+    const baseValues: Record<string, number> = {};
+    const firstPoint = chartData[0];
+    
+    Object.entries(firstPoint).forEach(([key, value]) => {
+      if (key !== 'date' && typeof value === 'number') {
+        baseValues[key] = value;
+      }
+    });
+
+    return chartData.map(point => {
+      const processedPoint: ChartPoint = { date: point.date };
+      const currentDate = new Date(point.date);
+
+      if (typeof point.SPY === 'number') {
+        processedPoint.SPY = showPercentage
+          ? ((point.SPY - baseValues.SPY) / baseValues.SPY) * 100
+          : point.SPY;
+      }
+
+      Object.entries(positionStates).forEach(([ticker, state]) => {
+        const value = point[ticker];
+        if (typeof value !== 'number') return;
+
+        const baseValue = baseValues[ticker];
+        const normalizedValue = showPercentage && baseValue
+          ? ((value - baseValue) / baseValue) * 100
+          : value;
+
+        let activeStatus = state.periods.reduce<'inactive' | 'open' | 'closed'>((status, period) => {
+          const startDate = new Date(period.start);
+          const endDate = period.end ? new Date(period.end) : null;
+          
+          if (currentDate >= startDate && (!endDate || currentDate <= endDate)) {
+            return period.type;
+          }
+          return status;
+        }, 'inactive');
+
+        processedPoint[`${ticker}_${activeStatus}`] = normalizedValue;
+      });
+
+      return processedPoint;
+    });
+  }, [chartData, positionStates, showPercentage]);
 };

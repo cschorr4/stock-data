@@ -4,6 +4,12 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Plus, Layout, LineChart, History, Settings, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from "@/components/ui/resizable";
 import { Transaction, Position, ClosedPosition, PortfolioMetrics, PortfolioTotals, MarketData, StockQuote } from '@/lib/types';
 import PortfolioSummary from './portfolio/PortfolioSummary';
 import PositionTimelineChart from './charts/position-timeline/PositionTimeLineChart';
@@ -14,7 +20,6 @@ import { fetchWithRetry } from '@/lib/fetch-helpers';
 import PositionTables from './portfolio/PositionTables';
 import { calculateMetricsFromPositions } from './portfolio/utils/portfolio-utils';
 import { cn } from '@/lib/utils';
-import { PortfolioLayout } from "@/components/portfolio-layout"
 
 const PortfolioTracker = () => {
   // States
@@ -453,13 +458,40 @@ const PortfolioTracker = () => {
 
   return (
     <>
-      <PortfolioLayout
-    selectedView={selectedView}
-    setSelectedView={setSelectedView}
-    setIsAddDialogOpen={setIsAddDialogOpen}
-  >
-    <MainContent />
-  </PortfolioLayout>
+      {/* Mobile Nav */}
+      <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
+        <SheetTrigger asChild>
+          <Button
+            variant="ghost"
+            className="sm:hidden fixed top-4 left-4 z-40"
+          >
+            <Menu className="h-4 w-4" />
+          </Button>
+        </SheetTrigger>
+        <SheetContent side="left" className="w-64 p-0">
+          <SideNav />
+        </SheetContent>
+      </Sheet>
+
+      {/* Desktop Layout */}
+      <ResizablePanelGroup direction="horizontal" className="min-h-screen">
+        <ResizablePanel
+          defaultSize={20}
+          minSize={15}
+          maxSize={20}
+          className="hidden sm:block"
+        >
+          <SideNav />
+        </ResizablePanel>
+        
+        <ResizableHandle withHandle />
+        
+        <ResizablePanel defaultSize={80}>
+          <main className="p-6 max-w-7xl mx-auto">
+            <MainContent />
+          </main>
+        </ResizablePanel>
+      </ResizablePanelGroup>
 
       {/* Add Transaction Dialog */}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
