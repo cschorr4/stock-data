@@ -15,7 +15,6 @@ interface PositionTimelineChartProps {
 }
 
 const PositionTimelineChart: React.FC<PositionTimelineChartProps> = ({ 
-  transactions, 
   openPositions, 
   closedPositions 
 }) => {
