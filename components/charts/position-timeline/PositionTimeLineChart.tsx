@@ -5,15 +5,33 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ChartControls } from './ChartControls';
 import { usePositionTimeline, useChartDataProcessing } from './hooks/useChartData';
+import { Position, ClosedPosition } from '@/lib/types';
+import { DateRange } from 'react-day-picker';
 
-const PositionTimelineChart = ({ openPositions, closedPositions }) => {
+interface StockDataPoint {
+  date: string;
+  close?: number;
+  price?: number;
+}
+
+interface ChartPoint {
+  date: string;
+  [key: string]: string | number;
+}
+
+interface PositionTimelineChartProps {
+  openPositions: Position[];
+  closedPositions: ClosedPosition[];
+}
+
+const PositionTimelineChart: React.FC<PositionTimelineChartProps> = ({ openPositions, closedPositions }) => {
   const [timeRange, setTimeRange] = useState('6M');
-  const [dateRange, setDateRange] = useState(undefined);
+  const [dateRange, setDateRange] = useState<DateRange | undefined>();
   const [showPercentage, setShowPercentage] = useState(false);
   const [selectedTickers, setSelectedTickers] = useState(['SPY']);
-  const [chartData, setChartData] = useState([]);
+  const [chartData, setChartData] = useState<ChartPoint[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -46,17 +64,21 @@ const PositionTimelineChart = ({ openPositions, closedPositions }) => {
           )
         );
 
-        const allDates = new Set();
-        responses.forEach(data => data.forEach(point => allDates.add(point.date)));
+        const allDates = new Set<string>();
+        responses.forEach(data => 
+          data.forEach((point: StockDataPoint) => allDates.add(point.date))
+        );
 
-        const combinedData = Array.from(allDates)
+        const combinedData: ChartPoint[] = Array.from(allDates)
           .sort()
           .map(date => {
-            const point = { date };
+            const point: ChartPoint = { date };
             tickers.forEach((ticker, idx) => {
-              const tickerData = responses[idx].find(d => d.date === date);
+              const tickerData = responses[idx].find((d: StockDataPoint) => d.date === date);
               if (tickerData) {
-                point[ticker] = tickerData.close || tickerData.price;
+                point[ticker] = tickerData.close ?? tickerData.price ?? 0;
+              } else {
+                point[ticker] = 0;
               }
             });
             return point;
@@ -86,7 +108,7 @@ const PositionTimelineChart = ({ openPositions, closedPositions }) => {
             selectedTickers={selectedTickers}
             showPercentage={showPercentage}
             timeRange={timeRange}
-            onTickerSelect={(ticker) => {
+            onTickerSelect={(ticker: string) => {
               setSelectedTickers(current => 
                 current.includes(ticker) 
                   ? current.filter(t => t !== ticker)
@@ -118,8 +140,8 @@ const PositionTimelineChart = ({ openPositions, closedPositions }) => {
                 width={55}
               />
               <Tooltip
-                labelFormatter={(label) => format(new Date(label), 'PPP')}
-                formatter={(value, name) => {
+                labelFormatter={(label) => format(new Date(label as string), 'PPP')}
+                formatter={(value: number, name: string) => {
                   const displayName = name.split('_')[0];
                   const formattedValue = showPercentage 
                     ? `${value.toFixed(1)}%` 
