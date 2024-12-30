@@ -6,18 +6,29 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ChartControls } from './ChartControls';
 import { usePositionTimeline, useChartDataProcessing } from './hooks/useChartData';
 import { DateRange } from "react-day-picker";
+import { Transaction, Position, ClosedPosition } from '@/lib/types';
 
-const PositionTimelineChart = ({ transactions, openPositions, closedPositions }) => {
+interface PositionTimelineChartProps {
+  transactions: Transaction[];
+  openPositions: Position[];
+  closedPositions: ClosedPosition[];
+}
+
+const PositionTimelineChart: React.FC<PositionTimelineChartProps> = ({ 
+  transactions, 
+  openPositions, 
+  closedPositions 
+}) => {
   const [timeRange, setTimeRange] = useState('6M');
   const [dateRange, setDateRange] = useState<DateRange>();
   const [showPercentage, setShowPercentage] = useState(false);
   const [selectedTickers, setSelectedTickers] = useState(['SPY']);
-  const [chartData, setChartData] = useState([]);
+  const [chartData, setChartData] = useState<Array<{ date: string; [key: string]: any }>>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
   const [isMobile] = useState(() => window.innerWidth < 768);
 
-  const positionStates = usePositionTimeline(transactions, openPositions, closedPositions, showPercentage);
+  const positionStates = usePositionTimeline(openPositions, closedPositions);
   const processedChartData = useChartDataProcessing(chartData, positionStates, showPercentage);
 
   useEffect(() => {
@@ -46,7 +57,7 @@ const PositionTimelineChart = ({ transactions, openPositions, closedPositions })
         const combinedData = Array.from(allDates)
           .sort()
           .map(date => {
-            const point = { date };
+            const point: { date: string; [key: string]: number | string } = { date };
             tickers.forEach((ticker, idx) => {
               const tickerData = responses[idx].find(d => d.date === date);
               if (tickerData) {
@@ -90,7 +101,7 @@ const PositionTimelineChart = ({ transactions, openPositions, closedPositions })
             selectedTickers={selectedTickers}
             showPercentage={showPercentage}
             timeRange={timeRange}
-            onTickerSelect={(ticker) => {
+            onTickerSelect={(ticker: string) => {
               setSelectedTickers(current => 
                 current.includes(ticker) 
                   ? current.filter(t => t !== ticker)
