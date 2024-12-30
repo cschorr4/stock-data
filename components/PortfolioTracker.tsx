@@ -348,7 +348,6 @@ const PortfolioTracker = () => {
             <section className="bg-card rounded-lg shadow-sm">
               <div className="h-[460px] md:h-[525px] p-4">
                 <PositionTimelineChart 
-                  transactions={transactions}
                   openPositions={openPositions}
                   closedPositions={closedPositions}
                 />

@@ -8,7 +8,7 @@ interface ViewSwitcherProps {
   setSelectedView: (view: string) => void;
 }
 
-export default function ViewSwitcher({ children, selectedView, setSelectedView }: ViewSwitcherProps) {
+export default function ViewSwitcher({ children, selectedView }: ViewSwitcherProps) {
   return (
     <div className={cn(
       "h-screen",

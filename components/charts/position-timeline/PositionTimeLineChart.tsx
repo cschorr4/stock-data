@@ -15,13 +15,11 @@ interface StockDataPoint {
 }
 
 interface PositionTimelineChartProps {
-  transactions: Transaction[];
   openPositions: Position[];
   closedPositions: ClosedPosition[];
 }
 
-const PositionTimelineChart: React.FC<PositionTimelineChartProps> = ({ 
-  transactions, 
+const PositionTimelineChart: React.FC<PositionTimelineChartProps> = ({  
   openPositions, 
   closedPositions 
 }) => {
