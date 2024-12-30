@@ -5,32 +5,23 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ChartControls } from './ChartControls';
 import { usePositionTimeline, useChartDataProcessing } from './hooks/useChartData';
-import { DateRange } from "react-day-picker";
-import { Position, ClosedPosition } from '@/lib/types';
 
-interface StockDataPoint {
-  date: string;
-  close?: number;
-  price?: number;
-}
-
-interface PositionTimelineChartProps {
-  openPositions: Position[];
-  closedPositions: ClosedPosition[];
-}
-
-const PositionTimelineChart: React.FC<PositionTimelineChartProps> = ({  
-  openPositions, 
-  closedPositions 
-}) => {
+const PositionTimelineChart = ({ openPositions, closedPositions }) => {
   const [timeRange, setTimeRange] = useState('6M');
-  const [dateRange, setDateRange] = useState<DateRange>();
+  const [dateRange, setDateRange] = useState(undefined);
   const [showPercentage, setShowPercentage] = useState(false);
   const [selectedTickers, setSelectedTickers] = useState(['SPY']);
-  const [chartData, setChartData] = useState<Array<{ date: string; [key: string]: any }>>([]);
+  const [chartData, setChartData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [isMobile] = useState(() => window.innerWidth < 768);
+  const [error, setError] = useState(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    setIsMobile(window.innerWidth < 768);
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const positionStates = usePositionTimeline(openPositions, closedPositions);
   const processedChartData = useChartDataProcessing(chartData, positionStates, showPercentage);
@@ -55,15 +46,15 @@ const PositionTimelineChart: React.FC<PositionTimelineChartProps> = ({
           )
         );
 
-        const allDates = new Set<string>();
-        responses.forEach(data => data.forEach((point: StockDataPoint) => allDates.add(point.date)));
+        const allDates = new Set();
+        responses.forEach(data => data.forEach(point => allDates.add(point.date)));
 
         const combinedData = Array.from(allDates)
           .sort()
           .map(date => {
-            const point: { date: string; [key: string]: number | string } = { date };
+            const point = { date };
             tickers.forEach((ticker, idx) => {
-              const tickerData = responses[idx].find((d: StockDataPoint) => d.date === date);
+              const tickerData = responses[idx].find(d => d.date === date);
               if (tickerData) {
                 point[ticker] = tickerData.close || tickerData.price;
               }
@@ -82,16 +73,6 @@ const PositionTimelineChart: React.FC<PositionTimelineChartProps> = ({
     fetchData();
   }, [timeRange, dateRange, selectedTickers]);
 
-  const handleTimeRangeChange = (range: string, customRange?: DateRange) => {
-    if (range === 'Custom' && customRange) {
-      setDateRange(customRange);
-      setTimeRange('Custom');
-    } else {
-      setDateRange(undefined);
-      setTimeRange(range);
-    }
-  };
-
   if (isLoading) return <div>Loading chart data...</div>;
   if (error) return <Alert variant="destructive"><AlertDescription>{error}</AlertDescription></Alert>;
 
@@ -105,7 +86,7 @@ const PositionTimelineChart: React.FC<PositionTimelineChartProps> = ({
             selectedTickers={selectedTickers}
             showPercentage={showPercentage}
             timeRange={timeRange}
-            onTickerSelect={(ticker: string) => {
+            onTickerSelect={(ticker) => {
               setSelectedTickers(current => 
                 current.includes(ticker) 
                   ? current.filter(t => t !== ticker)
@@ -113,12 +94,12 @@ const PositionTimelineChart: React.FC<PositionTimelineChartProps> = ({
               );
             }}
             onShowPercentageChange={setShowPercentage}
-            onTimeRangeChange={handleTimeRangeChange}
+            onTimeRangeChange={setTimeRange}
           />
         </div>
       </CardHeader>
       <CardContent>
-        <div className={`h-${isMobile ? '64' : '96'}`}>
+        <div className={`${isMobile ? 'h-64' : 'h-96'}`}>
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={processedChartData}>
               <CartesianGrid strokeDasharray="3 3" />
@@ -138,7 +119,7 @@ const PositionTimelineChart: React.FC<PositionTimelineChartProps> = ({
               />
               <Tooltip
                 labelFormatter={(label) => format(new Date(label), 'PPP')}
-                formatter={(value: number, name: string) => {
+                formatter={(value, name) => {
                   const displayName = name.split('_')[0];
                   const formattedValue = showPercentage 
                     ? `${value.toFixed(1)}%` 
