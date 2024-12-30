@@ -6,7 +6,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ChartControls } from './ChartControls';
 import { usePositionTimeline, useChartDataProcessing } from './hooks/useChartData';
 import { DateRange } from "react-day-picker";
-import { Transaction, Position, ClosedPosition } from '@/lib/types';
+import { Position, ClosedPosition } from '@/lib/types';
 
 interface StockDataPoint {
   date: string;
