@@ -14,8 +14,7 @@ interface PositionState {
 export const usePositionTimeline = (
   transactions: Transaction[],
   openPositions: Position[],
-  closedPositions: ClosedPosition[],
-  showPercentage: boolean
+  closedPositions: ClosedPosition[]
 ): Record<string, PositionState> => {
   return useMemo(() => {
     const states: Record<string, PositionState> = {};
