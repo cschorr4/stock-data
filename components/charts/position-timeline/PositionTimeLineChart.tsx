@@ -26,7 +26,7 @@ interface PositionTimelineChartProps {
 
 const PositionTimelineChart: React.FC<PositionTimelineChartProps> = ({ openPositions, closedPositions }) => {
   const [timeRange, setTimeRange] = useState('6M');
-  const [dateRange, setDateRange] = useState<DateRange | undefined>();
+  const [dateRange] = useState<DateRange | undefined>();
   const [showPercentage, setShowPercentage] = useState(false);
   const [selectedTickers, setSelectedTickers] = useState(['SPY']);
   const [chartData, setChartData] = useState<ChartPoint[]>([]);
