@@ -21,6 +21,7 @@ interface PositionTimelineChartProps {
 }
 
 const PositionTimelineChart: React.FC<PositionTimelineChartProps> = ({ 
+  transactions, 
   openPositions, 
   closedPositions 
 }) => {
@@ -64,7 +65,7 @@ const PositionTimelineChart: React.FC<PositionTimelineChartProps> = ({
           .map(date => {
             const point: { date: string; [key: string]: number | string } = { date };
             tickers.forEach((ticker, idx) => {
-              const tickerData = responses[idx].find(d => d.date === date);
+              const tickerData = responses[idx].find((d: StockDataPoint) => d.date === date);
               if (tickerData) {
                 point[ticker] = tickerData.close || tickerData.price;
               }
