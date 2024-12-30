@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import {
-  ResizableHandle,
   ResizablePanel,
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
@@ -482,8 +481,6 @@ const PortfolioTracker = () => {
         >
           <SideNav />
         </ResizablePanel>
-        
-        <ResizableHandle withHandle />
         
         <ResizablePanel defaultSize={80}>
           <main className="p-6 max-w-7xl mx-auto">
