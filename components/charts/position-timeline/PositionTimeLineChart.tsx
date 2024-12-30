@@ -8,6 +8,12 @@ import { usePositionTimeline, useChartDataProcessing } from './hooks/useChartDat
 import { DateRange } from "react-day-picker";
 import { Transaction, Position, ClosedPosition } from '@/lib/types';
 
+interface StockDataPoint {
+  date: string;
+  close?: number;
+  price?: number;
+}
+
 interface PositionTimelineChartProps {
   transactions: Transaction[];
   openPositions: Position[];
@@ -51,7 +57,7 @@ const PositionTimelineChart: React.FC<PositionTimelineChartProps> = ({
         );
 
         const allDates = new Set<string>();
-        responses.forEach(data => data.forEach(point => allDates.add(point.date)));
+        responses.forEach(data => data.forEach((point: StockDataPoint) => allDates.add(point.date)));
 
         const combinedData = Array.from(allDates)
           .sort()
