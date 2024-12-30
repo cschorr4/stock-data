@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Transaction, Position, ClosedPosition } from '@/lib/types';
+import { Position, ClosedPosition } from '@/lib/types';
 
 interface PositionPeriod {
   start: string;
