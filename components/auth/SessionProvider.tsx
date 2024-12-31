@@ -1,17 +1,16 @@
+// components/auth/SessionProvider.tsx
 'use client'
 
 import { createClient } from '@/utils/supabase/client'
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 
 export function SessionProvider() {
-  const [session, setSession] = useState(null)
   const supabase = createClient()
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session)
-    })
-  }, [])
+    const { data: { subscription }} = supabase.auth.onAuthStateChange(() => {})
+    return () => subscription.unsubscribe()
+  }, [supabase.auth])
 
   return null
 }
