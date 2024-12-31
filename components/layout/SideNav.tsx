@@ -125,37 +125,42 @@ const SideNav: React.FC<SideNavProps> = ({
           );
         })}
 
-        {selectedView === 'settings' ? (
-          <div className="space-y-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              className={cn(
-                "w-full justify-start relative group rounded-none",
-                "bg-muted font-medium px-3"
-              )}
-            >
-              <Settings className="h-4 w-4" />
-              <span className="ml-3">Settings</span>
-              <motion.div
-                className="absolute inset-y-0 left-0 w-1 bg-foreground rounded-full"
-                layoutId="activeNav"
-              />
-            </Button>
-            {user && <UserProfileForm />}
-          </div>
-        ) : (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="w-full justify-start relative group rounded-none text-muted-foreground hover:text-foreground px-3"
-            onClick={() => setSelectedView('settings')}
-          >
-            <Settings className="h-4 w-4" />
-            <span className="ml-3">Settings</span>
-          </Button>
+{user ? (
+  selectedView === 'settings' ? (
+    <div className="space-y-2">
+      <Button
+        variant="ghost"
+        size="sm"
+        className={cn(
+          "w-full justify-start relative group rounded-none",
+          "bg-muted font-medium px-3"
         )}
-      </nav>
+      >
+        <Settings className="h-4 w-4" />
+        <span className="ml-3">Settings</span>
+        <motion.div
+          className="absolute inset-y-0 left-0 w-1 bg-foreground rounded-full"
+          layoutId="activeNav"
+        />
+      </Button>
+      <div className="px-2">
+        <UserProfileForm />
+      </div>
+    </div>
+  ) : (
+    <Button
+      variant="ghost"
+      size="sm"
+      className="w-full justify-start relative group rounded-none text-muted-foreground hover:text-foreground px-3"
+      onClick={() => setSelectedView('settings')}
+    >
+      <Settings className="h-4 w-4" />
+      <span className="ml-3">Settings</span>
+    </Button>
+  )
+  
+) : null}
+</nav>
 
       <div className="border-t p-2 space-y-2">
         <AuthDialog />

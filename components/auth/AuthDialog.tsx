@@ -25,18 +25,20 @@ export function AuthDialog() {
   useEffect(() => {
     const getUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
+      console.log('Current user:', user);
       setUser(user);
       setIsVerified(user?.email_confirmed_at != null);
     };
     getUser();
-
+  
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('Auth state change:', event, session);
       setUser(session?.user ?? null);
       setIsVerified(session?.user?.email_confirmed_at != null);
     });
-
+  
     return () => subscription.unsubscribe();
-  }, []);
+  }, [supabase.auth]);
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,30 +49,33 @@ export function AuthDialog() {
         password,
         options: {
           emailRedirectTo: `${window.location.origin}/auth/callback`,
-          data: {
-            username,
-          }
+          data: { username }
         }
       });
-
-      if (error) throw error;
-
+  
+      if (error) {
+        console.error('Signup error:', error);
+        throw error;
+      }
+  
+      console.log('Signup success:', data);
       toast({
-        title: "Verification email sent",
-        description: "Please check your email to verify your account",
+        title: "Check your email",
+        description: "Click the link in your email to verify your account",
       });
       setOpen(false);
     } catch (error: any) {
+      console.error('Signup error:', error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: error.message,
+        description: error.message || "Failed to sign up",
       });
     } finally {
       setLoading(false);
     }
   };
-
+  
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -79,28 +84,24 @@ export function AuthDialog() {
         email,
         password
       });
-
-      if (error) throw error;
-
-      if (!data.user?.email_confirmed_at) {
-        toast({
-          variant: "destructive",
-          title: "Email not verified",
-          description: "Please check your email and verify your account"
-        });
-        return;
+  
+      if (error) {
+        console.error('Sign in error:', error);
+        throw error;
       }
-
+  
+      console.log('Sign in success:', data);
       toast({
-        title: "Welcome back!",
+        title: "Success",
         description: "Successfully signed in",
       });
       setOpen(false);
     } catch (error: any) {
+      console.error('Sign in error:', error);
       toast({
         variant: "destructive",
-        title: "Invalid credentials",
-        description: "Please check your email and password",
+        title: "Error",
+        description: error.message || "Invalid credentials",
       });
     } finally {
       setLoading(false);
