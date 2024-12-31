@@ -1,32 +1,30 @@
-// app/layout.tsx
-import type { Metadata } from "next"
-import localFont from "next/font/local"
-import { ThemeProvider } from "@/components/providers"
-import { SessionProvider } from "@/components/auth/SessionProvider"
-import "./globals.css"
+import { Inter } from 'next/font/google';
+import { AuthProvider } from '@/components/providers/AuthProvider';
+import { Toaster } from '@/components/ui/toaster';
+import { SessionProvider } from '@/components/providers/SessionProvider';
+import '@/app/globals.css';
 
-const geistSans = localFont({
-  src: "./fonts/GeistVF.woff",
-  variable: "--font-geist-sans",
-  weight: "100 900",
-})
+const inter = Inter({ subsets: ['latin'] });
 
-export const metadata: Metadata = {
-  title: "Stock Portfolio Tracker",
-  description: "Track and manage your stock portfolio",
-}
+export const metadata = {
+  title: 'Stock Portfolio Tracker',
+  description: 'Track your investments and portfolio performance',
+};
 
-import { ReactNode } from "react";
-
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
-    <html className={geistSans.variable}>
-      <body>
-        <ThemeProvider>
+    <html lang="en" className="h-full">
+      <body className={`${inter.className} h-full`}>
+        <AuthProvider>
           <SessionProvider />
           {children}
-        </ThemeProvider>
+          <Toaster />
+        </AuthProvider>
       </body>
     </html>
-  )
+  );
 }
