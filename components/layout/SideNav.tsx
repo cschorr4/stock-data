@@ -3,6 +3,7 @@ import { Plus, Layout, LineChart, CheckSquare, History, Settings } from 'lucide-
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import LoginButton from '@/components/auth/LoginButton';
 
 type ViewType = 'overview' | 'open-positions' | 'closed-positions' | 'transactions' | 'settings';
 
@@ -85,7 +86,8 @@ const SideNav: React.FC<SideNavProps> = ({
       </nav>
 
       {/* Footer */}
-      <div className="border-t p-2">
+      <div className="border-t p-2 space-y-2">
+        <LoginButton />
         <div className="text-xs text-muted-foreground">
           Last updated: {new Date().toLocaleTimeString()}
         </div>

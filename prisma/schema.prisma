@@ -1,0 +1,27 @@
+generator client {
+  provider = "prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String        @id @default(cuid())
+  email         String       @unique
+  transactions  Transaction[]
+  createdAt     DateTime     @default(now())
+  isSubscribed  Boolean      @default(false)
+}
+
+model Transaction {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  symbol    String
+  quantity  Float
+  price     Float
+  type      String
+  date      DateTime
+}
