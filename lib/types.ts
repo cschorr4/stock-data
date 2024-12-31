@@ -51,6 +51,8 @@ export interface Position {
   sector: string;
   industry: string;
   beta?: number; 
+  marketCap?: number;
+  dividendYield?: number;
 }
 
 export interface ClosedPosition {
