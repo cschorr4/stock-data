@@ -1,18 +1,16 @@
+'use client';
 
-import { createClient } from '@/utils/supabase/server'
-import { cookies } from 'next/headers'
+import { Card, CardContent } from "@/components/ui/card";
+import PortfolioTracker from '@/components/PortfolioTracker';
 
-export default async function Page() {
-  const cookieStore = await cookies()
-  const supabase = createClient(cookieStore)
-
-  const { data: todos } = await supabase.from('todos').select()
-
+export default function Home() {
   return (
-    <ul>
-      {todos?.map((todo) => (
-        <li>{todo}</li>
-      ))}
-    </ul>
-  )
+    <main className="min-h-screen bg-background p-2">
+      <Card className="h-[calc(100vh-16px)] rounded-lg border shadow-sm">
+        <CardContent className="p-0 h-full">
+          <PortfolioTracker />
+        </CardContent>
+      </Card>
+    </main>
+  );
 }

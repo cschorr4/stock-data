@@ -1,23 +1,6 @@
-'use client'
+// components/auth/LoginButton.tsx
+import { AuthDialog } from './AuthDialog'
 
-import { signIn, signOut, useSession } from "next-auth/react"
-import { Button } from "@/components/ui/button"
-
-export function LoginButton() {
-  const { data: session } = useSession()
-
-  if (session) {
-    return (
-      <Button onClick={() => signOut()}>
-        Sign out
-      </Button>
-    )
-  }
-  return (
-    <Button onClick={() => signIn()}>
-      Sign in
-    </Button>
-  )
+export default function LoginButton() {
+  return <AuthDialog />
 }
-
-export default LoginButton;
