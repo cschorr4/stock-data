@@ -1,5 +1,6 @@
 import { Inter } from 'next/font/google';
 import { AuthProvider } from '@/components/providers/AuthProvider';
+import { RouteGuard } from '@/components/auth/RouteGuard';
 import { Toaster } from '@/components/ui/toaster';
 import { SessionProvider } from '@/components/providers/SessionProvider';
 import '@/app/globals.css';
@@ -21,7 +22,9 @@ export default function RootLayout({
       <body className={`${inter.className} h-full`}>
         <AuthProvider>
           <SessionProvider />
-          {children}
+          <RouteGuard>
+            {children}
+          </RouteGuard>
           <Toaster />
         </AuthProvider>
       </body>
