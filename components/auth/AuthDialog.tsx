@@ -87,7 +87,20 @@ export function AuthDialog() {
   
       if (error) {
         console.error('Sign in error:', error);
-        throw error;
+        let errorMessage = 'Failed to sign in';
+        
+        if (error.message?.includes('Invalid login credentials')) {
+          errorMessage = 'Invalid email or password';
+        } else if (error.message?.includes('Email not confirmed')) {
+          errorMessage = 'Please verify your email first';
+        }
+        
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: errorMessage,
+        });
+        return;
       }
   
       console.log('Sign in success:', data);
@@ -101,7 +114,7 @@ export function AuthDialog() {
       toast({
         variant: "destructive",
         title: "Error",
-        description: error.message || "Invalid credentials",
+        description: error.message || "An unexpected error occurred",
       });
     } finally {
       setLoading(false);
