@@ -17,8 +17,7 @@ import {
   formatCurrency,
   formatPercentage,
   getColorForValue,
-  calculateSectorData,
-  calculateRiskMetrics
+  calculateSectorData
 } from './utils/portfolio-utils';
 
 const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
