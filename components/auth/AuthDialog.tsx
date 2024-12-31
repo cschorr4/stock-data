@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -11,17 +11,24 @@ import { useToast } from "@/components/ui/use-toast";
 
 type AuthStatus = 'idle' | 'loading' | 'success' | 'error';
 
+interface AuthDialogProps {
+  showInitially?: boolean;
+}
 
-export function AuthDialog() {
+export function AuthDialog({ showInitially = false }: AuthDialogProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [authStatus, setAuthStatus] = useState<AuthStatus>('idle');
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(showInitially);
   const [isSignUp, setIsSignUp] = useState(false);
   const supabase = createClient();
   const { toast } = useToast();
+
+  useEffect(() => {
+    setOpen(showInitially);
+  }, [showInitially]);
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -209,9 +216,11 @@ export function AuthDialog() {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <Button onClick={() => setOpen(true)} variant="outline">
-        Sign {isSignUp ? 'Up' : 'In'}
-      </Button>
+      {!showInitially && (
+        <Button onClick={() => setOpen(true)} variant="outline">
+          Sign {isSignUp ? 'Up' : 'In'}
+        </Button>
+      )}
       
       <DialogContent>
         <DialogTitle>{isSignUp ? 'Create Account' : 'Sign In'}</DialogTitle>
