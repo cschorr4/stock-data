@@ -2,8 +2,6 @@ import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { ChevronUp, ChevronDown } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
-import { cn } from '@/lib/utils';
 import { ClosedPositionsTableProps, ClosedPosition } from '@/lib/types';
 
 type SortField = 'ticker' | 'buyDate' | 'sellDate' | 'holdingPeriod' | 'shares' | 'buyPrice' | 'sellPrice' | 'profit' | 'percentChange' | 'spyReturn' | 'vsSpy';
