@@ -14,14 +14,18 @@ export function AuthDialog() {
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault()
-    await supabase.auth.signInWithOtp({
+    const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: `${location.origin}`
+        emailRedirectTo: `${location.origin}/auth/callback`,
       }
     })
+    
+    if (error) {
+      console.error('Error:', error.message)
+    }
   }
-
+  
   return (
     <Dialog>
       <DialogTrigger asChild>

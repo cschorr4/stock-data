@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import localFont from "next/font/local"
 import { ThemeProvider } from "@/components/providers"
 import { ThemeToggle } from "@/components/ui/theme-toggle"
-import { AuthProvider } from "@/components/auth/AuthProvider"
+import { SessionProvider } from "@/components/auth/SessionProvider"
 import "./globals.css"
 
 const geistSans = localFont({
@@ -22,27 +22,12 @@ export const metadata: Metadata = {
   description: "Track and manage your stock portfolio",
 }
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode
-}>) {
+export default function RootLayout({ children }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <AuthProvider>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-          >
-            <div className="fixed top-4 right-4 z-50">
-              <ThemeToggle />
-            </div>
-            <main>{children}</main>
-          </ThemeProvider>
-        </AuthProvider>
+    <html>
+      <body>
+        <SessionProvider />
+        {children}
       </body>
     </html>
   )
