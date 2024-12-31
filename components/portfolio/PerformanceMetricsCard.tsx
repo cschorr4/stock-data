@@ -173,6 +173,21 @@ const PerformanceMetricsCard: React.FC<PerformanceMetricsCardProps> = ({
                 </p>
               </div>
             </div>
+            <div>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">
+                Total P/L
+              </p>
+              <div className="flex items-center gap-1">
+                <DollarSign className="w-3 h-3 text-blue-600" />
+                <p className={`text-xs font-medium ${
+                  totalProfits >= 0 
+                    ? 'text-green-600' 
+                    : 'text-red-600'
+                }`}>
+                  {formatCurrency(totalProfits)}
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </CardContent>

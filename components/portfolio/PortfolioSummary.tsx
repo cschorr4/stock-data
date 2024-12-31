@@ -10,7 +10,6 @@ import SectorBreakdownCard from './SectorBreakdownCard';
 import PerformanceMetricsCard from './PerformanceMetricsCard';
 import RiskMetricsCard from './RiskMetricsCard';
 import ValueDistributionCard from './ValueDistributionCard';
-import FundamentalMetricsCard from './FundamentalMetricsCard';
 import RecentTradesCard from './RecentTradesCard';
 
 // Utils
@@ -29,9 +28,7 @@ const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
   closedPositions
 }) => {
   // Calculate metrics
-  const sectorData = useMemo(() => calculateSectorData(openPositions), [openPositions]);
-  const riskMetrics = useMemo(() => calculateRiskMetrics(metrics, openPositions), [metrics, openPositions]);
-  
+  const sectorData = useMemo(() => calculateSectorData(openPositions), [openPositions]);  
   const topSector = useMemo(() => 
     sectorData.length ? _.maxBy(sectorData, 'allocation') || {
       sector: 'None',
