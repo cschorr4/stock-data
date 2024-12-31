@@ -1,21 +1,23 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { Button } from "@/components/ui/button"
 import { createClient } from '@/utils/supabase/client'
-import { Button } from '@/components/ui/button'
+import { useEffect, useState } from "react"
+import { AuthDialog } from './AuthDialog'
 
-export function UserInfo() {
+export default function AuthButton() {
   const [email, setEmail] = useState<string | null>(null)
   const supabase = createClient()
 
   useEffect(() => {
-    const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      setEmail(user?.email ?? null)
-    }
-    getUser()
-    supabase.auth.onAuthStateChange((_, session) => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
       setEmail(session?.user?.email ?? null)
     })
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
+      setEmail(session?.user?.email ?? null)
+    })
+
+    return () => subscription.unsubscribe()
   }, [])
 
   const handleSignOut = async () => {
@@ -23,11 +25,8 @@ export function UserInfo() {
   }
 
   return email ? (
-    <div className="flex items-center gap-4">
-      <span>{email}</span>
-      <Button onClick={handleSignOut}>Sign Out</Button>
-    </div>
-  ) : null
+    <Button onClick={handleSignOut}>Sign Out</Button>
+  ) : (
+    <AuthDialog />
+  )
 }
-
-export default UserInfo;

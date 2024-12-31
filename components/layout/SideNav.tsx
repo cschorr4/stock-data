@@ -1,10 +1,14 @@
+'use client';
 import React from 'react';
 import { Plus, Layout, LineChart, CheckSquare, History, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import LoginButton from '@/components/auth/LoginButton';
-import UserInfo from '@/components/auth/UserInfo';
+import { UserProfileForm } from '@/components/settings/UserProfileForm';
+import { useEffect, useState } from 'react';
+import { createClient } from '@/utils/supabase/client';
+import { Skeleton } from "@/components/ui/skeleton";
+import { AuthDialog } from '@/components/auth/AuthDialog';
 
 type ViewType = 'overview' | 'open-positions' | 'closed-positions' | 'transactions' | 'settings';
 
@@ -15,43 +19,81 @@ interface SideNavProps {
   setIsMobileOpen?: (value: boolean) => void;
 }
 
-const SideNav: React.FC<SideNavProps> = ({ 
-  selectedView, 
-  setSelectedView, 
+const SideNav: React.FC<SideNavProps> = ({
+  selectedView,
+  setSelectedView,
   setIsAddDialogOpen,
   setIsMobileOpen
 }) => {
+  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<any>(null);
+  const supabase = createClient();
+
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+      setLoading(false);
+    };
+    getUser();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex h-full w-52 flex-col bg-card border-r">
+        <div className="flex h-14 items-center px-3 border-b">
+          <Skeleton className="h-6 w-24" />
+        </div>
+        <div className="py-2">
+          <Skeleton className="h-9 mx-2 w-[calc(100%-16px)]" />
+        </div>
+        <div className="flex-1 py-2 space-y-1">
+          {[1, 2, 3, 4].map((i) => (
+            <Skeleton key={i} className="h-9 mx-2 w-[calc(100%-16px)]" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   const navigation = [
     { id: 'overview' as ViewType, name: 'Dashboard', icon: Layout },
     { id: 'open-positions' as ViewType, name: 'Open Positions', icon: LineChart },
     { id: 'closed-positions' as ViewType, name: 'Closed Positions', icon: CheckSquare },
-    { id: 'transactions' as ViewType, name: 'Transactions', icon: History },
-    { id: 'settings' as ViewType, name: 'Settings', icon: Settings }
+    { id: 'transactions' as ViewType, name: 'Transactions', icon: History }
   ];
 
   return (
     <div className="flex h-full w-52 flex-col bg-card border-r shadow-sm">
-      {/* Header */}
-      <div className="flex h-14 items-center px-3 border-b">
+      <div className="flex h-14 items-center justify-between px-3 border-b">
         <h1 className="text-lg font-medium">Portfolio</h1>
-      </div>
-
-      {/* Add Transaction Button */}
-      <div className="py-2">
-        <Button 
-          variant="default"
-          size="sm"
-          className="w-[calc(100%-16px)] mx-2 justify-start gap-2 rounded-md px-3 bg-foreground text-background hover:bg-foreground/90"
-          onClick={() => setIsAddDialogOpen(true)}
-        >
-          <Plus className="h-4 w-4" />
-          <span className="overflow-hidden whitespace-nowrap">
-            Add Transaction
+        {user && (
+          <span className="text-sm text-muted-foreground">
+            Hello, {user.email?.split('@')[0]}
           </span>
-        </Button>
+        )}
       </div>
 
-      {/* Navigation */}
+      {user && (
+        <div className="py-2">
+          <Button
+            variant="default"
+            size="sm"
+            className="w-[calc(100%-16px)] mx-2 justify-start gap-2 rounded-md px-3 bg-foreground text-background hover:bg-foreground/90"
+            onClick={() => setIsAddDialogOpen(true)}
+          >
+            <Plus className="h-4 w-4" />
+            <span className="overflow-hidden whitespace-nowrap">Add Transaction</span>
+          </Button>
+        </div>
+      )}
+
       <nav className="flex-1 py-2 space-y-1">
         {navigation.map((item) => {
           const isActive = selectedView === item.id;
@@ -71,9 +113,7 @@ const SideNav: React.FC<SideNavProps> = ({
               }}
             >
               <item.icon className="h-4 w-4" />
-              <span className="ml-3 overflow-hidden whitespace-nowrap">
-                {item.name}
-              </span>
+              <span className="ml-3 overflow-hidden whitespace-nowrap">{item.name}</span>
               {isActive && (
                 <motion.div
                   className="absolute inset-y-0 left-0 w-1 bg-foreground rounded-full"
@@ -84,12 +124,41 @@ const SideNav: React.FC<SideNavProps> = ({
             </Button>
           );
         })}
+
+        {selectedView === 'settings' ? (
+          <div className="space-y-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              className={cn(
+                "w-full justify-start relative group rounded-none",
+                "bg-muted font-medium px-3"
+              )}
+            >
+              <Settings className="h-4 w-4" />
+              <span className="ml-3">Settings</span>
+              <motion.div
+                className="absolute inset-y-0 left-0 w-1 bg-foreground rounded-full"
+                layoutId="activeNav"
+              />
+            </Button>
+            {user && <UserProfileForm />}
+          </div>
+        ) : (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-full justify-start relative group rounded-none text-muted-foreground hover:text-foreground px-3"
+            onClick={() => setSelectedView('settings')}
+          >
+            <Settings className="h-4 w-4" />
+            <span className="ml-3">Settings</span>
+          </Button>
+        )}
       </nav>
 
-      {/* Footer */}
       <div className="border-t p-2 space-y-2">
-        <UserInfo />
-        <LoginButton />
+        <AuthDialog />
         <div className="text-xs text-muted-foreground">
           Last updated: {new Date().toLocaleTimeString()}
         </div>
