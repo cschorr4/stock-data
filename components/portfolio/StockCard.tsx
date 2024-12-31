@@ -37,7 +37,7 @@ const sectorIcons: Record<string, React.ReactNode> = {
   'Default': <Globe className="w-3 h-3" />
 };
 
-const StockCard: React.FC<StockCardProps> = ({ position, metrics, totals }) => {
+const StockCard: React.FC<StockCardProps> = ({ position, totals }) => {
   const holdingPeriod = Math.floor((new Date().getTime() - new Date(position.buyDate).getTime()) / (1000 * 60 * 60 * 24));
   const portfolioAllocation = totals ? (position.currentValue / totals.currentValue) * 100 : 0;
   const sectorIcon = sectorIcons[position.sector] || sectorIcons.Default;

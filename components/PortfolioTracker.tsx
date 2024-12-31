@@ -1,14 +1,10 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Plus, Layout, LineChart, CheckSquare, History, Settings, Menu } from 'lucide-react';
+import { Layout, LineChart, CheckSquare, History, Settings, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import {
-  ResizablePanel,
-  ResizablePanelGroup,
-} from "@/components/ui/resizable";
 import { Transaction, Position, ClosedPosition, PortfolioMetrics, PortfolioTotals, MarketData, StockQuote } from '@/lib/types';
 import PortfolioSummary from './portfolio/PortfolioSummary';
 import PositionTimelineChart from './charts/position-timeline/PositionTimeLineChart';
@@ -21,7 +17,6 @@ import ClosedPositionsTable from './ClosedPositionsTable'
 import { motion, AnimatePresence } from 'framer-motion';
 import SideNav from './layout/SideNav';
 import { calculateMetricsFromPositions } from './portfolio/utils/portfolio-utils';
-import { cn } from '@/lib/utils';
 
 const PortfolioTracker = () => {
   // States
@@ -34,17 +29,7 @@ const PortfolioTracker = () => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [selectedView, setSelectedView] = useState<'overview' | 'open-positions' | 'closed-positions' | 'transactions' | 'settings'>('overview');
   const [isMobileOpen, setIsMobileOpen] = useState(false);
-  const [isCollapsed, setIsCollapsed] = useState(false);
-
-  const navigation = [
-    { id: 'overview', name: 'Dashboard', icon: Layout, current: selectedView === 'overview' },
-    { id: 'open-positions', name: 'Open Positions', icon: LineChart, current: selectedView === 'open-positions' },
-    { id: 'closed-positions', name: 'Closed Positions', icon: CheckSquare, current: selectedView === 'closed-positions' },
-    { id: 'transactions', name: 'Transactions', icon: History, current: selectedView === 'transactions' },
-    { id: 'settings', name: 'Settings', icon: Settings, current: selectedView === 'settings' }
-  ];
   
-
   const fetchStockData = useCallback(async (symbols: string[], buyDates: string[]) => {
     try {
       const response = await fetchWithRetry(

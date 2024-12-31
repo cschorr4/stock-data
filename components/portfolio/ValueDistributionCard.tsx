@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { BarChart2, DollarSign, ArrowRight } from 'lucide-react';
+import { BarChart2, ArrowRight } from 'lucide-react';
 import {
   BarChart,
   Bar,

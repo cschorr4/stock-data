@@ -1,7 +1,7 @@
 import React from 'react';
 import { Plus, Layout, LineChart, CheckSquare, History, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
 type ViewType = 'overview' | 'open-positions' | 'closed-positions' | 'transactions' | 'settings';

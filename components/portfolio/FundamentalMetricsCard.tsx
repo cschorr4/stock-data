@@ -1,5 +1,5 @@
 import React from 'react';
-import { TrendingUp, BarChart2, DollarSign, Briefcase, Scale } from 'lucide-react';
+import { TrendingUp, BarChart2, Scale } from 'lucide-react';
 import { Position } from '@/lib/types';
 
 interface FundamentalMetricsCardProps {

@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import _ from 'lodash';
 import { DollarSign, PieChart } from 'lucide-react';
-import type { Position, PortfolioMetrics, PortfolioTotals, ClosedPosition, PortfolioSummaryProps } from '@/lib/types';
+import type { PortfolioSummaryProps } from '@/lib/types';
 
 // Components
 import MetricCard from './MetricCard';
