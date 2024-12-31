@@ -138,3 +138,68 @@ swiper-slide {
 .scrollbar-none::-webkit-scrollbar {
   display: none;
 }
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes slideIn {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+
+.animate-slideIn {
+  animation: slideIn 0.3s ease-in-out;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+.hover-pulse:hover {
+  animation: pulse 1s infinite;
+}
+/* Smooth transitions */
+.transition-all {
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 200ms;
+}
+
+/* Navigation item hover effect */
+.nav-item:hover {
+  background-color: hsl(var(--muted));
+  transform: translateX(2px);
+}
+
+/* Active navigation item */
+.nav-item-active {
+  background-color: hsl(var(--muted));
+  font-weight: 500;
+}
+
+/* Add Transaction button hover effect */
+.add-transaction-btn {
+  transition: transform 0.2s ease;
+}
+
+.add-transaction-btn:hover {
+  transform: translateY(-1px);
+}
+
+/* Fix for background color */
+.bg-background {
+  background-color: hsl(var(--background));
+}
+
+/* Icon color transitions */
+.icon-transition {
+  transition: color 0.2s ease;
+}

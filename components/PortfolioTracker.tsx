@@ -18,6 +18,8 @@ import { getLocalStorage, setLocalStorage } from '@/lib/storage';
 import { fetchWithRetry } from '@/lib/fetch-helpers';
 import OpenPositionsTable from './OpenPositionsTable'
 import ClosedPositionsTable from './ClosedPositionsTable'
+import { motion, AnimatePresence } from 'framer-motion';
+import SideNav from './layout/SideNav';
 import { calculateMetricsFromPositions } from './portfolio/utils/portfolio-utils';
 import { cn } from '@/lib/utils';
 
@@ -32,6 +34,7 @@ const PortfolioTracker = () => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [selectedView, setSelectedView] = useState<'overview' | 'open-positions' | 'closed-positions' | 'transactions' | 'settings'>('overview');
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   const navigation = [
     { id: 'overview', name: 'Dashboard', icon: Layout, current: selectedView === 'overview' },
@@ -311,125 +314,114 @@ const PortfolioTracker = () => {
     setLocalStorage('stockTransactions', []);
   };
 
+  
   const MainContent = () => {
     const { metrics, totals, openPositions, closedPositions } = calculateMetrics();
   
-    switch (selectedView) {
-      case 'overview':
-        return (
-          <>
-            <section className="bg-card rounded-lg shadow-sm mb-6">
-              <PortfolioSummary metrics={metrics} totals={totals} openPositions={openPositions} closedPositions={closedPositions} />
-            </section>
-            <section className="bg-card rounded-lg shadow-sm">
-              <div className="h-[460px] md:h-[525px] p-4">
-                <PositionTimelineChart openPositions={openPositions} closedPositions={closedPositions} />
-              </div>
-            </section>
-          </>
-        );
-      case 'open-positions':
-        return (
-          <section className="bg-card rounded-lg shadow-sm">
-            <OpenPositionsTable positions={openPositions} />
-          </section>
-        );
-      case 'closed-positions':
-        return (
-          <section className="bg-card rounded-lg shadow-sm">
-            <ClosedPositionsTable positions={closedPositions} />
-          </section>
-        );
-      case 'transactions':
-        return (
-          <section className="bg-card rounded-lg shadow-sm">
-            <TransactionTable
-              transactions={transactions}
-              onTransactionAdd={handleTransactionAdd}
-              onTransactionEdit={handleTransactionEdit}
-              onTransactionDelete={handleTransactionDelete}
-              onTransactionsDeleteAll={handleTransactionsDeleteAll}
-            />
-          </section>
-        );
-      case 'settings':
-        return (
-          <div className="bg-card rounded-lg shadow-sm p-6">
-            <h2 className="text-xl font-semibold mb-4">Settings</h2>
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-lg font-medium mb-2">Display Settings</h3>
-                <div className="space-y-2">
-                  {/* Add settings options here */}
-                </div>
-              </div>
-              <div>
-                <h3 className="text-lg font-medium mb-2">Data Management</h3>
-                <div className="space-y-2">
-                  {/* Add data management options here */}
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-      default:
-        return null;
-    }
-  };
-  
-
-  const SideNav = () => (
-    <div className="flex h-full flex-col gap-4">
-      <div className="flex h-[60px] items-center px-6 border-b">
-        <h1 className="text-xl font-semibold">Portfolio Tracker</h1>
-      </div>
-      <div className="px-2 py-2">
-        <Button 
-          className="w-full justify-start" 
-          size="sm"
-          onClick={() => setIsAddDialogOpen(true)}
+    return (
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={selectedView}
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -20 }}
+          transition={{ duration: 0.2 }}
         >
-          <Plus className="h-4 w-4 mr-2" />
-          Add Transaction
-        </Button>
-      </div>
-      <nav className="flex-1 px-2 py-2">
-        {navigation.map((item) => (
-          <Button
-            key={item.id}
-            variant={item.current ? "secondary" : "ghost"}
-            className={cn(
-              "w-full justify-start mb-1",
-              item.current ? "bg-muted" : "hover:bg-muted"
-            )}
-            onClick={() => {
-              setSelectedView(item.id as typeof selectedView);
-              setIsMobileOpen(false); // Close mobile nav when clicking
-            }}
-          >
-            <item.icon className="h-4 w-4 mr-2" />
-            {item.name}
-          </Button>
-        ))}
-      </nav>
-      <div className="flex-shrink-0 px-4 py-4 border-t">
-        <div className="text-sm text-muted-foreground">
-          Last updated: {new Date().toLocaleTimeString()}
-        </div>
-      </div>
-    </div>
-  );
+          {(() => {
+            switch (selectedView) {
+              case 'overview':
+                return (
+                  <motion.div layout>
+                    <section className="bg-card rounded-lg shadow-sm mb-6">
+                      <PortfolioSummary 
+                        metrics={metrics} 
+                        totals={totals} 
+                        openPositions={openPositions} 
+                        closedPositions={closedPositions} 
+                      />
+                    </section>
+                    <section className="bg-card rounded-lg shadow-sm">
+                      <div className="h-[460px] md:h-[525px] p-4">
+                        <PositionTimelineChart 
+                          openPositions={openPositions} 
+                          closedPositions={closedPositions} 
+                        />
+                      </div>
+                    </section>
+                  </motion.div>
+                );
+              case 'open-positions':
+                return (
+                  <motion.section className="bg-card rounded-lg shadow-sm" layout>
+                    <OpenPositionsTable positions={openPositions} />
+                  </motion.section>
+                );
+              case 'closed-positions':
+                return (
+                  <motion.section className="bg-card rounded-lg shadow-sm" layout>
+                    <ClosedPositionsTable positions={closedPositions} />
+                  </motion.section>
+                );
+              case 'transactions':
+                return (
+                  <motion.section className="bg-card rounded-lg shadow-sm" layout>
+                    <TransactionTable
+                      transactions={transactions}
+                      onTransactionAdd={handleTransactionAdd}
+                      onTransactionEdit={handleTransactionEdit}
+                      onTransactionDelete={handleTransactionDelete}
+                      onTransactionsDeleteAll={handleTransactionsDeleteAll}
+                    />
+                  </motion.section>
+                );
+              case 'settings':
+                return (
+                  <motion.div className="bg-card rounded-lg shadow-sm p-6" layout>
+                    <h2 className="text-xl font-semibold mb-4">Settings</h2>
+                    <div className="space-y-6">
+                      {/* Settings content */}
+                    </div>
+                  </motion.div>
+                );
+              default:
+                return null;
+            }
+          })()}
+        </motion.div>
+      </AnimatePresence>
+    );
+  };
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-screen">
+      <motion.div 
+        className="flex items-center justify-center h-screen"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+      >
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-      </div>
+      </motion.div>
     );
   }
 
   return (
-    <>
+    <div className="flex h-screen">
+      {/* Desktop Sidebar */}
+      <div className="hidden sm:block">
+        <SideNav 
+          selectedView={selectedView}
+          setSelectedView={setSelectedView}
+          setIsAddDialogOpen={setIsAddDialogOpen}
+        />
+      </div>
+
+      {/* Main Content */}
+      <main className="flex-1 overflow-auto">
+        <div className="max-w-[1600px] mx-auto p-3">
+          <MainContent />
+        </div>
+      </main>
+
       {/* Mobile Nav */}
       <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
         <SheetTrigger asChild>
@@ -440,28 +432,15 @@ const PortfolioTracker = () => {
             <Menu className="h-4 w-4" />
           </Button>
         </SheetTrigger>
-        <SheetContent side="left" className="w-64 p-0">
-          <SideNav />
+        <SheetContent side="left" className="w-52 p-0">
+          <SideNav 
+            selectedView={selectedView}
+            setSelectedView={setSelectedView}
+            setIsAddDialogOpen={setIsAddDialogOpen}
+            setIsMobileOpen={setIsMobileOpen}
+          />
         </SheetContent>
       </Sheet>
-
-      {/* Desktop Layout */}
-      <ResizablePanelGroup direction="horizontal" className="min-h-screen">
-        <ResizablePanel
-          defaultSize={20}
-          minSize={15}
-          maxSize={20}
-          className="hidden sm:block"
-        >
-          <SideNav />
-        </ResizablePanel>
-        
-        <ResizablePanel defaultSize={80}>
-          <main className="p-6 max-w-7xl mx-auto">
-            <MainContent />
-          </main>
-        </ResizablePanel>
-      </ResizablePanelGroup>
 
       {/* Add Transaction Dialog */}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
@@ -470,7 +449,7 @@ const PortfolioTracker = () => {
             <DialogTitle>Add New Transaction</DialogTitle>
           </DialogHeader>
           <TransactionForm
-            onSubmit={(transaction: Transaction) => {
+            onSubmit={(transaction) => {
               handleTransactionAdd(transaction);
               setIsAddDialogOpen(false);
             }}
@@ -478,9 +457,10 @@ const PortfolioTracker = () => {
           />
         </DialogContent>
       </Dialog>
-    </>
+    </div>
   );
 };
+
 
 // Helper function for diversification metrics
 const calculateDiversificationMetrics = (positions: Position[]) => {
