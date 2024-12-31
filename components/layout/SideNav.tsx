@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import LoginButton from '@/components/auth/LoginButton';
+import UserInfo from '@/components/auth/UserInfo';
 
 type ViewType = 'overview' | 'open-positions' | 'closed-positions' | 'transactions' | 'settings';
 
@@ -87,6 +88,7 @@ const SideNav: React.FC<SideNavProps> = ({
 
       {/* Footer */}
       <div className="border-t p-2 space-y-2">
+        <UserInfo />
         <LoginButton />
         <div className="text-xs text-muted-foreground">
           Last updated: {new Date().toLocaleTimeString()}
