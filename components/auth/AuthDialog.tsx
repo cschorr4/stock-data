@@ -11,9 +11,6 @@ import { useToast } from "@/components/ui/use-toast";
 
 type AuthStatus = 'idle' | 'loading' | 'success' | 'error';
 
-interface AuthDialogProps {
-    showInitially?: boolean;
-  }
 
 export function AuthDialog() {
   const [email, setEmail] = useState('');
