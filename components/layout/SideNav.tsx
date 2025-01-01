@@ -10,7 +10,7 @@ import { createClient } from '@/utils/supabase/client';
 import { Skeleton } from "@/components/ui/skeleton";
 import { AuthDialog } from '@/components/auth/AuthDialog';
 
-type ViewType = 'overview' | 'open-positions' | 'closed-positions' | 'transactions' | 'settings' | 'financials';
+type ViewType = 'overview' | 'open-positions' | 'closed-positions' | 'transactions' | 'financials';
 
 interface SideNavProps {
   selectedView: ViewType;
