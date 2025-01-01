@@ -109,7 +109,7 @@ const SideNav: React.FC<SideNavProps> = ({
                 "px-3"
               )}
               onClick={() => {
-                setSelectedView(item.id);
+                setSelectedView(item.id as ViewType);
                 setIsMobileOpen?.(false);
               }}
             >
