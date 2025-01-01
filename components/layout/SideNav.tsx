@@ -4,7 +4,7 @@ import { Plus, Layout, LineChart, CheckSquare, History, Settings } from 'lucide-
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { UserProfileForm } from '@/components/settings/UserProfileForm';
+// import { UserProfileForm } from '@/components/settings/UserProfileForm';
 import { useEffect, useState } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import { Skeleton } from "@/components/ui/skeleton";

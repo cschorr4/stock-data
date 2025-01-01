@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Layout, LineChart, CheckSquare, History, Settings, Menu } from 'lucide-react';
+import {  Menu } from 'lucide-react';
+// import {Layout, LineChart, CheckSquare, History, Settings} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -17,6 +18,7 @@ import ClosedPositionsTable from './ClosedPositionsTable'
 import { motion, AnimatePresence } from 'framer-motion';
 import SideNav from './layout/SideNav';
 import { calculateMetricsFromPositions } from './portfolio/utils/portfolio-utils';
+import { fr } from 'date-fns/locale';
 
 const PortfolioTracker = () => {
   // States
