@@ -52,29 +52,32 @@ async function runPythonScript(symbol: string): Promise<any> {
 }
 
 export async function GET(request: Request) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const symbol = searchParams.get('symbol');
-
-    if (!symbol) {
+    try {
+      const { searchParams } = new URL(request.url);
+      const symbol = searchParams.get('symbol');
+  
+      if (!symbol) {
+        return NextResponse.json(
+          { error: 'Stock symbol is required' },
+          { status: 400 }
+        );
+      }
+  
+      const data = await runPythonScript(symbol);
+      
+      // Add validation for the returned data
+      if (!data || !data.company_info) {
+        throw new Error('Invalid data structure returned');
+      }
+  
+      return NextResponse.json(data);
+    } catch (error) {
+      console.error('API Error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       return NextResponse.json(
-        { error: 'Stock symbol is required' },
-        { status: 400 }
+        { error: 'Failed to fetch stock data', details: errorMessage },
+        { status: 500 }
       );
     }
-
-    const data = await runPythonScript(symbol);
-    return NextResponse.json(data);
-    
-  } catch (error: unknown) {
-    console.error('API Error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    return NextResponse.json(
-      { 
-        error: 'Failed to fetch stock data',
-        details: errorMessage
-      },
-      { status: 500 }
-    );
   }
-}
+  
