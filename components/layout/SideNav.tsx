@@ -10,7 +10,7 @@ import { createClient } from '@/utils/supabase/client';
 import { Skeleton } from "@/components/ui/skeleton";
 import { AuthDialog } from '@/components/auth/AuthDialog';
 
-type ViewType = 'overview' | 'open-positions' | 'closed-positions' | 'transactions' | 'settings';
+type ViewType = 'overview' | 'open-positions' | 'closed-positions' | 'transactions' | 'settings' | 'financials';
 
 interface SideNavProps {
   selectedView: ViewType;
@@ -66,7 +66,8 @@ const SideNav: React.FC<SideNavProps> = ({
     { id: 'overview' as ViewType, name: 'Dashboard', icon: Layout },
     { id: 'open-positions' as ViewType, name: 'Open Positions', icon: LineChart },
     { id: 'closed-positions' as ViewType, name: 'Closed Positions', icon: CheckSquare },
-    { id: 'transactions' as ViewType, name: 'Transactions', icon: History }
+    { id: 'transactions' as ViewType, name: 'Transactions', icon: History }, 
+    { id: 'financials', name: 'Financial Data', icon: LineChart }
   ];
 
   return (

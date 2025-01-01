@@ -240,3 +240,41 @@ export interface ChartPosition {
   date: string;
   holdingPeriod: number;
 }
+
+export interface FinancialStatement {
+  [metric: string]: number | null;
+}
+
+export interface StatementCollection {
+  [date: string]: FinancialStatement;
+}
+
+export interface FinancialStatements {
+  income_statement: StatementCollection;
+  balance_sheet: StatementCollection;
+  cash_flow: StatementCollection;
+}
+
+export interface CompanyInfo {
+  name: string;
+  sector: string | null;
+  industry: string | null;
+  employees: number | null;
+  exchange: string | null;
+  description: string | null;
+  website: string | null;
+  country: string | null;
+}
+
+export interface FinancialData {
+  company_info: CompanyInfo;
+  financial_statements: {
+    quarterly: FinancialStatements;
+    annual: FinancialStatements;
+  };
+  metrics: {
+    [category: string]: {
+      [metric: string]: number | null;
+    };
+  };
+}

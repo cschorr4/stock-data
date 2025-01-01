@@ -9,16 +9,20 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Transaction, Position, ClosedPosition, PortfolioMetrics, PortfolioTotals, MarketData, StockQuote } from '@/lib/types';
 import PortfolioSummary from './portfolio/PortfolioSummary';
 import PositionTimelineChart from './charts/position-timeline/PositionTimeLineChart';
-import TransactionTable from './TransactionTable';
-import TransactionForm from './TransactionForm';
+import TransactionTable from './tables/TransactionTable';
+import TransactionForm from './tables/TransactionForm';
 import { getLocalStorage, setLocalStorage } from '@/lib/storage';
 import { fetchWithRetry } from '@/lib/fetch-helpers';
-import OpenPositionsTable from './OpenPositionsTable'
-import ClosedPositionsTable from './ClosedPositionsTable'
+import OpenPositionsTable from './tables/OpenPositionsTable'
+import ClosedPositionsTable from './tables/ClosedPositionsTable'
 import { motion, AnimatePresence } from 'framer-motion';
 import SideNav from './layout/SideNav';
 import { calculateMetricsFromPositions } from './portfolio/utils/portfolio-utils';
 // import { fr } from 'date-fns/locale';
+import { Input } from '@/components/ui/input';
+import { Search } from 'lucide-react';
+import { FinancialData } from '@/lib/types';
+import FinancialViewer from './tables/FinancialViewer';
 
 const PortfolioTracker = () => {
   // States
@@ -29,9 +33,12 @@ const PortfolioTracker = () => {
   const [spyData, setSpyData] = useState<Record<string, number>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [selectedView, setSelectedView] = useState<'overview' | 'open-positions' | 'closed-positions' | 'transactions' | 'settings'>('overview');
-  const [isMobileOpen, setIsMobileOpen] = useState(false);
-  
+  const [selectedView, setSelectedView] = useState<ViewType>('overview');  const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [financialData, setFinancialData] = useState<FinancialData | null>(null);
+  const [financialLoading, setFinancialLoading] = useState(false);
+  const [financialError, setFinancialError] = useState('');
+  const [symbolInput, setSymbolInput] = useState('');
+
 
   const fetchStockData = useCallback(async (symbols: string[], buyDates: string[]) => {
     try {
@@ -57,6 +64,22 @@ const PortfolioTracker = () => {
           dayLow: 0
         }))
       };
+    }
+  }, []);
+
+  const fetchFinancialData = useCallback(async (symbol: string) => {
+    try {
+      setFinancialLoading(true);
+      setFinancialError('');
+      const response = await fetchWithRetry(`/api/stock/financials?symbol=${symbol.toUpperCase()}`);
+      const data = await response.json();
+      
+      if (data.status === 'error') throw new Error(data.error);
+      setFinancialData(data);
+    } catch (error) {
+      setFinancialError(error instanceof Error ? error.message : 'Failed to fetch data');
+    } finally {
+      setFinancialLoading(false);
     }
   }, []);
 
@@ -277,6 +300,12 @@ const PortfolioTracker = () => {
   }, [transactions, fetchStockData]);
 
   // Transaction handlers
+  
+  const handleSymbolChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = event.target.value;
+    setSymbolInput(value.toUpperCase());
+  };
+
   const handleTransactionAdd = (transaction: Transaction) => {
     const updatedTransactions = [...transactions, { ...transaction, id: Date.now() }];
     setTransactions(updatedTransactions);
@@ -362,17 +391,28 @@ const PortfolioTracker = () => {
                     />
                   </motion.section>
                 );
-              case 'settings':
-                return (
-                  <motion.div className="bg-card rounded-lg shadow-sm p-6" layout>
-                    <h2 className="text-xl font-semibold mb-4">Settings</h2>
-                    <div className="space-y-6">
-                      {/* Settings content */}
-                    </div>
-                  </motion.div>
-                );
-              default:
-                return null;
+                case 'financials':
+  return (
+    <motion.section className="bg-card rounded-lg shadow-sm p-4">
+      <div className="flex gap-2 mb-4">
+      <Input 
+  key="symbol-input"
+  value={symbolInput}
+  onChange={handleSymbolChange}
+  placeholder="Enter stock symbol (e.g. AAPL)"
+  onKeyDown={(e) => e.key === 'Enter' && fetchFinancialData(symbolInput)}
+  className="w-full"
+/>
+        <Button onClick={() => fetchFinancialData(symbolInput)}>
+          <Search className="h-4 w-4 mr-2" />
+          Search
+        </Button>
+      </div>
+      {financialLoading && <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>}
+      {financialError && <div className="text-red-500">{financialError}</div>}
+      {financialData && <FinancialViewer data={financialData} />}
+    </motion.section>
+  );
             }
           })()}
         </motion.div>
