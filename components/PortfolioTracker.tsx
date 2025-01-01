@@ -24,6 +24,8 @@ import { Search } from 'lucide-react';
 import { FinancialData } from '@/lib/types';
 import FinancialViewer from './tables/FinancialViewer';
 
+type ViewType = 'overview' | 'open-positions' | 'closed-positions' | 'transactions' | 'financials';
+
 const PortfolioTracker = () => {
   // States
   const [transactions, setTransactions] = useState<Transaction[]>(() => 
