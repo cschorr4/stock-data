@@ -14,7 +14,7 @@ type ViewType = 'overview' | 'open-positions' | 'closed-positions' | 'transactio
 
 interface SideNavProps {
   selectedView: ViewType;
-  setSelectedView: (view: ViewType) => void;
+  setSelectedView: React.Dispatch<React.SetStateAction<ViewType>>;
   setIsAddDialogOpen: (value: boolean) => void;
   setIsMobileOpen?: (value: boolean) => void;
 }
