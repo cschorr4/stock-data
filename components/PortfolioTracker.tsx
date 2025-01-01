@@ -18,7 +18,7 @@ import ClosedPositionsTable from './ClosedPositionsTable'
 import { motion, AnimatePresence } from 'framer-motion';
 import SideNav from './layout/SideNav';
 import { calculateMetricsFromPositions } from './portfolio/utils/portfolio-utils';
-import { fr } from 'date-fns/locale';
+// import { fr } from 'date-fns/locale';
 
 const PortfolioTracker = () => {
   // States
