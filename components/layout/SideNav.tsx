@@ -125,7 +125,7 @@ const SideNav: React.FC<SideNavProps> = ({
           );
         })}
 
-{user ? (
+{/* {user ? (
   selectedView === 'settings' ? (
     <div className="space-y-2">
       <Button
@@ -159,7 +159,7 @@ const SideNav: React.FC<SideNavProps> = ({
     </Button>
   )
   
-) : null}
+) : null} */}
 </nav>
 
       <div className="border-t p-2 space-y-2">

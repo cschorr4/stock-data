@@ -1,13 +1,13 @@
-'use client';
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createClient } from '@/utils/supabase/client';
-import { Loader2, CheckCircle2, XCircle } from "lucide-react";
+import { Loader2, CheckCircle2, XCircle, LogOut } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { useRouter } from "next/navigation";
+import { useAuth } from '@/components/providers/AuthProvider';
 
 type AuthStatus = 'idle' | 'loading' | 'success' | 'error';
 
@@ -25,18 +25,51 @@ export function AuthDialog({ showInitially = false }: AuthDialogProps) {
   const [isSignUp, setIsSignUp] = useState(false);
   const supabase = createClient();
   const { toast } = useToast();
+  const router = useRouter();
+  const { user } = useAuth();
 
   useEffect(() => {
     setOpen(showInitially);
   }, [showInitially]);
+
+  const handleSignOut = async () => {
+    setAuthStatus('loading');
+    try {
+      await supabase.auth.signOut();
+      setAuthStatus('success');
+      toast({
+        title: "Success",
+        description: "Successfully signed out"
+      });
+      router.push('/login');
+    } catch (error: any) {
+      setAuthStatus('error');
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || "Failed to sign out"
+      });
+    }
+  };
+
+  if (user) {
+    return (
+      <Button 
+        onClick={handleSignOut} 
+        variant="outline" 
+        className="w-full flex items-center gap-2"
+      >
+        <LogOut className="h-4 w-4" />
+        Sign Out
+      </Button>
+    );
+  }
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setAuthStatus('loading');
     
     try {
-      console.log('Starting signup process...');
-      
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -50,12 +83,9 @@ export function AuthDialog({ showInitially = false }: AuthDialogProps) {
         }
       });
 
-      console.log('Signup response:', { data, error });
-
       if (error) throw error;
 
       if (data?.user) {
-        console.log('User created successfully:', data.user);
         setAuthStatus('success');
         toast({
           title: "Account created!",
@@ -68,7 +98,6 @@ export function AuthDialog({ showInitially = false }: AuthDialogProps) {
         }, 2000);
       }
     } catch (error: any) {
-      console.error('Signup error:', error);
       setAuthStatus('error');
       toast({
         variant: "destructive",
@@ -101,7 +130,6 @@ export function AuthDialog({ showInitially = false }: AuthDialogProps) {
         setAuthStatus('idle');
       }, 2000);
     } catch (error: any) {
-      console.error('Sign in error:', error);
       setAuthStatus('error');
       toast({
         variant: "destructive",

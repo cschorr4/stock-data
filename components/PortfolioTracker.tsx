@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Menu } from 'lucide-react';
+import { Layout, LineChart, CheckSquare, History, Settings, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -30,6 +30,7 @@ const PortfolioTracker = () => {
   const [selectedView, setSelectedView] = useState<'overview' | 'open-positions' | 'closed-positions' | 'transactions' | 'settings'>('overview');
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   
+
   const fetchStockData = useCallback(async (symbols: string[], buyDates: string[]) => {
     try {
       const response = await fetchWithRetry(
