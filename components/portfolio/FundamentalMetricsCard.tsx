@@ -33,10 +33,6 @@ interface InitialPrices {
   [key: string]: number;
 }
 
-interface LineColors {
-  [key: string]: string;
-}
-
 interface MetricItemProps {
   label: string;
   value: number | undefined;
