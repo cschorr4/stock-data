@@ -3,36 +3,25 @@ import { format } from 'date-fns';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Skeleton } from "@/components/ui/skeleton";
+import { RefreshCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { ChartControls } from './ChartControls';
 import { usePositionTimeline, useChartDataProcessing } from './hooks/useChartData';
-import { Position, ClosedPosition } from '@/lib/types';
 import { DateRange } from 'react-day-picker';
+import { Position, ClosedPosition, PositionTimelineChartProps, ChartDataPoint } from '@/lib/types';
 
-interface StockDataPoint {
-  date: string;
-  close?: number;
-  price?: number;
-}
 
-interface ChartPoint {
-  date: string;
-  [key: string]: string | number;
-}
-
-interface PositionTimelineChartProps {
-  openPositions: Position[];
-  closedPositions: ClosedPosition[];
-}
-
-const PositionTimelineChart: React.FC<PositionTimelineChartProps> = ({ openPositions, closedPositions }) => {
-  const [timeRange, setTimeRange] = useState('6M');
+const PositionTimelineChart: React.FC<PositionTimelineChartProps> = ({ openPositions, closedPositions, transactions }) => {
+  const [timeRange, setTimeRange] = useState<string>('6M');
   const [dateRange] = useState<DateRange | undefined>();
-  const [showPercentage, setShowPercentage] = useState(false);
-  const [selectedTickers, setSelectedTickers] = useState(['SPY']);
-  const [chartData, setChartData] = useState<ChartPoint[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [showPercentage, setShowPercentage] = useState<boolean>(false);
+  const [selectedTickers, setSelectedTickers] = useState<string[]>(['SPY']);
+  const [chartData, setChartData] = useState<ChartDataPoint[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
+  const [isMobile, setIsMobile] = useState<boolean>(false);
+  const [retryCount, setRetryCount] = useState<number>(0);
 
   useEffect(() => {
     setIsMobile(window.innerWidth < 768);
@@ -42,62 +31,140 @@ const PositionTimelineChart: React.FC<PositionTimelineChartProps> = ({ openPosit
   }, []);
 
   const positionStates = usePositionTimeline(openPositions, closedPositions);
-  const processedChartData = useChartDataProcessing(chartData, positionStates, showPercentage);
+  const filteredChartData = chartData.map(point => {
+    const filteredPoint: { [key: string]: string | number } = { date: point.date };
+    Object.keys(point).forEach(key => {
+      if (point[key] !== null) {
+        filteredPoint[key] = point[key] as string | number;
+      }
+    });
+    return filteredPoint as ChartDataPoint;
+  });
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const tickers = Array.from(new Set([...selectedTickers, 'SPY']));
-        let url = `/api/stock/chart?`;
-        
-        if (timeRange === 'Custom' && dateRange?.from && dateRange?.to) {
-          url += `start=${format(dateRange.from, 'yyyy-MM-dd')}&end=${format(dateRange.to, 'yyyy-MM-dd')}`;
-        } else {
-          url += `range=${timeRange}`;
-        }
+  const processedChartData = useChartDataProcessing(filteredChartData, positionStates, showPercentage);
 
-        const responses = await Promise.all(
-          tickers.map(ticker => 
-            fetch(`${url}&symbol=${ticker}`).then(res => res.json())
-          )
-        );
+  const fetchData = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const tickers = Array.from(new Set([...selectedTickers, 'SPY']));
+      let url = '/api/stock/chart?';
+      
+      if (timeRange === 'Custom' && dateRange?.from && dateRange?.to) {
+        url += `start=${format(dateRange.from, 'yyyy-MM-dd')}&end=${format(dateRange.to, 'yyyy-MM-dd')}`;
+      } else {
+        url += `range=${timeRange}`;
+      }
 
-        const allDates = new Set<string>();
-        responses.forEach(data => 
-          data.forEach((point: StockDataPoint) => allDates.add(point.date))
-        );
+      const responses = await Promise.all(
+        tickers.map(async ticker => {
+          const response = await fetch(`${url}&symbol=${ticker}`);
+          if (!response.ok) {
+            throw new Error(`Failed to fetch ${ticker}: ${response.statusText}`);
+          }
+          return response.json();
+        })
+      );
 
-        const combinedData: ChartPoint[] = Array.from(allDates)
-          .sort()
-          .map(date => {
-            const point: ChartPoint = { date };
-            tickers.forEach((ticker, idx) => {
-              const tickerData = responses[idx].find((d: StockDataPoint) => d.date === date);
-              if (tickerData) {
-                point[ticker] = tickerData.close ?? tickerData.price ?? 0;
-              } else {
-                point[ticker] = 0;
-              }
-            });
-            return point;
+      const allDates = new Set();
+      responses.forEach((data: any[]) => 
+        data.forEach((point: { date: string }) => allDates.add(point.date))
+      );
+
+      const combinedData = Array.from(allDates)
+        .sort()
+        .map(date => {
+          const point = { date: date as string } as { date: string } & { [key: string]: number | null };
+          tickers.forEach((ticker, idx) => {
+            const tickerData = responses[idx].find((d: { date: string }) => d.date === date);
+            point[ticker] = tickerData?.close ?? tickerData?.price ?? null;
           });
+          return point;
+        });
 
-        setChartData(combinedData);
-      } catch (err) {
-        console.error('Error fetching chart data:', err);
+      setChartData(combinedData);
+    } catch (err) {
+      console.error('Error fetching chart data:', err);
+      if (err instanceof Error) {
+        setError(err.message || 'Failed to load chart data');
+      } else {
         setError('Failed to load chart data');
       }
+    } finally {
       setIsLoading(false);
-    };
+    }
+  };
 
+  useEffect(() => {
     fetchData();
-  }, [timeRange, dateRange, selectedTickers]);
+  }, [timeRange, dateRange, selectedTickers, retryCount]);
 
-  if (isLoading) return <div>Loading chart data...</div>;
-  if (error) return <Alert variant="destructive"><AlertDescription>{error}</AlertDescription></Alert>;
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Position Timeline</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className={`${isMobile ? 'h-64' : 'h-96'} flex items-center justify-center bg-background relative overflow-hidden`}>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-32 h-32 relative">
+                {[...Array(12)].map((_, i) => (
+                  <div key={i} className="absolute inset-0 border-2 border-primary rounded-full opacity-75"
+                    style={{
+                      animation: `ripple 3s cubic-bezier(0, 0.2, 0.8, 1) infinite ${i * 0.2}s`,
+                      borderColor: i % 3 === 0 ? 'var(--primary)' : i % 3 === 1 ? 'var(--muted-foreground)' : '#34D399'
+                    }}
+                  />
+                ))}
+                <style jsx>{`
+                  @keyframes ripple {
+                    0% { 
+                      transform: scale(1);
+                      opacity: 0.8;
+                    }
+                    100% { 
+                      transform: scale(12);
+                      opacity: 0;
+                    }
+                  }
+                `}</style>
+                <div className="absolute inset-0 flex items-center justify-center z-10">
+                  <div className="text-3xl font-bold text-primary">$</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
+  if (error) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Position Timeline</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Alert variant="destructive">
+            <AlertDescription className="flex flex-col gap-4">
+              <p>{error}</p>
+              <Button 
+                onClick={() => setRetryCount(c => c + 1)}
+                variant="outline"
+                className="w-fit"
+              >
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Retry
+              </Button>
+            </AlertDescription>
+          </Alert>
+        </CardContent>
+      </Card>
+    );
+  }
+  
   return (
     <Card>
       <CardHeader>
