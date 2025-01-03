@@ -2,7 +2,6 @@
 
 import React from 'react';
 import { format as dateFormat } from 'date-fns';
-import Papa from 'papaparse';
 import { Download, Upload, Plus, Pencil, Trash2, ArrowUpDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,24 +20,7 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/components/ui/use-toast';
 import { Transaction } from '@/lib/types';
 import TransactionForm from './TransactionForm';
-import { validateTransaction, exportToJSON, exportToCSV, downloadFile, parseCSVFile} from '@/lib/transactions';
-
-interface CSVRow {
-  date: string;
-  ticker: string;
-  type: string;
-  price: number;
-  shares: number;
-}
-
-interface ImportedTransaction {
-  id?: number;
-  date: string;
-  ticker: string;
-  type: string;
-  price: number;
-  shares: number;
-}
+import { exportToJSON, exportToCSV, downloadFile, parseCSVFile} from '@/lib/transactions';
 
 interface TransactionTableProps {
   transactions: Transaction[];
@@ -46,10 +28,6 @@ interface TransactionTableProps {
   onTransactionEdit: (transaction: Transaction) => void;
   onTransactionDelete: (id: number) => void;
   onTransactionsDeleteAll: () => void;
-}
-
-function isValidTransactionType(type: string): type is Transaction['type'] {
-  return ['buy', 'sell', 'dividend'].includes(type.toLowerCase());
 }
 
 const TransactionTable: React.FC<TransactionTableProps> = ({
