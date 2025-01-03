@@ -21,7 +21,7 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/components/ui/use-toast';
 import { Transaction } from '@/lib/types';
 import TransactionForm from './TransactionForm';
-import { validateTransaction, exportToJSON, exportToCSV, downloadFile } from '@/lib/transactions';
+import { validateTransaction, exportToJSON, exportToCSV, downloadFile, parseCSVFile} from '@/lib/transactions';
 
 interface CSVRow {
   date: string;
@@ -115,70 +115,8 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
 
   const handleFileImport = async (file: File) => {
     try {
-      let transactions: Transaction[];
-      
-      if (file.type === 'application/json') {
-        const text = await file.text();
-        const data = JSON.parse(text) as ImportedTransaction[];
-        
-        if (!Array.isArray(data)) {
-          throw new Error('Invalid JSON format: Expected an array of transactions');
-        }
-  
-        transactions = data.map(item => {
-          const normalizedType = item.type.toLowerCase();
-          if (!isValidTransactionType(normalizedType)) {
-            throw new Error(`Invalid transaction type: ${item.type}. Must be "buy", "sell", or "dividend"`);
-          }
-  
-          return {
-            id: item.id || Date.now() + Math.random(),
-            date: new Date(item.date).toISOString(),
-            ticker: item.ticker.toUpperCase(),
-            type: normalizedType,
-            price: Number(item.price),
-            shares: Number(item.shares)
-          } as Transaction;
-        });
-      } else if (file.type === 'text/csv') {
-        transactions = await new Promise<Transaction[]>((resolve, reject) => {
-          Papa.parse<CSVRow>(file, {
-            header: true,
-            dynamicTyping: true,
-            skipEmptyLines: true,
-            complete: (results) => {
-              try {
-                const parsed = results.data.map((row): Transaction => {
-                  const normalizedType = row.type.toLowerCase();
-                  if (!isValidTransactionType(normalizedType)) {
-                    throw new Error(`Invalid transaction type: ${row.type}. Must be "buy", "sell", or "dividend"`);
-                  }
-  
-                  return {
-                    id: Date.now() + Math.random(),
-                    date: new Date(row.date).toISOString(),
-                    ticker: row.ticker.toUpperCase(),
-                    type: normalizedType,
-                    price: Number(row.price),
-                    shares: Number(row.shares)
-                  };
-                });
-                resolve(parsed);
-              } catch (error) {
-                reject(new Error('Error parsing CSV row: ' + (error as Error).message));
-              }
-            },
-            error: (error) => reject(new Error('CSV parsing error: ' + error.message))
-          });
-        });
-      } else {
-        throw new Error('Unsupported file format. Please use JSON or CSV.');
-      }
-  
-      if (!transactions.every(validateTransaction)) {
-        throw new Error('Invalid transaction data in file');
-      }
-  
+      const transactions = await parseCSVFile(file);
+      console.log('Parsed transactions:', transactions);
       transactions.forEach(onTransactionAdd);
       toast({
         title: "Success",
@@ -189,7 +127,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
       toast({
         variant: "destructive",
         title: "Import Error",
-        description: (error as Error).message || 'Error importing transactions. Please check the file format.',
+        description: (error as Error).message || 'Error importing transactions.',
       });
     }
   };
