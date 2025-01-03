@@ -1,14 +1,14 @@
 'use client';
-import React from 'react';
+
+import React, { useCallback, useEffect, useState } from 'react';
 import { Plus, Layout, LineChart, CheckSquare, History } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
-// import { UserProfileForm } from '@/components/settings/UserProfileForm';
-import { useEffect, useState } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import { Skeleton } from "@/components/ui/skeleton";
 import { AuthDialog } from '@/components/auth/AuthDialog';
+import { SupabaseClient, User } from '@supabase/supabase-js';
 
 type ViewType = 'overview' | 'open-positions' | 'closed-positions' | 'transactions' | 'financials';
 
@@ -19,6 +19,14 @@ interface SideNavProps {
   setIsMobileOpen?: (value: boolean) => void;
 }
 
+const navigation = [
+  { id: 'overview' as ViewType, name: 'Dashboard', icon: Layout },
+  { id: 'open-positions' as ViewType, name: 'Open Positions', icon: LineChart },
+  { id: 'closed-positions' as ViewType, name: 'Closed Positions', icon: CheckSquare },
+  { id: 'transactions' as ViewType, name: 'Transactions', icon: History },
+  { id: 'financials' as ViewType, name: 'Financial Data', icon: LineChart }
+] as const;
+
 const SideNav: React.FC<SideNavProps> = ({
   selectedView,
   setSelectedView,
@@ -26,23 +34,31 @@ const SideNav: React.FC<SideNavProps> = ({
   setIsMobileOpen
 }) => {
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<any>(null);
-  const supabase = createClient();
+  const [user, setUser] = useState<User | null>(null);
+  const [supabase] = useState(() => createClient());
+
+  const fetchUser = useCallback(async (client: SupabaseClient) => {
+    try {
+      const { data: { user } } = await client.auth.getUser();
+      setUser(user);
+    } catch (error) {
+      console.error('Error fetching user:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
-      setLoading(false);
-    };
-    getUser();
+    fetchUser(supabase);
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
       setUser(session?.user ?? null);
     });
 
-    return () => subscription.unsubscribe();
-  }, []);
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [supabase, fetchUser]);
 
   if (loading) {
     return (
@@ -54,21 +70,13 @@ const SideNav: React.FC<SideNavProps> = ({
           <Skeleton className="h-9 mx-2 w-[calc(100%-16px)]" />
         </div>
         <div className="flex-1 py-2 space-y-1">
-          {[1, 2, 3, 4].map((i) => (
+          {Array.from({ length: 4 }).map((_, i) => (
             <Skeleton key={i} className="h-9 mx-2 w-[calc(100%-16px)]" />
           ))}
         </div>
       </div>
     );
   }
-
-  const navigation = [
-    { id: 'overview' as ViewType, name: 'Dashboard', icon: Layout },
-    { id: 'open-positions' as ViewType, name: 'Open Positions', icon: LineChart },
-    { id: 'closed-positions' as ViewType, name: 'Closed Positions', icon: CheckSquare },
-    { id: 'transactions' as ViewType, name: 'Transactions', icon: History }, 
-    { id: 'financials', name: 'Financial Data', icon: LineChart }
-  ];
 
   return (
     <div className="flex h-full w-52 flex-col bg-card border-r shadow-sm">
@@ -109,7 +117,7 @@ const SideNav: React.FC<SideNavProps> = ({
                 "px-3"
               )}
               onClick={() => {
-                setSelectedView(item.id as ViewType);
+                setSelectedView(item.id);
                 setIsMobileOpen?.(false);
               }}
             >
@@ -125,43 +133,7 @@ const SideNav: React.FC<SideNavProps> = ({
             </Button>
           );
         })}
-
-{/* {user ? (
-  selectedView === 'settings' ? (
-    <div className="space-y-2">
-      <Button
-        variant="ghost"
-        size="sm"
-        className={cn(
-          "w-full justify-start relative group rounded-none",
-          "bg-muted font-medium px-3"
-        )}
-      >
-        <Settings className="h-4 w-4" />
-        <span className="ml-3">Settings</span>
-        <motion.div
-          className="absolute inset-y-0 left-0 w-1 bg-foreground rounded-full"
-          layoutId="activeNav"
-        />
-      </Button>
-      <div className="px-2">
-        <UserProfileForm />
-      </div>
-    </div>
-  ) : (
-    <Button
-      variant="ghost"
-      size="sm"
-      className="w-full justify-start relative group rounded-none text-muted-foreground hover:text-foreground px-3"
-      onClick={() => setSelectedView('settings')}
-    >
-      <Settings className="h-4 w-4" />
-      <span className="ml-3">Settings</span>
-    </Button>
-  )
-  
-) : null} */}
-</nav>
+      </nav>
 
       <div className="border-t p-2 space-y-2">
         <AuthDialog />
