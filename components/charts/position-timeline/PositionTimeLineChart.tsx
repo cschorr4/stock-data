@@ -3,16 +3,15 @@ import { format } from 'date-fns';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Skeleton } from "@/components/ui/skeleton";
 import { RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ChartControls } from './ChartControls';
 import { usePositionTimeline, useChartDataProcessing } from './hooks/useChartData';
 import { DateRange } from 'react-day-picker';
-import { Position, ClosedPosition, PositionTimelineChartProps, ChartDataPoint } from '@/lib/types';
+import { PositionTimelineChartProps, ChartDataPoint } from '@/lib/types';
 
 
-const PositionTimelineChart: React.FC<PositionTimelineChartProps> = ({ openPositions, closedPositions, transactions }) => {
+const PositionTimelineChart: React.FC<PositionTimelineChartProps> = ({ openPositions, closedPositions }) => {
   const [timeRange, setTimeRange] = useState<string>('6M');
   const [dateRange] = useState<DateRange | undefined>();
   const [showPercentage, setShowPercentage] = useState<boolean>(false);
