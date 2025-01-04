@@ -1,6 +1,5 @@
 import React from 'react';
 import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
 import { DollarSign, PercentIcon, Calendar } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
