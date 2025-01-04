@@ -29,42 +29,42 @@ const MetricCard: React.FC<MetricCardProps> = ({
   gradient
 }) => (
   <Card
-    className={`flex-none w-[200px] xs:w-[180px] sm:w-[200px] md:w-[220px] ${gradient}
-      rounded-xl border-0 shadow-sm transition-all duration-200
-      hover:shadow-md touch-pan-x select-none`}
+    className={`w-full max-w-[280px] ${gradient}
+      rounded-xl border-0 shadow-lg transition-all duration-300
+      hover:shadow-xl hover:scale-105 cursor-pointer`}
   >
-    <CardContent className="p-3">
-      <div className="space-y-2">
+    <CardContent className="p-5">
+      <div className="space-y-4">
         {/* Header */}
-        <div className="flex items-center gap-2">
-          <div className="rounded-full bg-white/10 p-1">
-            {icon}
-          </div>
-          <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
             {title}
           </span>
+          <div className="rounded-full bg-white/20 p-2">
+            {icon}
+          </div>
         </div>
 
         {/* Main Value */}
-        <div className={`text-lg font-semibold ${mainValueColor}`}>
+        <div className={`text-3xl font-bold ${mainValueColor}`}>
           {mainValue}
         </div>
 
         {/* Metrics */}
-        <div className="grid grid-cols-2 gap-x-3">
+        <div className="grid grid-cols-2 gap-4">
           <div>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
               {metric1Label}
             </p>
-            <p className={`text-xs font-medium ${metric1Color}`}>
+            <p className={`text-sm font-semibold ${metric1Color}`}>
               {metric1Value}
             </p>
           </div>
           <div>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
               {metric2Label}
             </p>
-            <p className={`text-xs font-medium ${metric2Color}`}>
+            <p className={`text-sm font-semibold ${metric2Color}`}>
               {metric2Value}
             </p>
           </div>
