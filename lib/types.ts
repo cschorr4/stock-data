@@ -175,6 +175,11 @@ export interface ChartDataPoint {
   [key: string]: number | string | null;
 }
 
+export interface ChartPoint {
+  date: string;
+  [key: string]: number | string;
+}
+
 export interface TickerData {
   ticker: string;
   data: {
@@ -188,7 +193,7 @@ export interface TickerData {
 }
 
 export interface PositionTimelineChartProps {
-  transactions: Transaction[];
+  transactions: Transaction[];  // Add this line
   openPositions: Position[];
   closedPositions: ClosedPosition[];
 }
@@ -197,7 +202,7 @@ export interface ChartControlsProps {
   allTickers: string[];
   selectedTickers: string[];
   showPercentage: boolean;
-  timeRange: string;
+  timeRange: '1M' | '3M' | '6M' | '1Y' | '2Y' | '5Y' | 'YTD' | 'Custom';
   onTickerSelect: (ticker: string) => void;
   onShowPercentageChange: (checked: boolean) => void;
   onTimeRangeChange: (value: string) => void;
@@ -210,10 +215,7 @@ interface TooltipPayloadItem {
   dataKey: string;
   color?: string;
   fill?: string;
-  payload?: {
-    date: string;
-    [key: string]: number | string | null;
-  };
+  payload?: ChartPoint;
 }
 
 interface PositionDataValue {

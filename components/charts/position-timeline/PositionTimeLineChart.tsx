@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { ChartControls } from './ChartControls';
 import { usePositionTimeline, useChartDataProcessing } from './hooks/useChartData';
 import { DateRange } from 'react-day-picker';
-import { PositionTimelineChartProps, ChartDataPoint } from '@/lib/types';
+import { PositionTimelineChartProps, ChartDataPoint, ChartPoint} from '@/lib/types';
 
 
 const PositionTimelineChart: React.FC<PositionTimelineChartProps> = ({ openPositions, closedPositions }) => {
@@ -31,13 +31,13 @@ const PositionTimelineChart: React.FC<PositionTimelineChartProps> = ({ openPosit
 
   const positionStates = usePositionTimeline(openPositions, closedPositions);
   const filteredChartData = chartData.map(point => {
-    const filteredPoint: { [key: string]: string | number } = { date: point.date };
-    Object.keys(point).forEach(key => {
-      if (point[key] !== null) {
-        filteredPoint[key] = point[key] as string | number;
+    const filteredPoint: ChartPoint = { date: point.date };
+    Object.entries(point).forEach(([key, value]) => {
+      if (value !== null && key !== 'date') {
+        filteredPoint[key] = value as string | number;
       }
     });
-    return filteredPoint as ChartDataPoint;
+    return filteredPoint;
   });
 
   const processedChartData = useChartDataProcessing(filteredChartData, positionStates, showPercentage);
