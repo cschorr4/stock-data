@@ -6,7 +6,7 @@ import {  Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Transaction, Position, ClosedPosition, PortfolioMetrics, PortfolioTotals, MarketData, StockQuote } from '@/lib/types';
+import { Transaction, Position, ClosedPosition, PortfolioMetrics, PortfolioTotals, MarketData, StockQuote, SectorKey } from '@/lib/types';
 import PortfolioSummary from './portfolio/PortfolioSummary';
 import PositionTimelineChart from './charts/position-timeline/PositionTimeLineChart';
 import TransactionTable from './tables/TransactionTable';
@@ -138,7 +138,9 @@ const PortfolioTracker = () => {
               profit: (sellPrice - lot.price) * sharesSold,
               percentChange,
               holdingPeriod,
-              spyReturn: spyData[ticker] || 0
+              spyReturn: spyData[ticker] || 0,
+              sector: realtimePrices[ticker]?.sector as SectorKey || 'Unknown' as SectorKey,
+              industry: realtimePrices[ticker]?.industry || 'Unknown'
             });
             
             remainingShares -= sharesSold;
@@ -180,7 +182,7 @@ const PortfolioTracker = () => {
         spyReturn: spyData[ticker] || 0,
         buyDate: firstLot.date,
         lastUpdated: new Date().toISOString(),
-        sector: realtimeData?.sector || 'Unknown',   
+        sector: realtimeData?.sector as SectorKey || 'Unknown' as SectorKey,   
         industry: realtimeData?.industry || 'Unknown' 
       };
     });
@@ -360,7 +362,7 @@ const PortfolioTracker = () => {
                       />
                     </section>
                     <section className="bg-card rounded-lg shadow-sm">
-                      <div className="h-[460px] md:h-[525px] p-4">
+                      <div className="grid grid-cols-1 gap-4 p-4">
                         <PositionTimelineChart 
                           transactions={transactions}
                           openPositions={openPositions} 

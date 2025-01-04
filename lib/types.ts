@@ -48,11 +48,11 @@ export interface Position {
   forwardPE?: number;
   industryPE?: number;
   spyReturn?: number;
-  sector: string;
-  industry: string;
   beta?: number; 
   dividendYield?: number;
   marketCap?: number;
+  sector: SectorKey;
+  industry: string;
 }
 
 export interface ClosedPosition {
@@ -66,7 +66,13 @@ export interface ClosedPosition {
   percentChange: number;
   spyReturn?: number;
   holdingPeriod: number;
+  sector: SectorKey;
+  industry: string;
 }
+
+export type SectorKey = 'Healthcare' | 'Technology' | 'Energy' | 'Finance' | 
+  'Consumer Cyclical' | 'Consumer Defensive' | 'Industrials' | 
+  'Materials' | 'Real Estate' | 'Utilities' | 'Communication Services';
 
 export interface TransactionFormState {
   date: string;

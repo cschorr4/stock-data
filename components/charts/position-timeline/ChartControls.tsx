@@ -8,7 +8,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import StockSelector from '@/components/StockSelector';
 import { cn } from "@/lib/utils";
-import { format, subMonths } from "date-fns";
+import { format } from "date-fns";
 
 interface ChartControlsProps {
   allTickers: string[];
@@ -18,7 +18,7 @@ interface ChartControlsProps {
   onTickerSelect: (ticker: string) => void;
   onShowPercentageChange: (checked: boolean) => void;
   onTimeRangeChange: (value: string) => void;
-  onCustomDateChange: (from: Date, to: Date) => void;
+  onCustomDateChange?: (from: Date, to: Date) => void;
 }
 
 const presetRanges = [
@@ -46,11 +46,9 @@ export const ChartControls: React.FC<ChartControlsProps> = ({
 
   const handleSelect = (selectedDate: Date | undefined) => {
     setDate(selectedDate);
-    if (selectedDate) {
-      const today = new Date();
-      const defaultRange = subMonths(today, 6); // Default to 6 months back if no end date
-      const startDate = selectedDate < defaultRange ? selectedDate : defaultRange;
-      onCustomDateChange(startDate, today);
+    if (selectedDate && onCustomDateChange) {
+      const endDate = new Date();
+      onCustomDateChange(selectedDate, endDate);
       onTimeRangeChange('Custom');
     }
     setCalendarOpen(false);
