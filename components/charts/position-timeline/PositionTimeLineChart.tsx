@@ -7,13 +7,12 @@ import { RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ChartControls } from './ChartControls';
 import { usePositionTimeline, useChartDataProcessing } from './hooks/useChartData';
-import { DateRange } from 'react-day-picker';
 import { PositionTimelineChartProps, ChartDataPoint, ChartPoint} from '@/lib/types';
-
 
 const PositionTimelineChart: React.FC<PositionTimelineChartProps> = ({ openPositions, closedPositions }) => {
   const [timeRange, setTimeRange] = useState<string>('6M');
-  const [dateRange] = useState<DateRange | undefined>();
+  const [startDate, setStartDate] = useState<Date | null>(null);
+  const [endDate, setEndDate] = useState<Date | null>(null);
   const [showPercentage, setShowPercentage] = useState<boolean>(false);
   const [selectedTickers, setSelectedTickers] = useState<string[]>(['SPY']);
   const [chartData, setChartData] = useState<ChartDataPoint[]>([]);
@@ -42,6 +41,11 @@ const PositionTimelineChart: React.FC<PositionTimelineChartProps> = ({ openPosit
 
   const processedChartData = useChartDataProcessing(filteredChartData, positionStates, showPercentage);
 
+  const handleCustomDateChange = (from: Date, to: Date) => {
+    setStartDate(from);
+    setEndDate(to);
+  };
+
   const fetchData = async () => {
     setIsLoading(true);
     setError(null);
@@ -49,8 +53,8 @@ const PositionTimelineChart: React.FC<PositionTimelineChartProps> = ({ openPosit
       const tickers = Array.from(new Set([...selectedTickers, 'SPY']));
       let url = '/api/stock/chart?';
       
-      if (timeRange === 'Custom' && dateRange?.from && dateRange?.to) {
-        url += `start=${format(dateRange.from, 'yyyy-MM-dd')}&end=${format(dateRange.to, 'yyyy-MM-dd')}`;
+      if (timeRange === 'Custom' && startDate && endDate) {
+        url += `start=${format(startDate, 'yyyy-MM-dd')}&end=${format(endDate, 'yyyy-MM-dd')}`;
       } else {
         url += `range=${timeRange}`;
       }
@@ -96,8 +100,9 @@ const PositionTimelineChart: React.FC<PositionTimelineChartProps> = ({ openPosit
 
   useEffect(() => {
     fetchData();
-  }, [timeRange, dateRange, selectedTickers, retryCount]);
+  }, [timeRange, startDate, endDate, selectedTickers, retryCount]);
 
+  // Loading state with enhanced animation
   if (isLoading) {
     return (
       <Card>
@@ -138,7 +143,7 @@ const PositionTimelineChart: React.FC<PositionTimelineChartProps> = ({ openPosit
       </Card>
     );
   }
-
+  // Error state with retry button
   if (error) {
     return (
       <Card>
@@ -146,12 +151,13 @@ const PositionTimelineChart: React.FC<PositionTimelineChartProps> = ({ openPosit
           <CardTitle>Position Timeline</CardTitle>
         </CardHeader>
         <CardContent>
-          <Alert variant="destructive">
+          <Alert variant="destructive" className="mb-4">
             <AlertDescription className="flex flex-col gap-4">
-              <p>{error}</p>
+              <p className="text-sm">{error}</p>
               <Button 
                 onClick={() => setRetryCount(c => c + 1)}
                 variant="outline"
+                size="sm"
                 className="w-fit"
               >
                 <RefreshCw className="mr-2 h-4 w-4" />
@@ -163,7 +169,7 @@ const PositionTimelineChart: React.FC<PositionTimelineChartProps> = ({ openPosit
       </Card>
     );
   }
-  
+
   return (
     <Card>
       <CardHeader>
@@ -183,6 +189,7 @@ const PositionTimelineChart: React.FC<PositionTimelineChartProps> = ({ openPosit
             }}
             onShowPercentageChange={setShowPercentage}
             onTimeRangeChange={setTimeRange}
+            onCustomDateChange={handleCustomDateChange}
           />
         </div>
       </CardHeader>
@@ -208,7 +215,7 @@ const PositionTimelineChart: React.FC<PositionTimelineChartProps> = ({ openPosit
               <Tooltip
                 labelFormatter={(label) => format(new Date(label as string), 'PPP')}
                 formatter={(value: number, name: string) => {
-                  const displayName = name.split('_')[0];
+                  const displayName = typeof name === 'string' ? name.split('_')[0] : name;
                   const formattedValue = showPercentage 
                     ? `${value.toFixed(1)}%` 
                     : `$${value.toFixed(2)}`;
@@ -220,7 +227,7 @@ const PositionTimelineChart: React.FC<PositionTimelineChartProps> = ({ openPosit
                 type="monotone"
                 dataKey="SPY"
                 stroke="#888888"
-                strokeWidth={1}
+                strokeWidth={2}
                 dot={false}
               />
 
@@ -230,7 +237,7 @@ const PositionTimelineChart: React.FC<PositionTimelineChartProps> = ({ openPosit
                     type="monotone"
                     dataKey={`${ticker}_inactive`}
                     stroke="#888888"
-                    strokeWidth={1}
+                    strokeWidth={2}
                     strokeDasharray="3 3"
                     dot={false}
                   />
