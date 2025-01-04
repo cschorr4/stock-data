@@ -23,6 +23,8 @@ import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
 import { FinancialData } from '@/lib/types';
 import FinancialViewer from './tables/FinancialViewer';
+import LoadingScreen from '@/components/LoadingScreen';
+
 
 type ViewType = 'overview' | 'open-positions' | 'closed-positions' | 'transactions' | 'financials';
 
@@ -427,13 +429,7 @@ const PortfolioTracker = () => {
 
   if (isLoading) {
     return (
-      <motion.div 
-        className="flex items-center justify-center h-screen"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-      >
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-      </motion.div>
+      <LoadingScreen />
     );
   }
 
