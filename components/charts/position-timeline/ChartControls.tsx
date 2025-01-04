@@ -134,12 +134,10 @@ export const ChartControls: React.FC<ChartControlsProps> = ({
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="end">
               <CalendarComponent
-                mode="single"
                 selected={date}
                 onSelect={handleSelect}
                 fromDate={new Date('1900-01-01')}
                 toDate={new Date()}
-                initialFocus
               />
             </PopoverContent>
           </Popover>
