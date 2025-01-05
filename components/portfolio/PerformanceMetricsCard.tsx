@@ -60,8 +60,6 @@ const PerformanceMetricsCard: React.FC<PerformanceMetricsCardProps> = ({
       return acc;
     }, []);
 
-  const totalProfits = totals.realizedProfits + totals.unrealizedProfits;
-
   return (
     <Card className="w-[440px] xs:w-[400px] sm:w-[440px] md:w-[480px] bg-gradient-to-br from-purple-50 to-fuchsia-50 dark:from-purple-900/20 dark:to-fuchsia-900/20 rounded-xl border-0 shadow-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
       <CardContent className="p-4 relative">
