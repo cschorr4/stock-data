@@ -18,7 +18,7 @@ const PositionTimelineChart: React.FC<PositionTimelineChartProps> = ({ openPosit
   const [chartData, setChartData] = useState<ChartDataPoint[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState<boolean>(false);
+  const [isMobile] = useState<boolean>(false);
   const [retryCount, setRetryCount] = useState<number>(0);
 
   const fetchData = useCallback(async () => {
