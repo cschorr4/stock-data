@@ -44,9 +44,6 @@ type ViewType = 'overview' | 'open-positions' | 'closed-positions' | 'transactio
 const PortfolioTracker = () => {
   // States
   const { getCurrentUser } = useAuth();
-  const [transactions, setTransactions] = useState<Transaction[]>(() => 
-    getLocalStorage<Transaction[]>('stockTransactions', [])
-  );
   const [realtimePrices, setRealtimePrices] = useState<MarketData>({});
   const [spyData, setSpyData] = useState<Record<string, number>>({});
   const [isLoading, setIsLoading] = useState(true);
@@ -56,6 +53,7 @@ const PortfolioTracker = () => {
   const [financialLoading, setFinancialLoading] = useState(false);
   const [financialError, setFinancialError] = useState('');
   const [symbolInput, setSymbolInput] = useState('');
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
 
   const fetchStockData = useCallback(async (symbols: string[], buyDates: string[]) => {
     try {
@@ -258,6 +256,29 @@ const PortfolioTracker = () => {
     return { metrics, totals, openPositions, closedPositions };
   }, [calculatePositions]);
 
+  const [transactionsLoading, setTransactionsLoading] = useState(true);
+
+useEffect(() => {
+  const loadInitialTransactions = async () => {
+    setTransactionsLoading(true);
+    try {
+      const loadedTransactions = await storageService.loadTransactions();
+      setTransactions(loadedTransactions);
+    } catch (error) {
+      console.error('Error loading transactions:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to load transactions",
+      });
+    } finally {
+      setTransactionsLoading(false);
+    }
+  };
+
+  loadInitialTransactions();
+}, []);
+
   useEffect(() => {
     const fetchPrices = async () => {
       const uniqueTransactions = transactions
@@ -317,15 +338,13 @@ const PortfolioTracker = () => {
     const interval = setInterval(fetchPrices, 300000); // Update every 5 minutes
     return () => clearInterval(interval);
   }, [transactions, fetchStockData]);
-
-  // Transaction handlers
   
   const handleTransactionAdd = async (formData: TransactionFormData) => {
     try {
       const user = await getCurrentUser();
       const newTransaction: Transaction = {
         ...formData,
-        id: crypto.randomUUID(), // Use UUID string
+        id: crypto.randomUUID(), 
         user_id: user.id,
         total_amount: formData.price * formData.shares
       };
