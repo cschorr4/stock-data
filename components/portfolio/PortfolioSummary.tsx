@@ -10,7 +10,6 @@ import SectorBreakdownCard from './SectorBreakdownCard';
 import PerformanceMetricsCard from './PerformanceMetricsCard';
 import RiskMetricsCard from './RiskMetricsCard';
 import ValueDistributionCard from './ValueDistributionCard';
-import RecentTradesCard from './RecentTradesCard';
 
 // Utils
 import {

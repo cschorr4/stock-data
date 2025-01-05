@@ -21,12 +21,61 @@ const PositionTimelineChart: React.FC<PositionTimelineChartProps> = ({ openPosit
   const [isMobile, setIsMobile] = useState<boolean>(false);
   const [retryCount, setRetryCount] = useState<number>(0);
 
+  const fetchData = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const tickers = Array.from(new Set([...selectedTickers, 'SPY']));
+      let url = '/api/stock/chart?';
+      
+      if (timeRange === 'Custom' && startDate && endDate) {
+        url += `start=${format(startDate, 'yyyy-MM-dd')}&end=${format(endDate, 'yyyy-MM-dd')}`;
+      } else {
+        url += `range=${timeRange}`;
+      }
+  
+      const responses = await Promise.all(
+        tickers.map(async ticker => {
+          const response = await fetch(`${url}&symbol=${ticker}`);
+          if (!response.ok) {
+            throw new Error(`Failed to fetch ${ticker}: ${response.statusText}`);
+          }
+          return response.json();
+        })
+      );
+  
+      const allDates = new Set();
+      responses.forEach((data: any[]) => 
+        data.forEach((point: { date: string }) => allDates.add(point.date))
+      );
+  
+      const combinedData = Array.from(allDates)
+        .sort()
+        .map(date => {
+          const point = { date: date as string } as { date: string } & { [key: string]: number | null };
+          tickers.forEach((ticker, idx) => {
+            const tickerData = responses[idx].find((d: { date: string }) => d.date === date);
+            point[ticker] = tickerData?.close ?? tickerData?.price ?? null;
+          });
+          return point;
+        });
+  
+      setChartData(combinedData);
+    } catch (err) {
+      console.error('Error fetching chart data:', err);
+      if (err instanceof Error) {
+        setError(err.message || 'Failed to load chart data');
+      } else {
+        setError('Failed to load chart data');
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  }, [timeRange, startDate, endDate, selectedTickers]); 
+  
   useEffect(() => {
-    setIsMobile(window.innerWidth < 768);
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+    fetchData();
+  }, [fetchData, retryCount]);
 
   const positionStates = usePositionTimeline(openPositions, closedPositions);
   const filteredChartData = chartData.map(point => {
@@ -45,62 +94,6 @@ const PositionTimelineChart: React.FC<PositionTimelineChartProps> = ({ openPosit
     setStartDate(from);
     setEndDate(to);
   };
-
-  const fetchData = async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const tickers = Array.from(new Set([...selectedTickers, 'SPY']));
-      let url = '/api/stock/chart?';
-      
-      if (timeRange === 'Custom' && startDate && endDate) {
-        url += `start=${format(startDate, 'yyyy-MM-dd')}&end=${format(endDate, 'yyyy-MM-dd')}`;
-      } else {
-        url += `range=${timeRange}`;
-      }
-
-      const responses = await Promise.all(
-        tickers.map(async ticker => {
-          const response = await fetch(`${url}&symbol=${ticker}`);
-          if (!response.ok) {
-            throw new Error(`Failed to fetch ${ticker}: ${response.statusText}`);
-          }
-          return response.json();
-        })
-      );
-
-      const allDates = new Set();
-      responses.forEach((data: any[]) => 
-        data.forEach((point: { date: string }) => allDates.add(point.date))
-      );
-
-      const combinedData = Array.from(allDates)
-        .sort()
-        .map(date => {
-          const point = { date: date as string } as { date: string } & { [key: string]: number | null };
-          tickers.forEach((ticker, idx) => {
-            const tickerData = responses[idx].find((d: { date: string }) => d.date === date);
-            point[ticker] = tickerData?.close ?? tickerData?.price ?? null;
-          });
-          return point;
-        });
-
-      setChartData(combinedData);
-    } catch (err) {
-      console.error('Error fetching chart data:', err);
-      if (err instanceof Error) {
-        setError(err.message || 'Failed to load chart data');
-      } else {
-        setError('Failed to load chart data');
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchData();
-  }, [timeRange, startDate, endDate, selectedTickers, retryCount]);
 
   // Loading state with enhanced animation
   if (isLoading) {
