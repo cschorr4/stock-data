@@ -1,13 +1,16 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { BarChart2, ArrowRight } from 'lucide-react';
+import { BarChart2, ArrowRight, PieChart } from 'lucide-react';
 import {
   BarChart,
   Bar,
   Cell,
   ResponsiveContainer,
   Tooltip,
-  ReferenceLine
+  ReferenceLine,
+  XAxis,
+  YAxis,
+  CartesianGrid
 } from 'recharts';
 import { formatCurrency, formatPercentage } from './utils/portfolio-utils';
 import _ from 'lodash';
@@ -51,40 +54,53 @@ const ValueDistributionCard: React.FC<ValueDistributionCardProps> = ({
   }));
 
   const getBarColor = (value: number) => {
-    if (value > 20) return '#dc2626'; // red
-    if (value > 15) return '#ea580c'; // orange
-    if (value > 10) return '#ca8a04'; // yellow
-    return '#059669'; // green
+    if (value > 20) return '#dc2626'; // High concentration - red
+    if (value > 15) return '#f97316'; // Medium-high - orange
+    if (value > 10) return '#eab308'; // Medium - yellow
+    return '#16a34a'; // Good - green
   };
 
   return (
-    <Card className="flex-none w-[220px] xs:w-[200px] sm:w-[220px] md:w-[240px] bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-xl border-0 shadow-sm transition-all duration-200 hover:shadow-md">
-      <CardContent className="p-3">
-        <div className="space-y-2">
-          {/* Header */}
+    <Card className="w-[220px] xs:w-[200px] sm:w-[220px] md:w-[240px] bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 rounded-xl border-0 shadow-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
+      <CardContent className="p-4 relative">
+        <div className="space-y-4">
+          {/* Header with improved styling */}
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="rounded-full bg-white/10 p-1">
-                <BarChart2 className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+            <div className="flex items-center gap-3">
+              <div className="rounded-lg bg-white/20 dark:bg-white/10 backdrop-blur-sm p-2 shadow-sm">
+                <PieChart className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
               </div>
-              <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
                 Value Distribution
               </span>
             </div>
           </div>
 
-          {/* Distribution Chart */}
-          <div className="h-24">
+          {/* Distribution Chart with improved height and axes */}
+          <div className="h-32">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData}>
+              <BarChart data={chartData} margin={{ top: 5, right: 5, bottom: 5, left: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#16a34a" strokeOpacity={0.1} />
+                <XAxis 
+                  dataKey="name"
+                  tick={{ fontSize: 10, fill: '#16a34a' }}
+                  stroke="#16a34a"
+                  strokeOpacity={0.4}
+                />
+                <YAxis
+                  tick={{ fontSize: 10, fill: '#16a34a' }}
+                  stroke="#16a34a"
+                  strokeOpacity={0.4}
+                  tickFormatter={(value) => `${value}%`}
+                />
                 <Tooltip
                   content={({ active, payload }) => {
                     if (active && payload && payload.length) {
                       const data = payload[0].payload;
                       return (
-                        <div className="bg-white dark:bg-gray-800 p-2 rounded shadow-lg border border-gray-200 dark:border-gray-700">
-                          <p className="text-xs font-medium">{data.name}</p>
-                          <p className="text-xs text-gray-600 dark:text-gray-400">
+                        <div className="bg-white dark:bg-gray-800 p-2 rounded shadow-md border border-gray-200 dark:border-gray-700">
+                          <p className="text-sm font-medium">{data.name}</p>
+                          <p className="text-xs text-emerald-600 dark:text-emerald-400">
                             Value: {formatCurrency(data.actualValue)}
                           </p>
                           <p className="text-xs text-gray-600 dark:text-gray-400">
@@ -99,7 +115,7 @@ const ValueDistributionCard: React.FC<ValueDistributionCardProps> = ({
                     return null;
                   }}
                 />
-                <ReferenceLine y={10} stroke="#059669" strokeDasharray="3 3" />
+                <ReferenceLine y={10} stroke="#16a34a" strokeDasharray="3 3" />
                 <ReferenceLine y={20} stroke="#dc2626" strokeDasharray="3 3" />
                 <Bar dataKey="value" radius={[4, 4, 0, 0]}>
                   {chartData.map((entry, index) => (
@@ -110,48 +126,54 @@ const ValueDistributionCard: React.FC<ValueDistributionCardProps> = ({
             </ResponsiveContainer>
           </div>
 
-          {/* Concentration Metrics */}
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">
+          {/* Concentration Metrics with improved styling */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <p className="text-xs font-medium text-gray-600 dark:text-gray-400">
                 Top 3 Weight
               </p>
-              <div className="flex items-center gap-1">
-                <ArrowRight className="w-3 h-3 text-purple-600" />
-                <p className={`text-xs font-medium ${
-                  top3Allocation > 50 ? 'text-red-600' : 'text-purple-600'
+              <div className="flex items-center gap-2">
+                <ArrowRight className="w-4 h-4 text-emerald-600" />
+                <p className={`text-sm font-semibold ${
+                  top3Allocation > 50 ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400'
                 }`}>
                   {formatPercentage(top3Allocation)}
                 </p>
               </div>
             </div>
-            <div>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">
+            <div className="space-y-1">
+              <p className="text-xs font-medium text-gray-600 dark:text-gray-400">
                 Top 5 Weight
               </p>
-              <div className="flex items-center gap-1">
-                <ArrowRight className="w-3 h-3 text-purple-600" />
-                <p className={`text-xs font-medium ${
-                  top5Allocation > 70 ? 'text-red-600' : 'text-purple-600'
+              <div className="flex items-center gap-2">
+                <ArrowRight className="w-4 h-4 text-emerald-600" />
+                <p className={`text-sm font-semibold ${
+                  top5Allocation > 70 ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400'
                 }`}>
                   {formatPercentage(top5Allocation)}
                 </p>
               </div>
             </div>
-            <div>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">
-                Largest Pos
+          </div>
+
+          {/* Additional Metrics */}
+          <div className="grid grid-cols-2 gap-4 pt-1">
+            <div className="space-y-1">
+              <p className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                Largest Position
               </p>
-              <p className="text-xs font-medium text-purple-600">
-                {positionsByValue[0]?.ticker} 
-                ({formatPercentage(positionsByValue[0]?.allocation || 0)})
+              <p className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">
+                {positionsByValue[0]?.ticker}
+                <span className="text-xs ml-1 text-gray-500">
+                  ({formatPercentage(positionsByValue[0]?.allocation || 0)})
+                </span>
               </p>
             </div>
-            <div>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">
+            <div className="space-y-1">
+              <p className="text-xs font-medium text-gray-600 dark:text-gray-400">
                 Position Count
               </p>
-              <p className="text-xs font-medium text-gray-600">
+              <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                 {positions.length}
               </p>
             </div>

@@ -231,29 +231,31 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
   return (
     <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
       <div className="flex flex-col space-y-4 p-6">
-        <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
-          <div className="flex items-center gap-2">
-            <h3 className="text-2xl font-semibold leading-none tracking-tight">Transaction Log</h3>
-            <Badge variant="secondary">
-              {transactions.length} transactions
-            </Badge>
-          </div>
-          <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={onSync}
-              className="min-w-10"
-            >
-              <CloudUpload className="h-4 w-4" />
-              <span className="hidden sm:ml-2 sm:inline">Sync</span>
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>Sync with cloud storage</TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+            <div className="flex items-center gap-2">
+              <h3 className="text-2xl font-semibold leading-none tracking-tight">Transaction Log</h3>
+              <Badge variant="secondary" className="text-xs px-2 py-0.5 whitespace-nowrap">
+                {transactions.length} transactions
+              </Badge>
+            </div>
+            <div className="flex items-center gap-2">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={onSync}
+                      className="h-8 px-2 flex items-center gap-1.5"
+                    >
+                      <CloudUpload className="h-4 w-4" />
+                      <span className="sm:inline text-sm font-medium">Sync</span>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Sync with cloud storage</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
             <Input
               placeholder="Filter by ticker..."

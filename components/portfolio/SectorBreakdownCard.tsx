@@ -13,20 +13,9 @@ interface SectorBreakdownCardProps {
 }
 
 const COLORS = [
-  '#60a5fa', // blue-400
-  '#34d399', // emerald-400
-  '#a78bfa', // violet-400
-  '#f87171', // red-400
-  '#fbbf24', // amber-400
-  '#a855f7', // purple-400
-  '#ec4899', // pink-400
-  '#14b8a6', // teal-400
-  '#f472b6', // pink-400
-  '#22d3ee', // cyan-400
-  '#6366f1', // indigo-400
-  '#fb923c', // orange-400
-  '#4ade80', // green-400
-  '#e879f9', // fuchsia-400
+  '#60a5fa', '#34d399', '#a78bfa', '#f87171', '#fbbf24',
+  '#a855f7', '#ec4899', '#14b8a6', '#f472b6', '#22d3ee',
+  '#6366f1', '#fb923c', '#4ade80', '#e879f9',
 ];
 
 const CustomTooltip = ({ active, payload }: any) => {
@@ -53,22 +42,22 @@ const SectorBreakdownCard: React.FC<SectorBreakdownCardProps> = ({ sectorData })
 
   return (
     <Card className="flex-none w-[220px] xs:w-[200px] sm:w-[220px] md:w-[240px] bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-xl border-0 shadow-sm transition-all duration-200 hover:shadow-md">
-      <CardContent className="p-3">
-        <div className="space-y-2">
+      <CardContent className="p-4">
+        <div className="space-y-3">
           {/* Header */}
           <div className="flex items-center gap-2">
-            <div className="rounded-full bg-white/10 p-1">
+            <div className="rounded-full bg-indigo-100 dark:bg-indigo-900/30 p-1.5">
               <PieChartIcon className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
             </div>
-            <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
+            <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
               Sector Breakdown
             </span>
           </div>
 
           {/* Main Content */}
-          <div className="flex gap-2">
+          <div className="flex gap-3">
             {/* Chart */}
-            <div className="w-24 h-24">
+            <div className="w-28 h-28">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
@@ -77,8 +66,8 @@ const SectorBreakdownCard: React.FC<SectorBreakdownCardProps> = ({ sectorData })
                     nameKey="sector"
                     cx="50%"
                     cy="50%"
-                    innerRadius={20}
-                    outerRadius={40}
+                    innerRadius={24}
+                    outerRadius={42}
                     paddingAngle={2}
                   >
                     {filteredData.map((entry, index) => (
@@ -86,7 +75,7 @@ const SectorBreakdownCard: React.FC<SectorBreakdownCardProps> = ({ sectorData })
                         key={`cell-${index}`}
                         fill={COLORS[index % COLORS.length]}
                         className="stroke-white dark:stroke-gray-800"
-                        strokeWidth={2}
+                        strokeWidth={1.5}
                       />
                     ))}
                   </Pie>
@@ -96,20 +85,20 @@ const SectorBreakdownCard: React.FC<SectorBreakdownCardProps> = ({ sectorData })
             </div>
 
             {/* Legend */}
-            <ScrollArea className="flex-1 h-24">
-              <div className="space-y-1 pr-4">
+            <ScrollArea className="flex-1 h-28">
+              <div className="space-y-1.5 pr-2">
                 {filteredData.map((item, index) => (
                   <div key={item.sector} className="flex items-center justify-between text-xs">
                     <div className="flex items-center gap-1.5">
                       <div 
-                        className="w-2 h-2 rounded-full flex-shrink-0" 
+                        className="w-2.5 h-2.5 rounded-full flex-shrink-0" 
                         style={{ backgroundColor: COLORS[index % COLORS.length] }}
                       />
-                      <span className="text-gray-600 dark:text-gray-400 truncate max-w-[80px]">
+                      <span className="text-gray-700 dark:text-gray-300 truncate max-w-[90px]">
                         {item.sector}
                       </span>
                     </div>
-                    <span className="font-medium whitespace-nowrap">
+                    <span className="font-medium whitespace-nowrap text-gray-900 dark:text-gray-100">
                       {item.allocation.toFixed(1)}%
                     </span>
                   </div>

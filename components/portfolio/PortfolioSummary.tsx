@@ -10,6 +10,7 @@ import SectorBreakdownCard from './SectorBreakdownCard';
 import PerformanceMetricsCard from './PerformanceMetricsCard';
 import RiskMetricsCard from './RiskMetricsCard';
 import ValueDistributionCard from './ValueDistributionCard';
+import PortfolioValueCard from './PortfolioValueCard';
 
 // Utils
 import {
@@ -41,6 +42,9 @@ const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
     }, 
     [sectorData]
   );
+  const portfolioMetrics = {
+    totalValue: metrics.totalValue,
+  };
 
   return (
     <div className="w-full space-y-6">
@@ -52,20 +56,12 @@ const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
         <div className="overflow-x-auto snap-x snap-mandatory scrollbar-none">
           <div className="flex gap-4 px-4 pb-4 w-max min-w-full">
             {/* Portfolio Value */}
-            <MetricCard
-              title="Portfolio Value"
-              icon={<DollarSign className="w-4 h-4 text-blue-600 dark:text-blue-400" />}
-              mainValue={formatCurrency(metrics.totalValue)}
-              mainValueColor="text-blue-600 dark:text-blue-400"
-              metric1Label="Daily P/L"
-              metric1Value={formatCurrency(totals.realizedProfits)}
-              metric1Color={getColorForValue(totals.realizedProfits)}
-              metric2Label="Total Return"
-              metric2Value={formatPercentage(totals.totalReturn)}
-              metric2Color={getColorForValue(totals.totalReturn)}
-              gradient="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20"
+            <PortfolioValueCard
+              openPositions={openPositions}
+              closedPositions={closedPositions}
+              totals={totals}
             />
-            
+                        
             {/* Performance Metrics */}
             <PerformanceMetricsCard 
               metrics={metrics}

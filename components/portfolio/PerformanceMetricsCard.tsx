@@ -5,7 +5,10 @@ import {
   AreaChart,
   Area,
   ResponsiveContainer,
-  Tooltip
+  Tooltip,
+  XAxis,
+  YAxis,
+  CartesianGrid
 } from 'recharts';
 import { formatCurrency, formatPercentage } from './utils/portfolio-utils';
 
@@ -61,131 +64,138 @@ const PerformanceMetricsCard: React.FC<PerformanceMetricsCardProps> = ({
   const totalProfits = totals.realizedProfits + totals.unrealizedProfits;
 
   return (
-    <Card className="flex-none w-[220px] xs:w-[200px] sm:w-[220px] md:w-[240px] bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl border-0 shadow-sm transition-all duration-200 hover:shadow-md">
-      <CardContent className="p-3">
-        <div className="space-y-2">
-          {/* Header */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="rounded-full bg-white/10 p-1">
-                <Trophy className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+    <Card className="w-[440px] xs:w-[400px] sm:w-[440px] md:w-[480px] bg-gradient-to-br from-cyan-50 to-teal-50 dark:from-cyan-900/20 dark:to-teal-900/20 rounded-xl border-0 shadow-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
+      <CardContent className="p-4 relative">
+        <div className="space-y-4">
+          {/* Header with improved styling */}
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-3">
+              <div className="rounded-lg bg-white/20 dark:bg-white/10 backdrop-blur-sm p-2 shadow-sm">
+                <Trophy className="w-4 h-4 text-teal-600 dark:text-teal-400" />
               </div>
-              <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
-                Performance
+              <span className="text-base font-medium text-gray-700 dark:text-gray-200">
+                Performance Metrics
               </span>
             </div>
-            <div className="flex items-center gap-1">
-              <span className={`text-xs font-medium ${
+            <div className="bg-white/30 dark:bg-white/10 rounded-lg px-3 py-1.5">
+              <span className={`text-sm font-bold ${
                 totals.totalReturn >= 0 
                 ? 'text-green-600 dark:text-green-400' 
                 : 'text-red-600 dark:text-red-400'
               }`}>
-                {formatPercentage(totals.totalReturn)}
+                {formatPercentage(totals.totalReturn)} Total Return
               </span>
             </div>
           </div>
 
-          {/* Performance Chart */}
-          <div className="h-24">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={performanceData}>
-                <defs>
-                  <linearGradient id="performanceGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <Tooltip
-                  content={({ active, payload }) => {
-                    if (active && payload && payload.length) {
-                      const data = payload[0].payload as ChartDataPoint;
-                      return (
-                        <div className="bg-white dark:bg-gray-800 p-2 rounded shadow-lg border border-gray-200 dark:border-gray-700">
-                          <p className="text-xs font-medium">{data.date}</p>
-                          <p className="text-xs text-blue-600 dark:text-blue-400">
-                            {formatCurrency(data.value)}
-                          </p>
-                          <p className="text-xs text-gray-600 dark:text-gray-400">
-                            Return: {formatPercentage(data.return)}
-                          </p>
-                        </div>
-                      );
-                    }
-                    return null;
-                  }}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="value"
-                  stroke="#3b82f6"
-                  fill="url(#performanceGradient)"
-                  strokeWidth={2}
-                  isAnimationActive={false}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
+          <div className="grid grid-cols-2 gap-6">
+            {/* Left column: Chart */}
+            <div className="space-y-2">
+              <div className="h-44">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={performanceData} margin={{ top: 5, right: 5, bottom: 5, left: 5 }}>
+                    <defs>
+                      <linearGradient id="performanceGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#0d9488" stopOpacity={0.3} />
+                        <stop offset="95%" stopColor="#0d9488" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#0d9488" strokeOpacity={0.1} />
+                    <XAxis 
+                      dataKey="date" 
+                      tick={{ fontSize: 10, fill: '#0d9488' }}
+                      stroke="#0d9488"
+                      strokeOpacity={0.4}
+                    />
+                    <YAxis 
+                      tick={{ fontSize: 10, fill: '#0d9488' }}
+                      stroke="#0d9488"
+                      strokeOpacity={0.4}
+                      tickFormatter={(value) => `$${Math.abs(value)}`}
+                    />
+                    <Tooltip
+                      content={({ active, payload }) => {
+                        if (active && payload && payload.length) {
+                          const data = payload[0].payload as ChartDataPoint;
+                          return (
+                            <div className="bg-white dark:bg-gray-800 p-2 rounded shadow-md border border-gray-200 dark:border-gray-700">
+                              <p className="text-xs font-medium">{data.date}</p>
+                              <p className="text-xs text-teal-600 dark:text-teal-400">
+                                {formatCurrency(data.value)}
+                              </p>
+                              <p className="text-xs text-gray-600 dark:text-gray-400">
+                                Return: {formatPercentage(data.return)}
+                              </p>
+                            </div>
+                          );
+                        }
+                        return null;
+                      }}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="value"
+                      stroke="#0d9488"
+                      fill="url(#performanceGradient)"
+                      strokeWidth={2}
+                      isAnimationActive={false}
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
 
-          {/* Performance Metrics */}
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">
-                Realized P/L
-              </p>
-              <div className="flex items-center gap-1">
-                <DollarSign className="w-3 h-3 text-blue-600" />
-                <p className={`text-xs font-medium ${
-                  totals.realizedProfits >= 0 
-                    ? 'text-green-600' 
-                    : 'text-red-600'
-                }`}>
-                  {formatCurrency(totals.realizedProfits)}
+            {/* Right column: Metrics */}
+            <div className="grid grid-cols-1 gap-4">
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                  Realized P/L
                 </p>
+                <div className="flex items-center gap-2">
+                  <DollarSign className="w-5 h-5 text-teal-600" />
+                  <p className={`text-xl font-bold ${
+                    totals.realizedProfits >= 0 
+                      ? 'text-green-600 dark:text-green-400' 
+                      : 'text-red-600 dark:text-red-400'
+                  }`}>
+                    {formatCurrency(totals.realizedProfits)}
+                  </p>
+                </div>
               </div>
-            </div>
-            <div>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">
-                Win Rate
-              </p>
-              <div className="flex items-center gap-1">
-                <TrendingUp className="w-3 h-3 text-green-600" />
-                <p className="text-xs font-medium text-green-600">
-                  {formatPercentage(metrics.winRate)}
+              
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                  Win Rate
                 </p>
+                <div className="flex items-center gap-2">
+                  <TrendingUp className="w-5 h-5 text-green-600" />
+                  <p className="text-xl font-bold text-green-600 dark:text-green-400">
+                    {formatPercentage(metrics.winRate)}
+                  </p>
+                </div>
               </div>
-            </div>
-            <div>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">
-                Avg Win
-              </p>
-              <p className="text-xs font-medium text-green-600">
-                {formatPercentage(metrics.avgWinPercent)}
-              </p>
-            </div>
-            <div>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">
-                Avg Hold Time
-              </p>
-              <div className="flex items-center gap-1">
-                <Timer className="w-3 h-3 text-gray-600" />
-                <p className="text-xs font-medium text-gray-600">
-                  {metrics.avgHoldingPeriodWinners}d
-                </p>
-              </div>
-            </div>
-            <div>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">
-                Total P/L
-              </p>
-              <div className="flex items-center gap-1">
-                <DollarSign className="w-3 h-3 text-blue-600" />
-                <p className={`text-xs font-medium ${
-                  totalProfits >= 0 
-                    ? 'text-green-600' 
-                    : 'text-red-600'
-                }`}>
-                  {formatCurrency(totalProfits)}
-                </p>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                    Average Win
+                  </p>
+                  <p className="text-lg font-bold text-green-600 dark:text-green-400">
+                    {formatPercentage(metrics.avgWinPercent)}
+                  </p>
+                </div>
+
+                <div className="space-y-1">
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                    Avg Hold Time
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <Timer className="w-5 h-5 text-teal-600" />
+                    <p className="text-lg font-bold text-gray-700 dark:text-gray-300">
+                      {metrics.avgHoldingPeriodWinners}d
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
