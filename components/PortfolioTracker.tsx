@@ -38,7 +38,6 @@ import {
   StockQuote, 
   SectorKey 
 } from '@/lib/types';
-import { v4 as uuidv4 } from 'uuid';  
 
 type ViewType = 'overview' | 'open-positions' | 'closed-positions' | 'transactions' | 'financials';
 
