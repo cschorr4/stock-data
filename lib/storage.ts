@@ -1,7 +1,9 @@
 // lib/storage.ts
 
+export const LOCAL_STORAGE_KEY = 'stockTransactions';
+
 export const getLocalStorage = <T,>(key: string, defaultValue: T): T => {
-    if (typeof window === 'undefined') return defaultValue;
+  if (typeof window === 'undefined') return defaultValue;
     try {
       const item = localStorage.getItem(key);
       return item ? JSON.parse(item) : defaultValue;

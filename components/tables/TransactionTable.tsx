@@ -18,16 +18,18 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/components/ui/use-toast';
-import { Transaction } from '@/lib/types';
 import TransactionForm from './TransactionForm';
+import { CloudUpload } from 'lucide-react';
 import { exportToJSON, exportToCSV, downloadFile, parseCSVFile} from '@/lib/transactions';
+import { Transaction, TransactionFormData } from '@/lib/types';
 
 interface TransactionTableProps {
   transactions: Transaction[];
   onTransactionAdd: (transaction: Transaction) => void;
   onTransactionEdit: (transaction: Transaction) => void;
-  onTransactionDelete: (id: number) => void;
+  onTransactionDelete: (id: string) => void;  // Changed from number to string
   onTransactionsDeleteAll: () => void;
+  onSync: () => void;
 }
 
 const TransactionTable: React.FC<TransactionTableProps> = ({
@@ -36,6 +38,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
   onTransactionEdit,
   onTransactionDelete,
   onTransactionsDeleteAll,
+  onSync
 }) => {
   const { toast } = useToast();
   const [filter, setFilter] = React.useState('');
@@ -67,9 +70,11 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
         const valueA = a[sortConfig.key];
         const valueB = b[sortConfig.key];
         
+        if (valueA === undefined || valueB === undefined) return 0;
+        
         return sortConfig.direction === 'asc' 
-          ? valueA < valueB ? -1 : valueA > valueB ? 1 : 0
-          : valueA > valueB ? -1 : valueA < valueB ? 1 : 0;
+          ? (valueA < valueB ? -1 : valueA > valueB ? 1 : 0)
+          : (valueA > valueB ? -1 : valueA < valueB ? 1 : 0);
       });
   }, [transactions, filter, sortConfig]);
 
@@ -114,6 +119,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
     className?: string;
   }
    
+
   const ImportButton = ({ className }: ImportButtonProps) => {
     const inputRef = React.useRef<HTMLInputElement>(null);
   
@@ -232,7 +238,22 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
               {transactions.length} transactions
             </Badge>
           </div>
-          
+          <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={onSync}
+              className="min-w-10"
+            >
+              <CloudUpload className="h-4 w-4" />
+              <span className="hidden sm:ml-2 sm:inline">Sync</span>
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Sync with cloud storage</TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
             <Input
               placeholder="Filter by ticker..."
@@ -281,12 +302,20 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
         <DialogTitle>Add New Transaction</DialogTitle>
       </DialogHeader>
       <TransactionForm
-        onSubmit={(transaction: Transaction) => {
-          onTransactionAdd(transaction);
-          setIsAddDialogOpen(false);
-        }}
-        onCancel={() => setIsAddDialogOpen(false)}
-      />
+  onSubmit={(formData: TransactionFormData) => {
+    // Create a full Transaction object including required properties
+    const fullTransaction: Transaction = {
+      ...formData,
+      id: crypto.randomUUID(), // Generate UUID for new transactions
+      user_id: '', // This will be set by the parent component
+      total_amount: formData.price * formData.shares
+    };
+    onTransactionAdd(fullTransaction);
+    setIsAddDialogOpen(false);
+  }}
+  onCancel={() => setIsAddDialogOpen(false)}
+/>
+
     </DialogContent>
   </Dialog>
   {transactions.length > 0 && (
@@ -426,13 +455,20 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
           </DialogHeader>
           {selectedTransaction && (
             <TransactionForm
-              initialData={selectedTransaction}
-              onSubmit={(transaction) => {
-                onTransactionEdit(transaction);
-                setIsEditDialogOpen(false);
-              }}
-              onCancel={() => setIsEditDialogOpen(false)}
-            />
+            initialData={selectedTransaction}
+            onSubmit={(formData: TransactionFormData) => {
+              // Preserve existing id and user_id when editing
+              const updatedTransaction: Transaction = {
+                ...formData,
+                id: selectedTransaction!.id,
+                user_id: selectedTransaction!.user_id,
+                total_amount: formData.price * formData.shares
+              };
+              onTransactionEdit(updatedTransaction);
+              setIsEditDialogOpen(false);
+            }}
+            onCancel={() => setIsEditDialogOpen(false)}
+          />
           )}
         </DialogContent>
       </Dialog>

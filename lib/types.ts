@@ -1,4 +1,4 @@
-// Existing interfaces
+//types.ts
 export interface Transaction {
   id: number;
   date: string;
@@ -6,6 +6,7 @@ export interface Transaction {
   type: 'buy' | 'sell' | 'dividend';
   price: number;
   shares: number;
+  user_id: string;
 }
 
 export interface StockQuote {
@@ -82,6 +83,20 @@ export interface TransactionFormState {
   shares: string;
 }
 
+export interface TransactionFormData {
+  date: string;
+  ticker: string;
+  type: 'buy' | 'sell' | 'dividend';
+  price: number;
+  shares: number;
+}
+
+export interface Transaction extends TransactionFormData {
+  id: string;  // Using string for UUID
+  user_id: string;
+  total_amount?: number;
+}
+
 export interface PortfolioMetrics {
   totalValue: number;
   totalCost: number;
@@ -143,8 +158,9 @@ export interface TransactionTableProps {
   transactions: Transaction[];
   onTransactionAdd: (transaction: Transaction) => void;
   onTransactionEdit: (transaction: Transaction) => void;
-  onTransactionDelete: (id: number) => void;
+  onTransactionDelete: (id: string) => void;
   onTransactionsDeleteAll: () => void;
+  onSync: () => void;
 }
 
 export interface OpenPositionsTableProps {

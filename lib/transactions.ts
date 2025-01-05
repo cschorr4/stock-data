@@ -1,8 +1,9 @@
+// transactions.ts
+
 import { format } from 'date-fns';
 import Papa from 'papaparse';
 import { Transaction } from '@/lib/types';
 
-// Define a type for unvalidated transaction data
 type UnvalidatedTransaction = {
   id?: number;
   date: unknown;

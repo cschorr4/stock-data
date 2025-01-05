@@ -1,3 +1,5 @@
+// Supabase client for the browser
+
 import { createBrowserClient } from "@supabase/ssr";
 
 export const createClient = () =>

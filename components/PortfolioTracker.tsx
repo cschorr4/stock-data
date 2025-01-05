@@ -6,9 +6,9 @@ import {  Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Transaction, Position, ClosedPosition, PortfolioMetrics, PortfolioTotals, MarketData, StockQuote, SectorKey } from '@/lib/types';
 import PortfolioSummary from './portfolio/PortfolioSummary';
 import PositionTimelineChart from './charts/position-timeline/PositionTimeLineChart';
+import { storageService } from '@/lib/supabase-storage';
 import TransactionTable from './tables/TransactionTable';
 import TransactionForm from './tables/TransactionForm';
 import { getLocalStorage, setLocalStorage } from '@/lib/storage';
@@ -24,12 +24,27 @@ import { Search } from 'lucide-react';
 import { FinancialData } from '@/lib/types';
 import FinancialViewer from './tables/FinancialViewer';
 import LoadingScreen from '@/components/LoadingScreen';
-
+import { toast } from './ui/use-toast';
+import { useAuth } from '@/components/hooks/useAuth';
+import { LOCAL_STORAGE_KEY } from '@/lib/storage';
+import { 
+  Transaction, 
+  TransactionFormData,
+  Position, 
+  ClosedPosition,
+  PortfolioMetrics, 
+  PortfolioTotals, 
+  MarketData, 
+  StockQuote, 
+  SectorKey 
+} from '@/lib/types';
+import { v4 as uuidv4 } from 'uuid';  
 
 type ViewType = 'overview' | 'open-positions' | 'closed-positions' | 'transactions' | 'financials';
 
 const PortfolioTracker = () => {
   // States
+  const { getCurrentUser } = useAuth();
   const [transactions, setTransactions] = useState<Transaction[]>(() => 
     getLocalStorage<Transaction[]>('stockTransactions', [])
   );
@@ -42,7 +57,6 @@ const PortfolioTracker = () => {
   const [financialLoading, setFinancialLoading] = useState(false);
   const [financialError, setFinancialError] = useState('');
   const [symbolInput, setSymbolInput] = useState('');
-
 
   const fetchStockData = useCallback(async (symbols: string[], buyDates: string[]) => {
     try {
@@ -307,34 +321,97 @@ const PortfolioTracker = () => {
 
   // Transaction handlers
   
+  const handleTransactionAdd = async (formData: TransactionFormData) => {
+    try {
+      const user = await getCurrentUser();
+      const newTransaction: Transaction = {
+        ...formData,
+        id: crypto.randomUUID(), // Use UUID string
+        user_id: user.id,
+        total_amount: formData.price * formData.shares
+      };
+  
+      const updatedTransactions = [...transactions, newTransaction];
+    setTransactions(updatedTransactions);
+    
+    try {
+      await storageService.saveTransactions(updatedTransactions);
+      setLocalStorage(LOCAL_STORAGE_KEY, updatedTransactions);
+      toast({
+        title: "Success",
+        description: "Transaction added successfully",
+      });
+    } catch (error) {
+      console.error('Storage error:', error);
+      toast({
+        variant: "destructive",
+        title: "Warning",
+        description: "Transaction saved locally but failed to sync to cloud",
+      });
+    }
+  } catch (error) {
+    console.error('Error adding transaction:', error);
+    toast({
+      variant: "destructive",
+      title: "Error",
+      description: "Failed to add transaction. Please try again.",
+    });
+  }
+};
+
+  const handleSync = async () => {
+    try {
+      setIsLoading(true);
+      
+      // First try to get user to check authentication
+      const user = await getCurrentUser();
+      if (!user) {
+        throw new Error('Please login to sync transactions');
+      }
+  
+      await storageService.syncWithSupabase();
+      toast({
+        title: "Success",
+        description: "Transactions synced successfully",
+      });
+    } catch (error) {
+      console.error('Sync error:', error);
+      toast({
+        variant: "destructive",
+        title: "Sync Failed",
+        description: error instanceof Error ? error.message : "Failed to sync transactions",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleSymbolChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = event.target.value;
     setSymbolInput(value.toUpperCase());
   };
 
-  const handleTransactionAdd = (transaction: Transaction) => {
-    const updatedTransactions = [...transactions, { ...transaction, id: Date.now() }];
-    setTransactions(updatedTransactions);
-    setLocalStorage('stockTransactions', updatedTransactions);
-  };
-
-  const handleTransactionEdit = (transaction: Transaction) => {
+  const handleTransactionEdit = async (transaction: Transaction) => {
     const updatedTransactions = transactions.map(t => 
       t.id === transaction.id ? transaction : t
     );
     setTransactions(updatedTransactions);
-    setLocalStorage('stockTransactions', updatedTransactions);
+    setLocalStorage(LOCAL_STORAGE_KEY, updatedTransactions);
+    await storageService.saveTransactions(updatedTransactions);
   };
+  
 
-  const handleTransactionDelete = (id: number) => {
+  const handleTransactionDelete = async (id: string) => {
     const updatedTransactions = transactions.filter(t => t.id !== id);
     setTransactions(updatedTransactions);
-    setLocalStorage('stockTransactions', updatedTransactions);
+    setLocalStorage(LOCAL_STORAGE_KEY, updatedTransactions);
+    await storageService.saveTransactions(updatedTransactions);
   };
 
-  const handleTransactionsDeleteAll = () => {
+  const handleTransactionsDeleteAll = async () => {
     setTransactions([]);
-    setLocalStorage('stockTransactions', []);
+    setLocalStorage(LOCAL_STORAGE_KEY, []);
+    await storageService.saveTransactions([]);
   };
 
   
@@ -390,13 +467,14 @@ const PortfolioTracker = () => {
                 return (
                   <motion.section className="bg-card rounded-lg shadow-sm" layout>
                     <TransactionTable
-                      transactions={transactions}
-                      onTransactionAdd={handleTransactionAdd}
-                      onTransactionEdit={handleTransactionEdit}
-                      onTransactionDelete={handleTransactionDelete}
-                      onTransactionsDeleteAll={handleTransactionsDeleteAll}
-                    />
-                  </motion.section>
+        transactions={transactions}
+        onTransactionAdd={handleTransactionAdd}
+        onTransactionEdit={handleTransactionEdit}
+        onTransactionDelete={handleTransactionDelete}
+        onTransactionsDeleteAll={handleTransactionsDeleteAll}
+        onSync={handleSync}
+      />
+    </motion.section>
                 );
                 case 'financials':
   return (
