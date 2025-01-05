@@ -44,7 +44,7 @@ const TransactionForm = ({ initialData, onSubmit, onCancel }: TransactionFormPro
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSubmit({
-      id: initialData?.id || Date.now().toString(),
+      id: initialData?.id || crypto.randomUUID(),
       date: selectedDate.toISOString(),
       ticker: formState.ticker.toUpperCase(),
       type: formState.type as 'buy' | 'sell' | 'dividend',

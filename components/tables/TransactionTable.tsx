@@ -459,7 +459,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
             onSubmit={(formData: TransactionFormData) => {
               const updatedTransaction: Transaction = {
                 ...formData,
-                id: selectedTransaction!.id,
+                id: selectedTransaction!.id,  // Keep existing string ID
                 user_id: selectedTransaction!.user_id,
                 total_amount: formData.price * formData.shares
               };

@@ -6,7 +6,7 @@ import { Transaction } from '@/lib/types';
 
 // Define a type for unvalidated transaction data
 type UnvalidatedTransaction = {
-  id?: number;
+  id?: string;
   date: unknown;
   ticker: unknown;
   type: unknown;
@@ -24,7 +24,7 @@ type CSVRowData = {
   [key: string]: unknown; // Allow for additional fields in CSV
 };
 
-export const validateTransaction = (transaction: UnvalidatedTransaction): transaction is Transaction => {
+export const validateTransaction = (transaction: any): transaction is Transaction => {
   return (
     typeof transaction.date === 'string' &&
     typeof transaction.ticker === 'string' &&
@@ -103,7 +103,8 @@ export const parseCSVFile = async (file: File): Promise<Transaction[]> => {
       complete: (results) => {
         try {
           const transactions = (results.data as CSVRowData[]).map((row) => ({
-            id: Date.now() + Math.random(),
+            id: crypto.randomUUID(),
+            user_id: '', // This will be set by the component
             date: new Date(row.date).toISOString(),
             ticker: row.ticker.toUpperCase(),
             type: row.type.toLowerCase(),
