@@ -11,7 +11,7 @@ import PositionTimelineChart from './charts/position-timeline/PositionTimeLineCh
 import { storageService } from '@/lib/supabase-storage';
 import TransactionTable from './tables/TransactionTable';
 import TransactionForm from './tables/TransactionForm';
-import { getLocalStorage, setLocalStorage } from '@/lib/storage';
+import { setLocalStorage } from '@/lib/storage';
 import { fetchWithRetry } from '@/lib/fetch-helpers';
 import OpenPositionsTable from './tables/OpenPositionsTable'
 import ClosedPositionsTable from './tables/ClosedPositionsTable'
@@ -523,7 +523,7 @@ useEffect(() => {
     );
   };
 
-  if (isLoading) {
+  if (isLoading || transactionsLoading) {
     return (
       <LoadingScreen />
     );
