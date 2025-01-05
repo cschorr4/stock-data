@@ -19,7 +19,7 @@ interface RiskMetricsCardProps {
   totalValue: number;
 }
 
-const RiskMetricsCard: React.FC<RiskMetricsCardProps> = ({ metrics, positions, totalValue }) => {
+const RiskMetricsCard: React.FC<RiskMetricsCardProps> = ({ metrics }) => {
   const getBetaStatus = (beta: number) => {
     if (beta > 1.2) return { color: 'text-red-600 dark:text-red-400', label: 'High Risk' };
     if (beta < 0.8) return { color: 'text-green-600 dark:text-green-400', label: 'Low Risk' };
