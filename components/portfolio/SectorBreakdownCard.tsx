@@ -57,7 +57,7 @@ const CustomLegend = ({ payload }: any) => {
   return (
     <ScrollArea className="h-40 w-full pr-4">
       <div className="space-y-1">
-        {payload.map((entry: any, index: number) => (
+        {payload.map((entry: any) => (
           <div key={entry.value} className="flex items-center justify-between text-xs">
             <div className="flex items-center gap-1.5">
               <div 
