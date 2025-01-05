@@ -2,25 +2,28 @@ import { format } from 'date-fns';
 import Papa from 'papaparse';
 import { Transaction } from '@/lib/types';
 
+const isValidTransactionType = (type: string): type is 'buy' | 'sell' | 'dividend' => {
+  return ['buy', 'sell', 'dividend'].includes(type.toLowerCase());
+};
+
 interface TransactionInput {
-  id?: number;
+  id?: string;  // Changed from number to string
   date: string;
   ticker: string;
   type: string;
   price: number | string;
   shares: number | string;
+  user_id?: string; 
 }
-
-const isValidTransactionType = (type: string): type is 'buy' | 'sell' | 'dividend' => {
-  return ['buy', 'sell', 'dividend'].includes(type.toLowerCase());
-};
 
 export const validateTransaction = (input: TransactionInput): input is Transaction => {
   const type = String(input.type).toLowerCase();
   const price = Number(input.price);
   const shares = Number(input.shares);
-
+  
   return !!(
+    input.id &&
+    input.user_id &&  // Make sure user_id is present
     input.date &&
     input.ticker &&
     isValidTransactionType(type) &&
@@ -60,46 +63,66 @@ export const downloadFile = (blob: Blob, filename: string): void => {
   URL.revokeObjectURL(url);
 };
 
-export const parseCSVFile = (file: File): Promise<Transaction[]> => {
+interface CSVRowData {
+  date: string;
+  ticker: string;
+  type: string;
+  price: string | number;
+  shares: string | number;
+}
+
+export const parseCSVFile = async (file: File): Promise<Transaction[]> => {
   return new Promise((resolve, reject) => {
-    Papa.parse<TransactionInput>(file, {
+    Papa.parse(file, {
       header: true,
+      dynamicTyping: true,
       skipEmptyLines: true,
-      transformHeader: header => header.toLowerCase().trim(),
       complete: (results) => {
         try {
-          console.log('Raw CSV data:', results.data);
-          
-          const filteredRows = results.data.filter(row => row.date && row.ticker && row.type && row.price && row.shares);
-          console.log('Filtered rows:', filteredRows);
-          
-          const transactions = filteredRows
-            .map(row => {
-              const transaction = {
-                id: Date.now() + Math.random(),
-                date: new Date(row.date).toISOString(),
-                ticker: String(row.ticker).toUpperCase(),
-                type: String(row.type).toLowerCase(),
-                price: Number(row.price),
-                shares: Number(row.shares)
-              };
-              console.log('Processed transaction:', transaction);
-              return transaction;
-            })
-            .filter((t): t is Transaction => {
-              const isValid = validateTransaction(t);
-              console.log('Validation result for:', t, isValid);
-              return isValid;
-            });
+          const transactions = (results.data as CSVRowData[]).map((row) => ({
+            id: crypto.randomUUID(),  // Use UUID instead of timestamp
+            user_id: '',  // This will be set by the component
+            date: new Date(row.date).toISOString(),
+            ticker: row.ticker.toUpperCase(),
+            type: row.type.toLowerCase(),
+            price: Number(row.price),
+            shares: Number(row.shares)
+          }));
 
-          console.log('Final transactions:', transactions);
+          if (!transactions.every(validateTransaction)) {
+            throw new Error('Invalid transaction data in CSV');
+          }
           resolve(transactions);
         } catch (error) {
-          console.error('Error in CSV parsing:', error);
           reject(error);
         }
       },
       error: (error) => reject(error)
     });
   });
+};
+
+export const parseJSONFile = async (file: File): Promise<Transaction[]> => {
+  const text = await file.text();
+  const data = JSON.parse(text);
+  
+  if (!Array.isArray(data)) {
+    throw new Error('Invalid JSON format: Expected an array of transactions');
+  }
+
+  const transactions = data.map(item => ({
+    id: item.id || crypto.randomUUID(),
+    user_id: item.user_id || '',  // Use existing user_id or empty string
+    date: new Date(item.date).toISOString(),
+    ticker: item.ticker.toUpperCase(),
+    type: item.type.toLowerCase(),
+    price: Number(item.price),
+    shares: Number(item.shares)
+  }));
+
+  if (!transactions.every(validateTransaction)) {
+    throw new Error('Invalid transaction data in JSON');
+  }
+
+  return transactions;
 };

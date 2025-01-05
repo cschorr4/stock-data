@@ -457,7 +457,6 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
             <TransactionForm
             initialData={selectedTransaction}
             onSubmit={(formData: TransactionFormData) => {
-              // Preserve existing id and user_id when editing
               const updatedTransaction: Transaction = {
                 ...formData,
                 id: selectedTransaction!.id,
