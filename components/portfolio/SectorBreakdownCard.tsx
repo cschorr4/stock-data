@@ -3,7 +3,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { PieChart as PieChartIcon } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import _ from 'lodash';
 
 interface SectorBreakdownCardProps {
   sectorData: {
