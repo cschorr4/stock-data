@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils';
 
 interface TransactionFormProps {
   initialData?: {
-    id?: number;
+    id?: string;
     date?: string;
     ticker?: string;
     type?: 'buy' | 'sell' | 'dividend';
@@ -19,7 +19,7 @@ interface TransactionFormProps {
     shares?: number;
   };
   onSubmit: (transaction: {
-    id: number;
+    id: string;
     date: string;
     ticker: string;
     type: 'buy' | 'sell' | 'dividend';
@@ -44,7 +44,7 @@ const TransactionForm = ({ initialData, onSubmit, onCancel }: TransactionFormPro
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSubmit({
-      id: initialData?.id || Date.now(),
+      id: initialData?.id || Date.now().toString(),
       date: selectedDate.toISOString(),
       ticker: formState.ticker.toUpperCase(),
       type: formState.type as 'buy' | 'sell' | 'dividend',
