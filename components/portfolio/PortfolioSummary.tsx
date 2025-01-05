@@ -104,18 +104,7 @@ const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
             
             {/* Sector Breakdown */}
             <SectorBreakdownCard sectorData={sectorData} />
-            
-            {/* Recent Trades */}
-            <RecentTradesCard 
-              transactions={closedPositions.map(pos => ({
-                id: new Date(pos.sellDate).getTime(),
-                date: pos.sellDate,
-                ticker: pos.ticker,
-                type: 'sell',
-                price: pos.sellPrice,
-                shares: pos.shares
-              }))}
-            />
+          
           </div>
         </div>
       </div>
