@@ -41,9 +41,9 @@ const SectorBreakdownCard: React.FC<SectorBreakdownCardProps> = ({ sectorData })
     .sort((a, b) => b.allocation - a.allocation);
 
   return (
-    <Card className="flex-none w-[220px] xs:w-[200px] sm:w-[220px] md:w-[240px] bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-xl border-0 shadow-sm transition-all duration-200 hover:shadow-md">
+    <Card className="flex-none w-[280px] xs:w-[260px] sm:w-[280px] md:w-[300px] bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-xl border-0 shadow-sm transition-all duration-200 hover:shadow-md">
   <CardContent className="p-4">
-    <div className="space-y-3">
+    <div className="space-y-4"> {/* Increased spacing */}
       {/* Header remains the same */}
       <div className="flex items-center gap-2">
         <div className="rounded-full bg-indigo-100 dark:bg-indigo-900/30 p-1.5">
@@ -54,10 +54,10 @@ const SectorBreakdownCard: React.FC<SectorBreakdownCardProps> = ({ sectorData })
         </span>
       </div>
 
-      {/* Main Content */}
-      <div className="flex gap-3">
-        {/* Slightly shorter chart */}
-        <div className="w-30 h-28"> {/* Reduced height */}
+      {/* Larger chart and modified layout */}
+      <div className="flex flex-col items-center gap-4"> {/* Changed to column layout */}
+        {/* Larger chart */}
+        <div className="w-40 h-40"> {/* Increased size */}
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
@@ -66,8 +66,8 @@ const SectorBreakdownCard: React.FC<SectorBreakdownCardProps> = ({ sectorData })
                 nameKey="sector"
                 cx="50%"
                 cy="50%"
-                innerRadius={26}
-                outerRadius={42}
+                innerRadius={32} 
+                outerRadius={56} 
                 paddingAngle={2}
               >
                 {filteredData.map((entry, index) => (
@@ -84,17 +84,17 @@ const SectorBreakdownCard: React.FC<SectorBreakdownCardProps> = ({ sectorData })
           </ResponsiveContainer>
         </div>
 
-        {/* Legend */}
-        <ScrollArea className="flex-1 h-28">
-          <div className="space-y-1.5 pr-2">
+        {/* Full-width legend */}
+        <ScrollArea className="w-full h-40"> {/* Increased height */}
+          <div className="space-y-2 pr-2"> {/* Increased spacing between items */}
             {filteredData.map((item, index) => (
-              <div key={item.sector} className="flex items-center justify-between text-xs">
-                <div className="flex items-center gap-1.5">
+              <div key={item.sector} className="flex items-center justify-between text-sm"> 
+                <div className="flex items-center gap-2">
                   <div 
-                    className="w-2.5 h-2.5 rounded-full flex-shrink-0" 
+                    className="w-3 h-3 rounded-full flex-shrink-0"
                     style={{ backgroundColor: COLORS[index % COLORS.length] }}
                   />
-                  <span className="text-gray-700 dark:text-gray-300 truncate max-w-[90px]">
+                  <span className="text-gray-700 dark:text-gray-300 truncate max-w-[140px]"> 
                     {item.sector}
                   </span>
                 </div>
@@ -109,7 +109,6 @@ const SectorBreakdownCard: React.FC<SectorBreakdownCardProps> = ({ sectorData })
     </div>
   </CardContent>
 </Card>
-
   );
 };
 
