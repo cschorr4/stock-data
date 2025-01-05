@@ -343,39 +343,39 @@ useEffect(() => {
     try {
       const user = await getCurrentUser();
       const newTransaction: Transaction = {
-        ...formData,
-        id: crypto.randomUUID(), 
+        ...formData,  // Spread the base form data
+        id: crypto.randomUUID(),  // UUID string
         user_id: user.id,
         total_amount: formData.price * formData.shares
       };
   
       const updatedTransactions = [...transactions, newTransaction];
-    setTransactions(updatedTransactions);
-    
-    try {
-      await storageService.saveTransactions(updatedTransactions);
-      setLocalStorage(LOCAL_STORAGE_KEY, updatedTransactions);
-      toast({
-        title: "Success",
-        description: "Transaction added successfully",
-      });
+      setTransactions(updatedTransactions);
+      
+      try {
+        await storageService.saveTransactions(updatedTransactions);
+        setLocalStorage(LOCAL_STORAGE_KEY, updatedTransactions);
+        toast({
+          title: "Success",
+          description: "Transaction added successfully",
+        });
+      } catch (error) {
+        console.error('Storage error:', error);
+        toast({
+          variant: "destructive",
+          title: "Warning",
+          description: "Transaction saved locally but failed to sync to cloud",
+        });
+      }
     } catch (error) {
-      console.error('Storage error:', error);
+      console.error('Error adding transaction:', error);
       toast({
         variant: "destructive",
-        title: "Warning",
-        description: "Transaction saved locally but failed to sync to cloud",
+        title: "Error",
+        description: "Failed to add transaction. Please try again.",
       });
     }
-  } catch (error) {
-    console.error('Error adding transaction:', error);
-    toast({
-      variant: "destructive",
-      title: "Error",
-      description: "Failed to add transaction. Please try again.",
-    });
-  }
-};
+  };
 
   const handleSync = async () => {
     try {

@@ -1,12 +1,13 @@
 //types.ts
 export interface Transaction {
-  id: number;
+  id: string;  // Using string for UUID
   date: string;
   ticker: string;
   type: 'buy' | 'sell' | 'dividend';
   price: number;
   shares: number;
   user_id: string;
+  total_amount?: number;
 }
 
 export interface StockQuote {
