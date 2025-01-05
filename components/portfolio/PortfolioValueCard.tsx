@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { DollarSign, ArrowDownSquare, ArrowUpSquare, Scale } from 'lucide-react';
+import { ArrowDownSquare, ArrowUpSquare, Scale } from 'lucide-react';
 import { formatCurrency, formatPercentage } from './utils/portfolio-utils';
 
 interface PortfolioValueCardProps {

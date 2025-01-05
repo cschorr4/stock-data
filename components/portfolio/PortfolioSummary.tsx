@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import _ from 'lodash';
-import { DollarSign, PieChart } from 'lucide-react';
+import { PieChart } from 'lucide-react';
 import type { PortfolioSummaryProps } from '@/lib/types';
 
 // Components
@@ -14,9 +14,7 @@ import PortfolioValueCard from './PortfolioValueCard';
 
 // Utils
 import {
-  formatCurrency,
   formatPercentage,
-  getColorForValue,
   calculateSectorData
 } from './utils/portfolio-utils';
 
@@ -42,9 +40,6 @@ const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
     }, 
     [sectorData]
   );
-  const portfolioMetrics = {
-    totalValue: metrics.totalValue,
-  };
 
   return (
     <div className="w-full space-y-6">

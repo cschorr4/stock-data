@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { BarChart2, ArrowRight, PieChart } from 'lucide-react';
+import { ArrowRight, PieChart } from 'lucide-react';
 import {
   BarChart,
   Bar,

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { AlertTriangle, TrendingDown, Target, Shield } from 'lucide-react';
+import { AlertTriangle, TrendingDown, Shield } from 'lucide-react';
 import { formatPercentage } from './utils/portfolio-utils';
 
 interface RiskMetricsCardProps {
