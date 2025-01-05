@@ -1,8 +1,9 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 import { PieChart as PieChartIcon } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import _ from 'lodash';
 
 interface SectorBreakdownCardProps {
   sectorData: {
@@ -12,10 +13,28 @@ interface SectorBreakdownCardProps {
   }[];
 }
 
+// Extended color palette for more sectors
 const COLORS = [
-  '#60a5fa', '#34d399', '#a78bfa', '#f87171', '#fbbf24',
-  '#a855f7', '#ec4899', '#14b8a6', '#f472b6', '#22d3ee',
-  '#6366f1', '#fb923c', '#4ade80', '#e879f9',
+  '#60a5fa', // blue-400
+  '#34d399', // emerald-400
+  '#a78bfa', // violet-400
+  '#f87171', // red-400
+  '#fbbf24', // amber-400
+  '#a855f7', // purple-400
+  '#ec4899', // pink-400
+  '#14b8a6', // teal-400
+  '#f472b6', // pink-400
+  '#22d3ee', // cyan-400
+  '#6366f1', // indigo-400
+  '#fb923c', // orange-400
+  '#4ade80', // green-400
+  '#e879f9', // fuchsia-400
+  '#2dd4bf', // teal-400
+  '#38bdf8', // sky-400
+  '#818cf8', // indigo-400
+  '#fb7185', // rose-400
+  '#94a3b8', // slate-400
+  '#c084fc', // purple-400
 ];
 
 const CustomTooltip = ({ active, payload }: any) => {
@@ -35,80 +54,90 @@ const CustomTooltip = ({ active, payload }: any) => {
   return null;
 };
 
+const CustomLegend = ({ payload }: any) => {
+  return (
+    <ScrollArea className="h-40 w-full pr-4">
+      <div className="space-y-1">
+        {payload.map((entry: any, index: number) => (
+          <div key={entry.value} className="flex items-center justify-between text-xs">
+            <div className="flex items-center gap-1.5">
+              <div 
+                className="w-2 h-2 rounded-full flex-shrink-0" 
+                style={{ backgroundColor: entry.color }}
+              />
+              <span className="text-gray-600 dark:text-gray-400 truncate max-w-[120px]">
+                {entry.value}
+              </span>
+            </div>
+            <span className="font-medium whitespace-nowrap">
+              {entry.payload.allocation.toFixed(1)}%
+            </span>
+          </div>
+        ))}
+      </div>
+    </ScrollArea>
+  );
+};
+
 const SectorBreakdownCard: React.FC<SectorBreakdownCardProps> = ({ sectorData }) => {
+  // Filter out sectors with 0 allocation and sort by allocation
   const filteredData = sectorData
     .filter(item => item.allocation > 0)
     .sort((a, b) => b.allocation - a.allocation);
 
   return (
-    <Card className="flex-none w-[280px] xs:w-[260px] sm:w-[280px] md:w-[300px] bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-xl border-0 shadow-sm transition-all duration-200 hover:shadow-md">
-  <CardContent className="p-4">
-    <div className="space-y-4"> {/* Increased spacing */}
-      {/* Header remains the same */}
-      <div className="flex items-center gap-2">
-        <div className="rounded-full bg-indigo-100 dark:bg-indigo-900/30 p-1.5">
-          <PieChartIcon className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-        </div>
-        <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-          Sector Breakdown
-        </span>
-      </div>
-
-      {/* Larger chart and modified layout */}
-      <div className="flex flex-col items-center gap-4"> {/* Changed to column layout */}
-        {/* Larger chart */}
-        <div className="w-40 h-40"> {/* Increased size */}
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie
-                data={filteredData}
-                dataKey="allocation"
-                nameKey="sector"
-                cx="50%"
-                cy="50%"
-                innerRadius={32} 
-                outerRadius={56} 
-                paddingAngle={2}
-              >
-                {filteredData.map((entry, index) => (
-                  <Cell 
-                    key={`cell-${index}`}
-                    fill={COLORS[index % COLORS.length]}
-                    className="stroke-white dark:stroke-gray-800"
-                    strokeWidth={1.5}
-                  />
-                ))}
-              </Pie>
-              <Tooltip content={<CustomTooltip />} />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
-
-        {/* Full-width legend */}
-        <ScrollArea className="w-full h-40"> {/* Increased height */}
-          <div className="space-y-2 pr-2"> {/* Increased spacing between items */}
-            {filteredData.map((item, index) => (
-              <div key={item.sector} className="flex items-center justify-between text-sm"> 
-                <div className="flex items-center gap-2">
-                  <div 
-                    className="w-3 h-3 rounded-full flex-shrink-0"
-                    style={{ backgroundColor: COLORS[index % COLORS.length] }}
-                  />
-                  <span className="text-gray-700 dark:text-gray-300 truncate max-w-[140px]"> 
-                    {item.sector}
-                  </span>
-                </div>
-                <span className="font-medium whitespace-nowrap text-gray-900 dark:text-gray-100">
-                  {item.allocation.toFixed(1)}%
-                </span>
-              </div>
-            ))}
+    <Card className="flex-none w-[220px] xs:w-[200px] sm:w-[220px] md:w-[240px] bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-xl border-0 shadow-sm transition-all duration-200 hover:shadow-md">
+      <CardContent className="p-3">
+        <div className="space-y-2">
+          {/* Header */}
+          <div className="flex items-center gap-2">
+            <div className="rounded-full bg-white/10 p-1">
+              <PieChartIcon className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+            </div>
+            <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
+              Sector Breakdown
+            </span>
           </div>
-        </ScrollArea>
-      </div>
-    </div>
-  </CardContent>
-</Card>
+
+          {/* Chart */}
+          <div className="h-48">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={filteredData}
+                  dataKey="allocation"
+                  nameKey="sector"
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={30}
+                  outerRadius={70}
+                  paddingAngle={2}
+                >
+                  {filteredData.map((entry, index) => (
+                    <Cell 
+                      key={`cell-${index}`}
+                      fill={COLORS[index % COLORS.length]}
+                      className="stroke-white dark:stroke-gray-800"
+                      strokeWidth={2}
+                    />
+                  ))}
+                </Pie>
+                <Tooltip content={<CustomTooltip />} />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Scrollable Legend */}
+          <CustomLegend 
+            payload={filteredData.map((item, index) => ({
+              value: item.sector,
+              color: COLORS[index % COLORS.length],
+              payload: item
+            }))} 
+          />
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 

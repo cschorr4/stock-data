@@ -61,6 +61,7 @@ const PerformanceMetricsCard: React.FC<PerformanceMetricsCardProps> = ({
       return acc;
     }, []);
 
+
   return (
     <Card className="w-[440px] xs:w-[400px] sm:w-[440px] md:w-[480px] bg-gradient-to-br from-cyan-50 to-teal-50 dark:from-cyan-900/20 dark:to-teal-900/20 rounded-xl border-0 shadow-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
       <CardContent className="p-4 relative">
