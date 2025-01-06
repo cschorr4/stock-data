@@ -104,7 +104,7 @@ export const parseCSVFile = async (file: File): Promise<Transaction[]> => {
 
           console.log('Valid rows:', validRows);
 
-          const transactions = validRows.map((row: CSVRowData) => {
+          const transactions = (validRows as CSVRowData[]).map((row: CSVRowData) => {
             // Convert the row data to proper types
             const date = new Date(row.date);
             const ticker = String(row.ticker || '').trim().toUpperCase();
