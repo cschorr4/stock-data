@@ -10,9 +10,6 @@ const inter = Inter({ subsets: ['latin'] });
 export const metadata = {
   title: 'Stock Portfolio Tracker',
   description: 'Track your investments and portfolio performance',
-  icons: {
-    icon: '/gold-bars-icon.ico',
-  },
 };
 
 export default function RootLayout({
