@@ -39,6 +39,12 @@ import {
   SectorKey 
 } from '@/lib/types';
 
+interface TransactionAddPayload {
+  type?: 'single' | 'batch';
+  transaction?: TransactionFormData;
+  transactions?: Transaction[];
+}
+
 type ViewType = 'overview' | 'open-positions' | 'closed-positions' | 'transactions' | 'financials';
 
 const PortfolioTracker = () => {
@@ -339,17 +345,36 @@ useEffect(() => {
     return () => clearInterval(interval);
   }, [transactions, fetchStockData]);
   
-  const handleTransactionAdd = async (formData: TransactionFormData) => {
+  const handleTransactionAdd = async (payload: { 
+    type?: 'single' | 'batch';
+    transaction?: TransactionFormData;
+    transactions?: Transaction[];
+  }) => {
     try {
       const user = await getCurrentUser();
-      const newTransaction: Transaction = {
-        ...formData,  // Spread the base form data
-        id: crypto.randomUUID(),  // UUID string
-        user_id: user.id,
-        total_amount: formData.price * formData.shares
-      };
+      let updatedTransactions: Transaction[];
   
-      const updatedTransactions = [...transactions, newTransaction];
+      if (payload.type === 'batch' && payload.transactions) {
+        // Handle batch import
+        const newTransactions = payload.transactions.map(t => ({
+          ...t,
+          user_id: user.id,
+          total_amount: t.price * t.shares
+        }));
+        updatedTransactions = [...transactions, ...newTransactions];
+      } else if (payload.transaction) {
+        // Handle single transaction add
+        const newTransaction: Transaction = {
+          ...payload.transaction,
+          id: crypto.randomUUID(),
+          user_id: user.id,
+          total_amount: payload.transaction.price * payload.transaction.shares
+        };
+        updatedTransactions = [...transactions, newTransaction];
+      } else {
+        throw new Error('Invalid transaction payload');
+      }
+  
       setTransactions(updatedTransactions);
       
       try {
@@ -357,22 +382,24 @@ useEffect(() => {
         setLocalStorage(LOCAL_STORAGE_KEY, updatedTransactions);
         toast({
           title: "Success",
-          description: "Transaction added successfully",
+          description: payload.type === 'batch' 
+            ? `${payload.transactions?.length} transactions imported successfully`
+            : "Transaction added successfully",
         });
       } catch (error) {
         console.error('Storage error:', error);
         toast({
           variant: "destructive",
           title: "Warning",
-          description: "Transaction saved locally but failed to sync to cloud",
+          description: "Transaction(s) saved locally but failed to sync to cloud",
         });
       }
     } catch (error) {
-      console.error('Error adding transaction:', error);
+      console.error('Error adding transaction(s):', error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to add transaction. Please try again.",
+        description: "Failed to add transaction(s). Please try again.",
       });
     }
   };
@@ -485,13 +512,13 @@ useEffect(() => {
                 return (
                   <motion.section className="bg-card rounded-lg shadow-sm" layout>
                     <TransactionTable
-        transactions={transactions}
-        onTransactionAdd={handleTransactionAdd}
-        onTransactionEdit={handleTransactionEdit}
-        onTransactionDelete={handleTransactionDelete}
-        onTransactionsDeleteAll={handleTransactionsDeleteAll}
-        onSync={handleSync}
-      />
+                    transactions={transactions}
+                    onTransactionAdd={handleTransactionAdd}
+                    onTransactionEdit={handleTransactionEdit}
+                    onTransactionDelete={handleTransactionDelete}
+                    onTransactionsDeleteAll={handleTransactionsDeleteAll}
+                    onSync={handleSync}
+                  />
     </motion.section>
                 );
                 case 'financials':

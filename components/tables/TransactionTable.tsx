@@ -24,7 +24,11 @@ import { Transaction, TransactionFormData } from '@/lib/types';
 
 interface TransactionTableProps {
   transactions: Transaction[];
-  onTransactionAdd: (transaction: Transaction) => void;
+  onTransactionAdd: (payload: { 
+    type?: 'single' | 'batch';
+    transaction?: Transaction;
+    transactions?: Transaction[];
+  }) => void;
   onTransactionEdit: (transaction: Transaction) => void;
   onTransactionDelete: (id: string) => void;
   onTransactionsDeleteAll: () => void;
@@ -127,13 +131,24 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
         processedTransactions.push(newTransaction);
       }
 
-      // Add all transactions and update UI
-      for (const transaction of processedTransactions) {
-        onTransactionAdd(transaction);
-      }
+      // Add all transactions at once as a batch
+      const transactionsToAdd = processedTransactions.map(transaction => ({
+        ...transaction,
+        id: crypto.randomUUID(), // Ensure unique IDs
+        user_id: '',
+      }));
 
-      // Log final state
-      console.log('Import complete. Added transactions:', processedTransactions);
+      // Log the batch of transactions we're about to add
+      console.log('Adding batch of transactions:', transactionsToAdd);
+      
+      // Add all transactions at once
+      onTransactionAdd({
+        type: 'batch',
+        transactions: transactionsToAdd
+      });
+
+      // Log completion
+      console.log('Import complete. Added transactions:', transactionsToAdd);
 
       toast({
         title: "Success",
@@ -346,7 +361,10 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                         user_id: '',
                         total_amount: formData.price * formData.shares
                       };
-                      onTransactionAdd(fullTransaction);
+                      onTransactionAdd({
+                        type: 'single',
+                        transaction: fullTransaction
+                      });
                       setIsAddDialogOpen(false);
                     }}
                     onCancel={() => setIsAddDialogOpen(false)}
