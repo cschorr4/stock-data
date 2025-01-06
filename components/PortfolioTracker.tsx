@@ -595,8 +595,11 @@ useEffect(() => {
             <DialogTitle>Add New Transaction</DialogTitle>
           </DialogHeader>
           <TransactionForm
-            onSubmit={(transaction) => {
-              handleTransactionAdd(transaction);
+            onSubmit={(formData) => {
+              handleTransactionAdd({
+                type: 'single',
+                transaction: formData
+              });
               setIsAddDialogOpen(false);
             }}
             onCancel={() => setIsAddDialogOpen(false)}
