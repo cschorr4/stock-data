@@ -158,50 +158,61 @@ const MetricsCard: React.FC<MetricsCardProps> = ({ title, metrics }) => (
 );
 
 const FinancialViewer: React.FC<FinancialViewerProps> = ({ data }) => {
-  const [periodicity, setPeriodicity] = useState<'quarterly' | 'annual'>('quarterly');
-  const [copied, setCopied] = useState(false);
-
-  const getFormattedText = () => {
-    if (!data?.financial_statements?.[periodicity]) return '';
-    
-    let text = `${data.company_info.name} - Financial Statements (${periodicity.toUpperCase()})\n\n`;
-    
-    for (const [statementType, statement] of Object.entries(data.financial_statements[periodicity])) {
-      text += `${statementType.toUpperCase()}\n`;
-      text += '='.repeat(40) + '\n';
-      
-      const dates = Object.keys(statement).sort().reverse();
-      const metrics = Object.keys(statement[dates[0]] || {}).sort();
-      
-      // Header
-      text += 'Metric'.padEnd(30) + '|';
-      dates.forEach(date => {
-        const formattedDate = new Date(date).toLocaleDateString('en-US', {
-          year: 'numeric',
-          month: 'short'
-        });
-        text += ` ${formattedDate.padEnd(15)}|`;
-      });
-      text += '\n' + '-'.repeat(30 + (dates.length * 16)) + '\n';
-      
-      // Data rows
-      metrics.forEach(metric => {
-        const formattedMetric = formatMetricName(metric).padEnd(30);
-        
-        text += formattedMetric + '|';
-        dates.forEach(date => {
-          const value = statement[date]?.[metric];
-          const formattedValue = formatCurrency(value).padEnd(15);
-          text += ` ${formattedValue}|`;
-        });
-        text += '\n';
-      });
-      
-      text += '\n\n';
+    const [periodicity, setPeriodicity] = useState<'quarterly' | 'annual'>('quarterly');
+    const [copied, setCopied] = useState(false);
+  
+    if (!data || !data.company_info) {
+      return (
+        <Card>
+          <CardContent className="p-4">
+            <div className="text-center text-gray-500">No financial data available</div>
+          </CardContent>
+        </Card>
+      );
     }
+
+    const getFormattedText = () => {
+        if (!data?.financial_statements?.[periodicity]) return '';
+        
+        let text = `${data.company_info.name} - Financial Statements (${periodicity.toUpperCase()})\n\n`;
+        
+        for (const [statementType, statement] of Object.entries(data.financial_statements[periodicity])) {
+          text += `${statementType.toUpperCase()}\n`;
+          text += '='.repeat(40) + '\n';
+          
+          const dates = Object.keys(statement).sort().reverse();
+          const metrics = Object.keys(statement[dates[0]] || {}).sort();
+          
+          // Header
+          text += 'Metric'.padEnd(30) + '|';
+          dates.forEach(date => {
+            const formattedDate = new Date(date).toLocaleDateString('en-US', {
+              year: 'numeric',
+              month: 'short'
+            });
+            text += ` ${formattedDate.padEnd(15)}|`;
+          });
+          text += '\n' + '-'.repeat(30 + (dates.length * 16)) + '\n';
+          
+          // Data rows
+          metrics.forEach(metric => {
+            const formattedMetric = formatMetricName(metric).padEnd(30);
+            
+            text += formattedMetric + '|';
+            dates.forEach(date => {
+              const value = statement[date]?.[metric];
+              const formattedValue = formatCurrency(value).padEnd(15);
+              text += ` ${formattedValue}|`;
+            });
+            text += '\n';
+          });
+          
+          text += '\n\n';
+        }
+        
+        return text;
+      };
     
-    return text;
-  };
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(getFormattedText());
