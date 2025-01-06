@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { createClient } from '@/utils/supabase/client';
 import { useToast } from "@/components/ui/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useAuth } from '@/components/providers/AuthProvider';
+import { useAuth } from '@/components/providers/auto-provider';
 
 interface Profile {
   first_name: string;

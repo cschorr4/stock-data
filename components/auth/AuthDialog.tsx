@@ -7,7 +7,7 @@ import { createClient } from '@/utils/supabase/client';
 import { Loader2, CheckCircle2, XCircle, LogOut } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { useRouter } from "next/navigation";
-import { useAuth } from '@/components/providers/AuthProvider';
+import { useAuth } from '@/components/providers/auto-provider';
 
 type AuthStatus = 'idle' | 'loading' | 'success' | 'error';
 

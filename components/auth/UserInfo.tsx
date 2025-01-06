@@ -8,7 +8,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useAuth } from '@/components/providers/AuthProvider';
+import { useAuth } from '@/components/providers/auto-provider';
 import { createClient } from '@/utils/supabase/client';
 import { LogOut, Settings, User } from 'lucide-react';
 import { useRouter } from 'next/navigation';

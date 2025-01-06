@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/components/providers/AuthProvider';
+import { useAuth } from '@/components/providers/auto-provider';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { UserProfileForm } from '@/components/settings/UserProfileForm';
 import { Button } from '@/components/ui/button';
