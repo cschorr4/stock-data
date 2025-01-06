@@ -3,6 +3,7 @@
 import React from 'react';
 import { format as dateFormat } from 'date-fns';
 import { Download, Upload, Plus, Pencil, Trash2, ArrowUpDown, CloudUpload } from 'lucide-react';
+import Papa from 'papaparse';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -19,8 +20,110 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/components/ui/use-toast';
 import TransactionForm from './TransactionForm';
-import { exportToJSON, exportToCSV, downloadFile, parseCSVFile } from '@/lib/transactions';
 import { Transaction, TransactionFormData } from '@/lib/types';
+
+// CSV Cleaning and Validation Functions
+interface CSVRowData {
+  date: string;
+  ticker: string;
+  type: string;
+  price: string | number;
+  shares: string | number;
+  total?: string | number;
+  [key: string]: unknown;
+}
+
+const cleanCSVData = (csvContent: string): CSVRowData[] => {
+  // Split content into lines and clean each line
+  const lines = csvContent.split('\n');
+  
+  // Clean lines
+  const cleanedLines = lines.map(line => {
+    // Remove any extra whitespace
+    line = line.trim();
+    
+    // Fix merged lines by looking for date patterns in the middle of the line
+    const datePattern = /\d{4}-\d{2}-\d{2}/g;
+    const dates = line.match(datePattern);
+    
+    if (dates && dates.length > 1) {
+      // Split the line at the second date occurrence
+      const splitPoint = line.indexOf(dates[1]);
+      return [
+        line.substring(0, splitPoint).trim(),
+        line.substring(splitPoint).trim()
+      ];
+    }
+    
+    return line;
+  }).flat(); // Flatten array in case we split any lines
+  
+  // Rejoin lines with proper line endings
+  const cleanedContent = cleanedLines.join('\n');
+  
+  // Parse the cleaned content
+  const parsed = Papa.parse(cleanedContent, {
+    header: true,
+    skipEmptyLines: true,
+    transform: (value, field) => {
+      // Standardize number formatting for price and shares
+      if (field === 'price' || field === 'shares') {
+        return Number(value).toFixed(4);
+      }
+      return value;
+    }
+  });
+  
+  // Validate and clean each row
+  const validatedData = (parsed.data as CSVRowData[]).filter(row => {
+    return (
+      row.date &&
+      row.ticker &&
+      row.type &&
+      !isNaN(Number(row.price)) &&
+      !isNaN(Number(row.shares))
+    );
+  });
+  
+  return validatedData;
+};
+
+// Export functions
+const exportToJSON = (data: Transaction[]): Blob => {
+  const dataStr = JSON.stringify(data, null, 2);
+  return new Blob([dataStr], { type: 'application/json' });
+};
+
+const exportToCSV = (data: Transaction[]): Blob => {
+  const csvData = data.map(t => ({
+    date: dateFormat(new Date(t.date), 'yyyy-MM-dd'),
+    ticker: t.ticker.trim().toUpperCase(),
+    type: t.type.trim().toLowerCase(),
+    price: t.price.toFixed(2),
+    shares: t.shares.toFixed(2),
+    total: (t.price * t.shares).toFixed(2)
+  }));
+
+  const csv = Papa.unparse(csvData, {
+    header: true,
+    delimiter: ",",
+    newline: "\r\n",
+    skipEmptyLines: true
+  });
+  
+  return new Blob([csv], { type: 'text/csv;charset=utf-8' });
+};
+
+const downloadFile = (blob: Blob, filename: string): void => {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+};
 
 interface TransactionTableProps {
   transactions: Transaction[];
@@ -101,54 +204,42 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
 
   const handleFileImport = async (file: File) => {
     try {
-      // First, try to parse the file
-      const parsed = await parseCSVFile(file);
-      console.log('Parsed CSV data:', parsed);
-
-      if (!Array.isArray(parsed) || parsed.length === 0) {
+      // Read and clean the CSV content
+      const text = await file.text();
+      const cleanedData = cleanCSVData(text);
+      
+      if (!Array.isArray(cleanedData) || cleanedData.length === 0) {
         throw new Error('No valid transactions found in file');
       }
 
-      // Log the current transactions before import
-      console.log('Current transactions:', transactions);
-
-      // Process each transaction and add it individually
-      const processedTransactions: Transaction[] = [];
-      
-      for (const transaction of parsed) {
-        const newTransaction: Transaction = {
-          id: crypto.randomUUID(),
-          user_id: '',
-          date: new Date(transaction.date).toISOString(),
-          ticker: transaction.ticker.toUpperCase(),
-          type: transaction.type.toLowerCase() as 'buy' | 'sell' | 'dividend',
-          price: Number(transaction.price || 0),
-          shares: Number(transaction.shares || 0),
-          total_amount: Number(transaction.price || 0) * Number(transaction.shares || 0)
-        };
-        
-        console.log('Adding transaction:', newTransaction);
-        processedTransactions.push(newTransaction);
-      }
-
-      // Add all transactions at once as a batch
-      const transactionsToAdd = processedTransactions.map(transaction => ({
-        ...transaction,
-        id: crypto.randomUUID(), // Ensure unique IDs
+      // Process each transaction
+      const processedTransactions: Transaction[] = cleanedData.map(row => ({
+        id: crypto.randomUUID(),
         user_id: '',
+        date: new Date(row.date).toISOString(),
+        ticker: String(row.ticker).toUpperCase(),
+        type: String(row.type).toLowerCase() as 'buy' | 'sell' | 'dividend',
+        price: Number(row.price),
+        shares: Number(row.shares),
+        total_amount: Number(row.price) * Number(row.shares)
       }));
 
-      // Log the batch of transactions we're about to add
-      console.log('Adding batch of transactions:', transactionsToAdd);
-      
-      // Add all transactions at once
+      // Validate the processed transactions
+      const invalidTransactions = processedTransactions.filter(t => 
+        !t.date || !t.ticker || !t.type || isNaN(t.price) || isNaN(t.shares) ||
+        t.price <= 0 || t.shares <= 0
+      );
+
+      if (invalidTransactions.length > 0) {
+        console.error('Invalid transactions found:', invalidTransactions);
+        throw new Error(`Found ${invalidTransactions.length} invalid transactions`);
+      }
+
+      // Add all transactions as a batch
       onTransactionAdd({
         type: 'batch',
-        transactions: transactionsToAdd
+        transactions: processedTransactions
       });
-
-      // Log completion
-      console.log('Import complete. Added transactions:', transactionsToAdd);
 
       toast({
         title: "Success",
@@ -345,7 +436,6 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                 <DialogTrigger asChild>
                   <Button size="sm">
                     <Plus className="mr-2 h-4 w-4" />
-                    <span className="sm:hidden">Add Transaction</span> 
                     <span className="hidden sm:inline">Add Transaction</span>
                   </Button>
                 </DialogTrigger>
@@ -381,8 +471,8 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                         size="sm"
                         onClick={() => setIsDeleteAllDialogOpen(true)}
                       >
-                        <Trash2 className="mr-2 h-4 w-4"/>
-                        <span className="ml-2 hidden md:inline">Remove All</span>
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        <span className="hidden sm:inline">Remove All</span>
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent>Delete all transactions</TooltipContent>
@@ -448,7 +538,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                         ? 'default'
                         : transaction.type === 'sell'
                         ? 'sand'
-                        : 'blue'  // for dividend
+                        : 'blue'
                     }>
                       {transaction.type.toUpperCase()}
                     </Badge>
