@@ -1,5 +1,12 @@
 {
-    "version": 2,
-    "framework": "nextjs",
-    "buildCommand": "next build"
+  "version": 2,
+  "framework": "nextjs",
+  "buildCommand": "next build",
+  "installCommand": "npm install && pip install -r requirements.txt",
+  "functions": {
+    "api/stock/financials/route.ts": {
+      "runtime": "vercel-python@1.0.0",
+      "maxDuration": 30
+    }
   }
+}
