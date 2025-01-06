@@ -4,7 +4,7 @@
   "buildCommand": "next build",
   "functions": {
     "app/api/stock/financials/route.ts": {
-      "runtime": "python3.9",
+      "runtime": "vercel-python@3.9",
       "maxDuration": 30
     }
   },
