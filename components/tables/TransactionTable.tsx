@@ -98,9 +98,24 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
 
   const handleFileImport = async (file: File) => {
     try {
-      const transactions = await parseCSVFile(file);
-      console.log('Parsed transactions:', transactions);
-      transactions.forEach(onTransactionAdd);
+      const parsed = await parseCSVFile(file);
+      console.log('Raw parsed data:', parsed); // Debug log
+      
+      // Create transaction objects with required fields
+      const transactions = parsed.map(transaction => ({
+        id: crypto.randomUUID(),
+        user_id: '',
+        date: new Date(transaction.date).toISOString(),
+        ticker: transaction.ticker.toUpperCase(),
+        type: transaction.type.toLowerCase() as 'buy' | 'sell' | 'dividend',
+        price: Number(transaction.price || 0),
+        shares: Number(transaction.shares || 0),
+        total_amount: Number(transaction.price || 0) * Number(transaction.shares || 0)
+      }));
+  
+      // Add all transactions at once
+      transactions.forEach(transaction => onTransactionAdd(transaction));
+  
       toast({
         title: "Success",
         description: `Imported ${transactions.length} transactions successfully.`,
@@ -108,7 +123,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
     } catch (error) {
       console.error('Error importing transactions:', error);
       toast({
-        variant: "destructive",
+        variant: "destructive", 
         title: "Import Error",
         description: (error as Error).message || 'Error importing transactions.',
       });
