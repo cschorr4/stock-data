@@ -4,7 +4,7 @@
   "buildCommand": "next build",
   "installCommand": "npm install && pip install -r requirements.txt",
   "functions": {
-    "api/stock/financials/route.ts": {
+    "app/api/stock/financials/route.ts": {
       "runtime": "vercel-python@1.0.0",
       "maxDuration": 30
     }
