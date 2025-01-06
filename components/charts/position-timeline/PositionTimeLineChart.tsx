@@ -109,7 +109,7 @@ const PositionTimelineChart: React.FC<PositionTimelineChartProps> = ({ openPosit
                 {[...Array(12)].map((_, i) => (
                   <div key={i} className="absolute inset-0 border-2 border-primary rounded-full opacity-75"
                     style={{
-                      animation: `ripple 3s cubic-bezier(0, 0.2, 0.8, 1) infinite ${i * 0.2}s`,
+                      animation: `ripple 3s cubic-bezier(0, 0.2, 0.8, 1) infinite ${i * 1}s`,
                       borderColor: i % 3 === 0 ? 'var(--primary)' : i % 3 === 1 ? 'var(--muted-foreground)' : '#34D399'
                     }}
                   />
