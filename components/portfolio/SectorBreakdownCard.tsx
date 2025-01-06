@@ -55,7 +55,7 @@ const CustomTooltip = ({ active, payload }: any) => {
 
 const CustomLegend = ({ payload }: any) => {
   return (
-    <ScrollArea className="h-40 w-full pr-4">
+    <ScrollArea className="h-20 w-full pr-4">
       <div className="space-y-1">
         {payload.map((entry: any) => (
           <div key={entry.value} className="flex items-center justify-between text-xs">
@@ -85,9 +85,9 @@ const SectorBreakdownCard: React.FC<SectorBreakdownCardProps> = ({ sectorData })
     .sort((a, b) => b.allocation - a.allocation);
 
   return (
-    <Card className="flex-none w-[220px] xs:w-[200px] sm:w-[220px] md:w-[240px] bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-xl border-0 shadow-sm transition-all duration-200 hover:shadow-md">
-      <CardContent className="p-3">
-        <div className="space-y-2">
+    <Card className="w-[220px] xs:w-[200px] sm:w-[220px] md:w-[240px] bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-xl border-0 shadow-sm transition-all duration-200 hover:shadow-md">
+      <CardContent className="p-2">
+        <div className="space-y-1">
           {/* Header */}
           <div className="flex items-center gap-2">
             <div className="rounded-full bg-white/10 p-1">
@@ -99,7 +99,7 @@ const SectorBreakdownCard: React.FC<SectorBreakdownCardProps> = ({ sectorData })
           </div>
 
           {/* Chart */}
-          <div className="h-48">
+          <div className="h-32">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
@@ -107,9 +107,9 @@ const SectorBreakdownCard: React.FC<SectorBreakdownCardProps> = ({ sectorData })
                   dataKey="allocation"
                   nameKey="sector"
                   cx="50%"
-                  cy="50%"
-                  innerRadius={30}
-                  outerRadius={70}
+                  cy="40%"
+                  innerRadius={20}
+                  outerRadius={50}
                   paddingAngle={2}
                 >
                   {filteredData.map((entry, index) => (

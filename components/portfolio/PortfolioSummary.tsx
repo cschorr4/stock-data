@@ -1,10 +1,9 @@
 import React, { useMemo } from 'react';
 import _ from 'lodash';
-import { PieChart } from 'lucide-react';
 import type { PortfolioSummaryProps } from '@/lib/types';
 
 // Components
-import MetricCard from './MetricCard';
+import SectorAnalysisCard from './SectorAnalysisCard';
 import StockCard from './StockCard';
 import SectorBreakdownCard from './SectorBreakdownCard';
 import PerformanceMetricsCard from './PerformanceMetricsCard';
@@ -14,7 +13,6 @@ import PortfolioValueCard from './PortfolioValueCard';
 
 // Utils
 import {
-  formatPercentage,
   calculateSectorData
 } from './utils/portfolio-utils';
 
@@ -26,20 +24,6 @@ const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
 }) => {
   // Calculate metrics
   const sectorData = useMemo(() => calculateSectorData(openPositions), [openPositions]);  
-  const topSector = useMemo(() => 
-    sectorData.length ? _.maxBy(sectorData, 'allocation') || {
-      sector: 'None',
-      allocation: 0,
-      return: 0,
-      positions: 0
-    } : {
-      sector: 'None',
-      allocation: 0,
-      return: 0,
-      positions: 0
-    }, 
-    [sectorData]
-  );
 
   return (
     <div className="w-full space-y-6">
@@ -78,18 +62,9 @@ const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
             />
             
             {/* Sector Analysis */}
-            <MetricCard
-              title="Sector Analysis"
-              icon={<PieChart className="w-4 h-4 text-violet-600 dark:text-violet-400" />}
-              mainValue={formatPercentage(topSector.allocation)}
-              mainValueColor="text-violet-600 dark:text-violet-400"
-              metric1Label="Top Sector"
-              metric1Value={topSector.sector}
-              metric1Color="text-gray-600 dark:text-gray-400"
-              metric2Label="Active Positions"
-              metric2Value={`${openPositions.length}`}
-              metric2Color="text-gray-600 dark:text-gray-400"
-              gradient="bg-gradient-to-br from-violet-50 to-purple-50 dark:from-violet-900/20 dark:to-purple-900/20"
+            <SectorAnalysisCard
+              sectorData={sectorData}
+              positions={openPositions}
             />
             
             {/* Sector Breakdown */}
