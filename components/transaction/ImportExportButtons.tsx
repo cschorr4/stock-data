@@ -48,16 +48,18 @@ export const exportToJSON = (data: Transaction[]): Blob => {
 export const exportToCSV = (data: Transaction[]): Blob => {
   const csvData = data.map(t => ({
     date: format(new Date(t.date), 'yyyy-MM-dd'),
-    ticker: t.ticker,
-    type: t.type,
-    price: t.price.toString(),
-    shares: t.shares.toString(),
-    total_amount: (t.price * t.shares).toString()
+    ticker: t.ticker.trim().toUpperCase(),
+    type: t.type.trim().toLowerCase(),
+    price: t.price.toFixed(2),
+    shares: t.shares.toFixed(2),
+    total: (t.price * t.shares).toFixed(2)  // Changed to 'total' to match import format
   }));
 
   const csv = Papa.unparse(csvData, {
     header: true,
     delimiter: ",",
+    newline: "\r\n",  // Explicit newline character
+    skipEmptyLines: true
   });
   
   return new Blob([csv], { type: 'text/csv;charset=utf-8' });
@@ -83,16 +85,47 @@ export const parseCSVFile = async (file: File): Promise<Transaction[]> => {
       skipEmptyLines: true,
       complete: (results) => {
         try {
-          const transactions = (results.data as CSVRowData[]).map((row) => {
+          // Debug log to see what we're getting
+          console.log('Parsed CSV results:', results);
+          
+          if (!Array.isArray(results.data)) {
+            throw new Error('CSV parsing failed: data is not an array');
+          }
+
+          // Filter out any empty rows
+          const validRows = results.data.filter(row => 
+            row && typeof row === 'object' && 
+            'date' in row && 
+            'ticker' in row && 
+            'type' in row && 
+            'price' in row && 
+            'shares' in row
+          );
+
+          console.log('Valid rows:', validRows);
+
+          const transactions = validRows.map((row: CSVRowData) => {
+            // Convert the row data to proper types
+            const date = new Date(row.date);
+            const ticker = String(row.ticker || '').trim().toUpperCase();
+            const type = String(row.type || '').trim().toLowerCase();
+            const price = typeof row.price === 'string' ? parseFloat(row.price) : Number(row.price);
+            const shares = typeof row.shares === 'string' ? parseFloat(row.shares) : Number(row.shares);
+
+            // Validate the date
+            if (isNaN(date.getTime())) {
+              throw new Error(`Invalid date format for row: ${JSON.stringify(row)}`);
+            }
+
             const transaction: Transaction = {
               id: crypto.randomUUID(),
               user_id: '', // Will be set by parent component
-              date: new Date(row.date).toISOString(),
-              ticker: String(row.ticker).toUpperCase(),
-              type: String(row.type).toLowerCase() as TransactionType,
-              price: Number(row.price || 0),
-              shares: Number(row.shares || 0),
-              total_amount: Number(row.price || 0) * Number(row.shares || 0)
+              date: date.toISOString(),
+              ticker,
+              type: type as TransactionType,
+              price,
+              shares,
+              total_amount: price * shares
             };
 
             if (!isValidTransactionData(transaction)) {
@@ -102,6 +135,7 @@ export const parseCSVFile = async (file: File): Promise<Transaction[]> => {
             return transaction;
           });
 
+          console.log('Processed transactions:', transactions);
           resolve(transactions);
         } catch (error) {
           console.error('Error processing CSV:', error);
