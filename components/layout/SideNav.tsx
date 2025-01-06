@@ -1,5 +1,3 @@
-'use client';
-
 import React, { useCallback, useEffect, useState } from 'react';
 import { Plus, Layout, LineChart, CheckSquare, History } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -63,8 +61,9 @@ const SideNav: React.FC<SideNavProps> = ({
   if (loading) {
     return (
       <div className="flex h-full w-52 flex-col bg-card border-r">
-        <div className="flex h-14 items-center px-3 border-b">
-          <Skeleton className="h-6 w-24" />
+        <div className="flex flex-col h-20 px-3 border-b">
+          <Skeleton className="h-6 w-24 mt-3" />
+          <Skeleton className="h-4 w-32 mt-2" />
         </div>
         <div className="py-2">
           <Skeleton className="h-9 mx-2 w-[calc(100%-16px)]" />
@@ -80,11 +79,11 @@ const SideNav: React.FC<SideNavProps> = ({
 
   return (
     <div className="flex h-full w-52 flex-col bg-card border-r shadow-sm">
-      <div className="flex h-14 items-center justify-between px-3 border-b">
-        <h1 className="text-lg font-medium">Portfolio</h1>
+      <div className="flex flex-col h-20 px-3 border-b">
+        <h1 className="text-lg font-medium mt-3">Portfolio</h1>
         {user && (
-          <span className="text-sm text-muted-foreground">
-            Hello, {user.email?.split('@')[0]}
+          <span className="text-sm text-muted-foreground mt-1 truncate">
+            {user.email?.split('@')[0]}
           </span>
         )}
       </div>
