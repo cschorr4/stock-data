@@ -93,18 +93,19 @@ export const parseCSVFile = async (file: File): Promise<Transaction[]> => {
           }
 
           // Filter out any empty rows
-          const validRows = results.data.filter(row => 
-            row && typeof row === 'object' && 
-            'date' in row && 
-            'ticker' in row && 
-            'type' in row && 
-            'price' in row && 
+          const validRows = (results.data as unknown[]).filter((row): row is CSVRowData => 
+            row !== null &&
+            typeof row === 'object' &&
+            'date' in row &&
+            'ticker' in row &&
+            'type' in row &&
+            'price' in row &&
             'shares' in row
           );
 
           console.log('Valid rows:', validRows);
 
-          const transactions = (validRows as CSVRowData[]).map((row: CSVRowData) => {
+          const transactions = validRows.map((row) => {
             // Convert the row data to proper types
             const date = new Date(row.date);
             const ticker = String(row.ticker || '').trim().toUpperCase();

@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { format as dateFormat } from 'date-fns';
-import { Download, Upload, Plus, Pencil, Trash2, ArrowUpDown } from 'lucide-react';
+import { Download, Upload, Plus, Pencil, Trash2, ArrowUpDown, CloudUpload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -19,15 +19,14 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/components/ui/use-toast';
 import TransactionForm from './TransactionForm';
-import { CloudUpload } from 'lucide-react';
-import { exportToJSON, exportToCSV, downloadFile, parseCSVFile} from '@/lib/transactions';
+import { exportToJSON, exportToCSV, downloadFile, parseCSVFile } from '@/lib/transactions';
 import { Transaction, TransactionFormData } from '@/lib/types';
 
 interface TransactionTableProps {
   transactions: Transaction[];
   onTransactionAdd: (transaction: Transaction) => void;
   onTransactionEdit: (transaction: Transaction) => void;
-  onTransactionDelete: (id: string) => void;  // Changed from number to string
+  onTransactionDelete: (id: string) => void;
   onTransactionsDeleteAll: () => void;
   onSync: () => void;
 }
@@ -98,49 +97,70 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
 
   const handleFileImport = async (file: File) => {
     try {
+      // First, try to parse the file
       const parsed = await parseCSVFile(file);
-      console.log('Raw parsed data:', parsed); // Debug log
+      console.log('Parsed CSV data:', parsed);
+
+      if (!Array.isArray(parsed) || parsed.length === 0) {
+        throw new Error('No valid transactions found in file');
+      }
+
+      // Log the current transactions before import
+      console.log('Current transactions:', transactions);
+
+      // Process each transaction and add it individually
+      const processedTransactions: Transaction[] = [];
       
-      // Create transaction objects with required fields
-      const transactions = parsed.map(transaction => ({
-        id: crypto.randomUUID(),
-        user_id: '',
-        date: new Date(transaction.date).toISOString(),
-        ticker: transaction.ticker.toUpperCase(),
-        type: transaction.type.toLowerCase() as 'buy' | 'sell' | 'dividend',
-        price: Number(transaction.price || 0),
-        shares: Number(transaction.shares || 0),
-        total_amount: Number(transaction.price || 0) * Number(transaction.shares || 0)
-      }));
-  
-      // Add all transactions at once
-      transactions.forEach(transaction => onTransactionAdd(transaction));
-  
+      for (const transaction of parsed) {
+        const newTransaction: Transaction = {
+          id: crypto.randomUUID(),
+          user_id: '',
+          date: new Date(transaction.date).toISOString(),
+          ticker: transaction.ticker.toUpperCase(),
+          type: transaction.type.toLowerCase() as 'buy' | 'sell' | 'dividend',
+          price: Number(transaction.price || 0),
+          shares: Number(transaction.shares || 0),
+          total_amount: Number(transaction.price || 0) * Number(transaction.shares || 0)
+        };
+        
+        console.log('Adding transaction:', newTransaction);
+        processedTransactions.push(newTransaction);
+      }
+
+      // Add all transactions and update UI
+      for (const transaction of processedTransactions) {
+        onTransactionAdd(transaction);
+      }
+
+      // Log final state
+      console.log('Import complete. Added transactions:', processedTransactions);
+
       toast({
         title: "Success",
-        description: `Imported ${transactions.length} transactions successfully.`,
+        description: `Imported ${processedTransactions.length} transactions successfully.`,
+        duration: 3000,
       });
     } catch (error) {
       console.error('Error importing transactions:', error);
       toast({
-        variant: "destructive", 
+        variant: "destructive",
         title: "Import Error",
         description: (error as Error).message || 'Error importing transactions.',
+        duration: 5000,
       });
     }
   };
 
-  interface ImportButtonProps {
-    className?: string;
-  }
-   
-
-  const ImportButton = ({ className }: ImportButtonProps) => {
+  const ImportButton: React.FC<{ className?: string }> = ({ className }) => {
     const inputRef = React.useRef<HTMLInputElement>(null);
   
     const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
-      if (!e.target.files?.length) return;
-      handleFileImport(e.target.files[0]);
+      const file = e.target.files?.[0];
+      if (!file) return;
+      
+      handleFileImport(file);
+      
+      // Reset the input
       if (inputRef.current) {
         inputRef.current.value = '';
       }
@@ -152,7 +172,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
           type="file"
           ref={inputRef}
           onChange={handleImport}
-          accept=".json,.csv"
+          accept=".csv"
           className="hidden"
         />
         <Button
@@ -246,31 +266,31 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
   return (
     <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
       <div className="flex flex-col space-y-4 p-6">
-      <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-            <div className="flex items-center gap-2">
-              <h3 className="text-2xl font-semibold leading-none tracking-tight">Transaction Log</h3>
-              <Badge variant="secondary" className="text-xs px-2 py-0.5 whitespace-nowrap">
-                {transactions.length} transactions
-              </Badge>
-            </div>
-            <div className="flex items-center gap-2">
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={onSync}
-                      className="h-8 px-2 flex items-center gap-1.5"
-                    >
-                      <CloudUpload className="h-4 w-4" />
-                      <span className="sm:inline text-sm font-medium">Sync</span>
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Sync with cloud storage</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </div>
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+          <div className="flex items-center gap-2">
+            <h3 className="text-2xl font-semibold leading-none tracking-tight">Transaction Log</h3>
+            <Badge variant="secondary" className="text-xs px-2 py-0.5 whitespace-nowrap">
+              {transactions.length} transactions
+            </Badge>
+          </div>
+          <div className="flex items-center gap-2">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={onSync}
+                    className="h-8 px-2 flex items-center gap-1.5"
+                  >
+                    <CloudUpload className="h-4 w-4" />
+                    <span className="sm:inline text-sm font-medium">Sync</span>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Sync with cloud storage</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
             <Input
               placeholder="Filter by ticker..."
@@ -280,79 +300,78 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
             />
             
             <div className="flex items-center space-x-2">
-            <TooltipProvider>
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm" className="min-w-10">
-              <Download className="h-4 w-4" />
-              <span className="hidden sm:ml-2 sm:inline">Export</span>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent>
-            <DropdownMenuItem onClick={() => handleExport('json')}>
-              Export as JSON
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => handleExport('csv')}>
-              Export as CSV
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </TooltipTrigger>
-      <TooltipContent>Export transactions</TooltipContent>
-    </Tooltip>
-  </TooltipProvider>
-  <ImportButton className="min-w-10" />
-  
-  
-  <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-    <DialogTrigger asChild>
-      <Button size="sm">
-        <Plus className="mr-2 h-4 w-4" />
-       <span className="sm:hidden">Add Transaction</span> 
-        <span className="hidden sm:inline">Add Transaction</span>
-      </Button>
-    </DialogTrigger>
-    <DialogContent>
-      <DialogHeader>
-        <DialogTitle>Add New Transaction</DialogTitle>
-      </DialogHeader>
-      <TransactionForm
-  onSubmit={(formData: TransactionFormData) => {
-    // Create a full Transaction object including required properties
-    const fullTransaction: Transaction = {
-      ...formData,
-      id: crypto.randomUUID(), // Generate UUID for new transactions
-      user_id: '', // This will be set by the parent component
-      total_amount: formData.price * formData.shares
-    };
-    onTransactionAdd(fullTransaction);
-    setIsAddDialogOpen(false);
-  }}
-  onCancel={() => setIsAddDialogOpen(false)}
-/>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline" size="sm" className="min-w-10">
+                          <Download className="h-4 w-4" />
+                          <span className="hidden sm:ml-2 sm:inline">Export</span>
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent>
+                        <DropdownMenuItem onClick={() => handleExport('json')}>
+                          Export as JSON
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleExport('csv')}>
+                          Export as CSV
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TooltipTrigger>
+                  <TooltipContent>Export transactions</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              
+              <ImportButton className="min-w-10" />
+              
+              <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button size="sm">
+                    <Plus className="mr-2 h-4 w-4" />
+                    <span className="sm:hidden">Add Transaction</span> 
+                    <span className="hidden sm:inline">Add Transaction</span>
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Add New Transaction</DialogTitle>
+                  </DialogHeader>
+                  <TransactionForm
+                    onSubmit={(formData: TransactionFormData) => {
+                      const fullTransaction: Transaction = {
+                        ...formData,
+                        id: crypto.randomUUID(),
+                        user_id: '',
+                        total_amount: formData.price * formData.shares
+                      };
+                      onTransactionAdd(fullTransaction);
+                      setIsAddDialogOpen(false);
+                    }}
+                    onCancel={() => setIsAddDialogOpen(false)}
+                  />
+                </DialogContent>
+              </Dialog>
 
-    </DialogContent>
-  </Dialog>
-  {transactions.length > 0 && (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger asChild>
-        <Button 
-            variant="destructive" 
-            size="sm"
-            onClick={() => setIsDeleteAllDialogOpen(true)}
-          >
-            <Trash2 className="mr-2 h-4 w-4"/>
-            <span className="ml-2 hidden md:inline">Remove All</span>
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent>Delete all transactions</TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
-  )}
-</div>
+              {transactions.length > 0 && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button 
+                        variant="destructive" 
+                        size="sm"
+                        onClick={() => setIsDeleteAllDialogOpen(true)}
+                      >
+                        <Trash2 className="mr-2 h-4 w-4"/>
+                        <span className="ml-2 hidden md:inline">Remove All</span>
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Delete all transactions</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -401,90 +420,90 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
               </TableRow>
             </TableHeader>
             <TableBody>
-            {getFilteredAndSortedTransactions.map(transaction => (
-              <TableRow key={transaction.id}>
-                <TableCell>{dateFormat(new Date(transaction.date), "yyyy.MM.dd")}</TableCell>
-                <TableCell className="font-medium">{transaction.ticker}</TableCell>
-                <TableCell>
-                  <Badge variant={
-      transaction.type === 'buy' 
-        ? 'default'
-        : transaction.type === 'sell'
-        ? 'sand'
-        : 'blue'  // for dividend
-    }>
-                    {transaction.type.toUpperCase()}
-                  </Badge>
-                </TableCell>
-                <TableCell>${transaction.price.toFixed(2)}</TableCell>
-                <TableCell>{transaction.shares}</TableCell>
-                <TableCell>${(transaction.price * transaction.shares).toFixed(2)}</TableCell>
-                <TableCell className="text-right">
-                  <div className="flex justify-end gap-2">
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={() => {
-                              setSelectedTransaction(transaction);
-                              setIsEditDialogOpen(true);
-                            }}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>Edit transaction</TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="destructive"
-                            size="icon"
-                            onClick={() => {
-                              setSelectedTransaction(transaction);
-                              setIsDeleteDialogOpen(true);
-                            }}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>Delete transaction</TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
+              {getFilteredAndSortedTransactions.map(transaction => (
+                <TableRow key={transaction.id}>
+                  <TableCell>{dateFormat(new Date(transaction.date), "yyyy.MM.dd")}</TableCell>
+                  <TableCell className="font-medium">{transaction.ticker}</TableCell>
+                  <TableCell>
+                    <Badge variant={
+                      transaction.type === 'buy' 
+                        ? 'default'
+                        : transaction.type === 'sell'
+                        ? 'sand'
+                        : 'blue'  // for dividend
+                    }>
+                      {transaction.type.toUpperCase()}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>${transaction.price.toFixed(2)}</TableCell>
+                  <TableCell>{transaction.shares}</TableCell>
+                  <TableCell>${(transaction.price * transaction.shares).toFixed(2)}</TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end gap-2">
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              onClick={() => {
+                                setSelectedTransaction(transaction);
+                                setIsEditDialogOpen(true);
+                              }}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Edit transaction</TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="destructive"
+                              size="icon"
+                              onClick={() => {
+                                setSelectedTransaction(transaction);
+                                setIsDeleteDialogOpen(true);
+                              }}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Delete transaction</TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
           </Table>
         </div>
       </div>
 
-            {/* Edit Dialog */}
-            <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+      {/* Edit Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Edit Transaction</DialogTitle>
           </DialogHeader>
           {selectedTransaction && (
             <TransactionForm
-            initialData={selectedTransaction}
-            onSubmit={(formData: TransactionFormData) => {
-              const updatedTransaction: Transaction = {
-                ...formData,
-                id: selectedTransaction!.id,  // Keep existing string ID
-                user_id: selectedTransaction!.user_id,
-                total_amount: formData.price * formData.shares
-              };
-              onTransactionEdit(updatedTransaction);
-              setIsEditDialogOpen(false);
-            }}
-            onCancel={() => setIsEditDialogOpen(false)}
-          />
+              initialData={selectedTransaction}
+              onSubmit={(formData: TransactionFormData) => {
+                const updatedTransaction: Transaction = {
+                  ...formData,
+                  id: selectedTransaction.id,
+                  user_id: selectedTransaction.user_id,
+                  total_amount: formData.price * formData.shares
+                };
+                onTransactionEdit(updatedTransaction);
+                setIsEditDialogOpen(false);
+              }}
+              onCancel={() => setIsEditDialogOpen(false)}
+            />
           )}
         </DialogContent>
       </Dialog>
