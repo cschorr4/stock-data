@@ -39,12 +39,6 @@ import {
   SectorKey 
 } from '@/lib/types';
 
-interface TransactionAddPayload {
-  type?: 'single' | 'batch';
-  transaction?: TransactionFormData;
-  transactions?: Transaction[];
-}
-
 type ViewType = 'overview' | 'open-positions' | 'closed-positions' | 'transactions' | 'financials';
 
 const PortfolioTracker = () => {
